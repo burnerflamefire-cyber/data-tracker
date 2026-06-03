@@ -84,12 +84,6 @@
     th.sticky-header.sticky-column {
       z-index: 40 !important;
     }
-    /* Force Audit Log to hold layout without wrapping string blocks */
-    .audit-log-cell {
-      white-space: nowrap !important;
-      max-width: 450px;
-      overflow-x: auto;
-    }
   </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden text-gray-800 antialiased select-none text-xs">
@@ -142,11 +136,11 @@
   <div class="flex-1 flex overflow-hidden relative w-full">
     
     <div id="primaryNavPane" class="w-12 bg-[#001F3F] flex flex-col items-center py-4 gap-6 shrink-0 z-10 border-r border-blue-950 shadow-xl">
-      <button onclick="toggleSecondaryNav('Programme')" id="btnNavProgramme" class="text-blue-300/70 hover:text-white transition-all py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-[#003161]/50 w-full border-l-2 border-transparent">
+      <button onclick="changeNavContext('Programme')" id="btnNavProgramme" class="text-blue-300/70 hover:text-white transition-all py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-[#003161]/50 w-full border-l-2 border-transparent">
         <span class="vertical-text font-bold tracking-widest text-[11px] uppercase"><i class="fa-solid fa-grip-vertical mr-1.5 rotate-90"></i> Programme Level</span>
       </button>
       <div class="w-8 border-b border-blue-950"></div>
-      <button onclick="toggleSecondaryNav('Project')" id="btnNavProject" class="text-blue-300/70 hover:text-white transition-all py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-[#003161]/50 w-full border-l-2 border-transparent">
+      <button onclick="changeNavContext('Project')" id="btnNavProject" class="text-blue-300/70 hover:text-white transition-all py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-[#003161]/50 w-full border-l-2 border-transparent">
         <span class="vertical-text font-bold tracking-widest text-[11px] uppercase"><i class="fa-solid fa-diagram-project mr-1.5 rotate-90"></i> Project Level</span>
       </button>
     </div>
@@ -222,7 +216,7 @@
             </span>
             <div>
               <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Main Category</label>
-              <select id="inputMainCategory" onchange="handleMainCategoryDropdownCascade()" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs bg-white">
+              <select id="inputMainCategory" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs bg-white">
                 <option value="">Select Main Category...</option>
                 <option value="Material Cycle Data">Material Cycle Data</option>
                 <option value="Structural Engineering">Structural Engineering</option>
@@ -234,6 +228,10 @@
               <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Sub Category</label>
               <select id="inputSubCategory" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs bg-white">
                 <option value="">Select Sub Category...</option>
+                <option value="Foundations">Foundations</option>
+                <option value="Insulation">Insulation</option>
+                <option value="Distribution Valves">Distribution Valves</option>
+                <option value="Surfacing Layout">Surfacing Layout</option>
               </select>
             </div>
             <div>
@@ -335,7 +333,7 @@
   </div>
 
   <script>
-    // --- LEGACY FIREBASE CONFIGURATION & REGISTRY HOOKS ---
+    // --- LEGACY RETAINED FIREBASE CONFIGURATION & REGISTRY HOOKS ---
     const firebaseConfig = {
       apiKey: "AIzaSyCL6iJKRp-WjCgBTtRCuRny14lUOMP9KJg",
       authDomain: "data-tracker-f11df.firebaseapp.com",
@@ -425,7 +423,7 @@
     updateGovernmentFinancialMetrics();
     setInterval(updateGovernmentFinancialMetrics, 60000);
 
-    // --- RAW DATA STORES WITH DIAGNOSTIC SYSTEM CONTROLS ---
+    // --- RAW DATA STORES WITH DYNAMIC ADDED COLUMNS & FREEZE SCHEMATICS ---
     const rawTableColumns = [
       { id: "guid", label: "Project GUID", visible: true, frozen: false },
       { id: "name", label: "Project Name", visible: true, frozen: false },
@@ -451,25 +449,33 @@
       { guid: "PRJ-0711", name: "Paarl Sustainable Housing Phase 2", mainProgramme: "Human Settlements", subProgramme: "Social Housing", rolloutFY: "2026/27", mainCategory: "Material Cycle Data", subCategory: "Foundations", freetext: "Pre-fabricated Eco-Lite Cellular Concrete Walling", unit: "Blocks", qty: 8500, rate: 48, amount: 408000, visible: true, date: "2026-03-15", audit: "System Auto-Ingest Base Schema" }
     ];
 
-    // Cascade Maps for Categories
-    const categoryCascadeMap = {
-      "Material Cycle Data": ["Foundations", "Insulation"],
-      "Structural Engineering": ["Foundations", "Insulation"],
-      "Utility Automation": ["Distribution Valves"],
-      "Civil Works": ["Surfacing Layout"]
-    };
-
-    // Array of indices chosen by the operator in multi-select ledger mode
-    let chosenLedgerIndices = []; 
-
+    // Navigation and Filtering State Memory
     let selectedProjectsFilterList = []; 
     let selectedProgrammesFilterList = []; 
     let activeNavContext = "Project"; 
     let selectedPagesStore = { "Programme": 0, "Project": 0 }; 
     
+    // Track row highlights explicitly via true database indices 
+    let highlightedRowIndices = [];
+    
     let inlineTableFilters = {};
     let currentEditingRowIndex = null;
-    let isProjectDetailsExpanded = true;
+    let isSearchFilterCollapsed = false;
+
+    // Default Initialization Logic to enforce single project filter context selection rules
+    function initializeDefaultFilterStates() {
+      if (rawTableRows.length > 0) {
+        let uniqueProjGuids = [...new Set(rawTableRows.map(r => r.guid))];
+        if (uniqueProjGuids.length > 0) {
+          selectedProjectsFilterList = [uniqueProjGuids[0]];
+        }
+        let uniqueProgs = [...new Set(rawTableRows.map(r => r.mainProgramme))];
+        if (uniqueProgs.length > 0) {
+          selectedProgrammesFilterList = [uniqueProgs[0]];
+        }
+      }
+    }
+    initializeDefaultFilterStates();
 
     function calculateAmountEngine() {
       const qty = parseFloat(document.getElementById("inputQty").value) || 0;
@@ -477,27 +483,7 @@
       document.getElementById("inputAmount").value = (qty * rate).toFixed(2);
     }
 
-    function handleMainCategoryDropdownCascade() {
-      const mainVal = document.getElementById("inputMainCategory").value;
-      const subSelect = document.getElementById("inputSubCategory");
-      subSelect.innerHTML = '<option value="">Select Sub Category...</option>';
-      
-      if (mainVal && categoryCascadeMap[mainVal]) {
-        categoryCascadeMap[mainVal].forEach(sub => {
-          subSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
-        });
-      }
-    }
-
-    // --- INITIALIZATION AND SELECTION ENFORCEMENT ON BOOT ---
-    function initializeDefaultProjectFilter() {
-      if (rawTableRows.length > 0) {
-        selectedProjectsFilterList = [rawTableRows[0].guid];
-      }
-    }
-    initializeDefaultProjectFilter();
-
-    // --- GLOBAL FILTERS RENDERING BLOCK WITH SINGLE SELECT FOR PROJECT ---
+    // --- GLOBAL FILTERS RENDERING BLOCK WITH DYNAMIC SELECTION STRICTNESS ---
     function renderGlobalFiltersLayout() {
       const filterZone = document.getElementById("filtersPaneContent");
       filterZone.innerHTML = "";
@@ -509,144 +495,173 @@
           uniqueProjectsMap[comboKey] = { name: row.name, guid: row.guid };
         });
 
-        let heading = document.createElement("h3");
-        heading.className = "text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2";
-        heading.innerText = "Select Project Focus";
+        let heading = document.createElement("div");
+        heading.className = "mb-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider";
+        heading.innerText = "Select Project (Strict Single Select)";
         filterZone.appendChild(heading);
 
         let flexWrapper = document.createElement("div");
-        flexWrapper.className = "flex flex-col gap-1.5 bg-white p-2 rounded-lg border border-gray-200 shadow-sm";
+        flexWrapper.className = "flex flex-col gap-1.5";
 
         Object.keys(uniqueProjectsMap).forEach(key => {
           let p = uniqueProjectsMap[key];
           let isChecked = selectedProjectsFilterList.includes(p.guid);
           
-          let lbl = document.createElement("label");
-          lbl.className = "flex items-start gap-2 p-1.5 hover:bg-gray-100/80 rounded cursor-pointer transition-colors text-xs";
+          let label = document.createElement("label");
+          label.className = "flex items-start gap-2 p-1.5 hover:bg-gray-200/60 rounded cursor-pointer transition-colors text-xs";
           
-          lbl.innerHTML = `
-            <input type="radio" name="globalProjectRadioFilter" value="${p.guid}" ${isChecked ? 'checked' : ''} 
-              class="mt-0.5 h-3.5 w-3.5 text-blue-600 focus:ring-blue-500 border-gray-300">
-            <span class="text-gray-700 font-medium leading-tight">${key}</span>
-          `;
+          let radio = document.createElement("input");
+          radio.type = "radio";
+          radio.name = "globalProjectRadioFilter";
+          radio.value = p.guid;
+          if (isChecked) radio.checked = true;
+          radio.className = "mt-0.5 h-3.5 w-3.5 text-blue-600 focus:ring-blue-500 border-gray-300";
           
-          lbl.querySelector("input").addEventListener("change", function() {
+          radio.onchange = function() {
             handleProjectRadioSelectionChange(p.guid);
-          });
-          
-          flexWrapper.appendChild(lbl);
+          };
+
+          let span = document.createElement("span");
+          span.className = "text-gray-700 font-medium leading-tight";
+          span.innerText = key;
+
+          label.appendChild(radio);
+          label.appendChild(span);
+          flexWrapper.appendChild(label);
         });
 
         filterZone.appendChild(flexWrapper);
+
       } else {
-        // Programme Level Multi Select Configuration
+        // Programme Context: Multi-Select Context Allowed
         let uniqueProgs = [...new Set(rawTableRows.map(r => r.mainProgramme))];
         
-        let heading = document.createElement("h3");
-        heading.className = "text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2";
-        heading.innerText = "Filter Key Programmes";
+        let heading = document.createElement("div");
+        heading.className = "mb-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider flex justify-between items-center";
+        heading.innerHTML = `<span>Programmes Scope</span>`;
+        
+        let resetBtn = document.createElement("button");
+        resetBtn.className = "text-[9px] font-bold text-blue-600 hover:underline uppercase";
+        resetBtn.innerText = "Reset Scope";
+        resetBtn.onclick = function() {
+          selectedProgrammesFilterList = [];
+          renderGlobalFiltersLayout();
+          recalculateActiveViewsAndLedgers();
+        };
+        heading.appendChild(resetBtn);
         filterZone.appendChild(heading);
 
         let flexWrapper = document.createElement("div");
-        flexWrapper.className = "flex flex-col gap-1.5 bg-white p-2 rounded-lg border border-gray-200 shadow-sm";
+        flexWrapper.className = "flex flex-col gap-1.5";
 
-        uniqueProgs.forEach(prog => {
-          let isChecked = selectedProgrammesFilterList.includes(prog);
-          let lbl = document.createElement("label");
-          lbl.className = "flex items-start gap-2 p-1.5 hover:bg-gray-100/80 rounded cursor-pointer transition-colors text-xs";
+        uniqueProgs.forEach(progName => {
+          let isChecked = selectedProgrammesFilterList.includes(progName);
           
-          lbl.innerHTML = `
-            <input type="checkbox" value="${prog}" ${isChecked ? 'checked' : ''} 
-              class="mt-0.5 h-3.5 w-3.5 rounded text-blue-600 focus:ring-blue-500 border-gray-300">
-            <span class="text-gray-700 font-medium leading-tight">${prog}</span>
-          `;
+          let label = document.createElement("label");
+          label.className = "flex items-start gap-2 p-1.5 hover:bg-gray-200/60 rounded cursor-pointer transition-colors text-xs";
           
-          lbl.querySelector("input").addEventListener("change", function(e) {
-            if (e.target.checked) {
-              if (!selectedProgrammesFilterList.includes(prog)) selectedProgrammesFilterList.push(prog);
+          let checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.value = progName;
+          if (isChecked) checkbox.checked = true;
+          checkbox.className = "mt-0.5 h-3.5 w-3.5 rounded text-blue-600 focus:ring-blue-500 border-gray-300";
+          
+          checkbox.onchange = function() {
+            if (this.checked) {
+              if (!selectedProgrammesFilterList.includes(progName)) selectedProgrammesFilterList.push(progName);
             } else {
-              selectedProgrammesFilterList = selectedProgrammesFilterList.filter(x => x !== prog);
+              selectedProgrammesFilterList = selectedProgrammesFilterList.filter(item => item !== progName);
             }
-            routeAndExecuteWorkspaceRefresh();
-          });
+            recalculateActiveViewsAndLedgers();
+          };
 
-          flexWrapper.appendChild(lbl);
+          let span = document.createElement("span");
+          span.className = "text-gray-700 font-medium leading-tight";
+          span.innerText = progName;
+
+          label.appendChild(checkbox);
+          label.appendChild(span);
+          flexWrapper.appendChild(label);
         });
 
         filterZone.appendChild(flexWrapper);
-        
-        let resetBtn = document.createElement("button");
-        resetBtn.className = "mt-4 w-full bg-slate-600 hover:bg-slate-700 text-white font-bold py-1.5 px-3 rounded shadow text-[10px] uppercase tracking-wider transition-colors";
-        resetBtn.innerText = "Reset Global Scope";
-        resetBtn.onclick = function() {
-          selectedProgrammesFilterList = [];
-          routeAndExecuteWorkspaceRefresh();
-          renderGlobalFiltersLayout();
-        };
-        filterZone.appendChild(resetBtn);
       }
     }
 
-    function handleProjectRadioSelectionChange(chosenGuid) {
-      selectedProjectsFilterList = [chosenGuid];
-      routeAndExecuteWorkspaceRefresh();
+    function handleProjectRadioSelectionChange(guid) {
+      selectedProjectsFilterList = [guid];
+      recalculateActiveViewsAndLedgers();
     }
 
-    // --- NAVIGATION AND SECONDARY TABS STRUCTURING PANEL ---
-    const pageSubNavDefinitions = {
-      "Programme": ["Strategic Summary Matrix", "Financial Outlay Analytics"],
-      "Project": ["Operational Data Ledger", "Audit Matrix View"]
+    // --- SECONDARY NAV PAGE STRUCTURAL ROUTING PANELS ---
+    const pageStructureConfig = {
+      "Programme": [
+        { name: "Portfolio Summary Matrix", icon: "fa-chart-simple" },
+        { name: "Treasury Allocation Ledger", icon: "fa-sack-dollar" },
+        { name: "Cross-Cutting Analytics Framework", icon: "fa-folder-tree" }
+      ],
+      "Project": [
+        { name: "Project Itemized Cost Ledger", icon: "fa-list-check" },
+        { name: "Category Matrix Cross Breakdown", icon: "fa-table-cells" }
+      ]
     };
 
-    function toggleSecondaryNav(contextType) {
-      activeNavContext = contextType;
+    function changeNavContext(context) {
+      activeNavContext = context;
       
       document.getElementById("btnNavProgramme").className = "text-blue-300/70 hover:text-white transition-all py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-[#003161]/50 w-full border-l-2 border-transparent";
       document.getElementById("btnNavProject").className = "text-blue-300/70 hover:text-white transition-all py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-[#003161]/50 w-full border-l-2 border-transparent";
       
-      if (contextType === "Programme") {
+      if (context === "Programme") {
         document.getElementById("btnNavProgramme").classList.add("text-white", "bg-[#003161]/60", "border-blue-400");
-        document.getElementById("secondaryNavHeading").innerText = "Programme Sub-Suites";
+        document.getElementById("secondaryNavHeading").innerText = "Programme Pages";
       } else {
         document.getElementById("btnNavProject").classList.add("text-white", "bg-[#003161]/60", "border-blue-400");
-        document.getElementById("secondaryNavHeading").innerText = "Project Sub-Suites";
+        document.getElementById("secondaryNavHeading").innerText = "Project Pages";
       }
 
-      const buttonsZone = document.getElementById("secondaryNavButtonsZone");
-      buttonsZone.innerHTML = "";
+      // Enforce default radio selection fallback if jumping to project level and selection empty
+      if (context === "Project" && selectedProjectsFilterList.length === 0 && rawTableRows.length > 0) {
+        selectedProjectsFilterList = [rawTableRows[0].guid];
+      }
 
-      pageSubNavDefinitions[contextType].forEach((pageTitle, idx) => {
-        let isSelected = selectedPagesStore[contextType] === idx;
-        let btn = document.createElement("button");
-        btn.className = `w-full text-left px-3 py-2 rounded text-xs font-medium transition-all flex items-center justify-between group ${
-          isSelected ? 'bg-blue-600 text-white shadow-md font-semibold' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
-        }`;
-        
-        btn.innerHTML = `
-          <span>${pageTitle}</span>
-          <i class="fa-solid fa-chevron-right text-[9px] opacity-0 group-hover:opacity-100 transition-opacity ${isSelected ? 'opacity-100 text-white' : ''}"></i>
-        `;
-        
-        btn.onclick = function() {
-          selectedPagesStore[contextType] = idx;
-          toggleSecondaryNav(contextType);
-          routeAndExecuteWorkspaceRefresh();
-        };
-        
-        buttonsZone.appendChild(btn);
-      });
-
+      renderSecondaryNavTabs();
       renderGlobalFiltersLayout();
-      routeAndExecuteWorkspaceRefresh();
+      recalculateActiveViewsAndLedgers();
     }
 
-    // --- FORM COMPONENT CONTROLS & SELECTION BINDINGS ---
+    function renderSecondaryNavTabs() {
+      const container = document.getElementById("secondaryNavButtonsZone");
+      container.innerHTML = "";
+      let pages = pageStructureConfig[activeNavContext];
+      let activeIndex = selectedPagesStore[activeNavContext];
+
+      pages.forEach((page, index) => {
+        let btn = document.createElement("button");
+        btn.onclick = function() { selectPageNavIndex(index); };
+        
+        if (index === activeIndex) {
+          btn.className = "w-full text-left px-3 py-2 rounded text-xs font-semibold bg-blue-950 text-white border-l-2 border-blue-500 shadow-sm flex items-center gap-2";
+        } else {
+          btn.className = "w-full text-left px-3 py-2 rounded text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all flex items-center gap-2";
+        }
+        
+        btn.innerHTML = `<i class="fa-solid ${page.icon} text-[10px] tracking-normal shrink-0 opacity-80"></i> <span class="truncate">${page.name}</span>`;
+        container.appendChild(btn);
+      });
+    }
+
+    function selectPageNavIndex(idx) {
+      selectedPagesStore[activeNavContext] = idx;
+      renderSecondaryNavTabs();
+      recalculateActiveViewsAndLedgers();
+    }
+
+    // --- FORM MANAGEMENT ENGINE CODE ---
     function toggleProjectDetailsPane() {
       const content = document.getElementById("projectDetailsContent");
       const caret = document.getElementById("projectDetailsCaret");
-      isProjectDetailsExpanded = !isProjectDetailsExpanded;
-      
-      if (isProjectDetailsExpanded) {
+      if (content.classList.contains("hidden")) {
         content.classList.remove("hidden");
         caret.style.transform = "rotate(0deg)";
       } else {
@@ -655,106 +670,17 @@
       }
     }
 
-    function syncLedgerRowSelectionStateToControls() {
-      const editBanner = document.getElementById("engineModeAlertBanner");
-      const btnEdit = document.getElementById("btnSubmitExistingEdit");
-      const btnCopy = document.getElementById("btnCopySelectedRow");
-
-      if (chosenLedgerIndices.length === 1) {
-        // Exactly one row selected allows modification states
-        btnEdit.removeAttribute("disabled");
-        btnCopy.removeAttribute("disabled");
-        
-        if (currentEditingRowIndex !== null && chosenLedgerIndices[0] === currentEditingRowIndex) {
-          editBanner.classList.remove("hidden");
-        } else {
-          editBanner.classList.add("hidden");
-        }
-      } else {
-        // Disable individual row mutations if multiple rows or zero rows are selected
-        btnEdit.setAttribute("disabled", "true");
-        btnCopy.setAttribute("disabled", "true");
-        editBanner.classList.add("hidden");
-      }
-    }
-
-    function triggerRowSelectionChange(rowIndex, isChecked) {
-      if (isChecked) {
-        if (!chosenLedgerIndices.includes(rowIndex)) {
-          chosenLedgerIndices.push(rowIndex);
-        }
-      } else {
-        chosenLedgerIndices = chosenLedgerIndices.filter(i => i !== rowIndex);
-      }
-      
-      // Selectively re-evaluate UI controls and color states without general redraw bugs
-      syncLedgerRowSelectionStateToControls();
-      
-      // Update individual row visualization explicitly
-      const rowDOMElement = document.getElementById(`ledger-row-tr-${rowIndex}`);
-      if (rowDOMElement) {
-        const checkboxInput = document.getElementById(`row-checkbox-input-${rowIndex}`);
-        if (checkboxInput) checkboxInput.checked = isChecked;
-        
-        if (isChecked) {
-          rowDOMElement.classList.remove("hover:bg-gray-50/80");
-          rowDOMElement.classList.add("bg-blue-50/90", "font-medium");
-        } else {
-          rowDOMElement.classList.remove("bg-blue-50/90", "font-medium");
-          rowDOMElement.classList.add("hover:bg-gray-50/80");
-        }
-      }
-      
-      // Re-evaluate core programmatic buttons matching active grid selection rules
-      const collectiveCheckbox = document.getElementById("masterToggleLedgerCheckbox");
-      if (collectiveCheckbox) {
-        const structuralRows = obtainActiveFilteredDataSet();
-        collectiveCheckbox.checked = structuralRows.length > 0 && structuralRows.every(r => chosenLedgerIndices.includes(r.originalIndex));
-      }
-    }
-
-    function masterToggleLedgerRowsSelection(isChecked) {
-      const activeRows = obtainActiveFilteredDataSet();
-      activeRows.forEach(row => {
-        triggerRowSelectionChange(row.originalIndex, isChecked);
-      });
-    }
-
-    function populateFormForEditing(rowIndex) {
-      const targetRow = rawTableRows[rowIndex];
-      if (!targetRow) return;
-
-      currentEditingRowIndex = rowIndex;
-      
-      // Lock into form layout structures
-      document.getElementById("inputProjectGUID").value = targetRow.guid;
-      document.getElementById("inputProjectName").value = targetRow.name;
-      document.getElementById("inputMainProgramme").value = targetRow.mainProgramme;
-      document.getElementById("inputSubProgramme").value = targetRow.subProgramme;
-      document.getElementById("inputRolloutFY").value = targetRow.rolloutFY;
-      
-      document.getElementById("inputMainCategory").value = targetRow.mainCategory;
-      handleMainCategoryDropdownCascade();
-      document.getElementById("inputSubCategory").value = targetRow.subCategory;
-      
-      document.getElementById("inputFreeText").value = targetRow.freetext;
-      document.getElementById("inputUnit").value = targetRow.unit;
-      document.getElementById("inputQty").value = targetRow.qty;
-      document.getElementById("inputRate").value = targetRow.rate;
-      document.getElementById("inputAmount").value = targetRow.amount.toFixed(2);
-      document.getElementById("inputDate").value = targetRow.date;
-
-      // Force view synchronization
-      if (!chosenLedgerIndices.includes(rowIndex)) {
-        chosenLedgerIndices = [rowIndex];
-        routeAndExecuteWorkspaceRefresh();
-      } else {
-        syncLedgerRowSelectionStateToControls();
-      }
-    }
-
     function clearSelectedFormState() {
       currentEditingRowIndex = null;
+      highlightedRowIndices = []; // Wipe selections to clean multi highlight bugs
+      
+      document.getElementById("inputProjectGUID").value = "";
+      document.getElementById("inputProjectName").value = "";
+      document.getElementById("inputMainProgramme").value = "";
+      document.getElementById("inputSubProgramme").value = "";
+      document.getElementById("inputRolloutFY").value = "";
+      document.getElementById("inputMainCategory").value = "";
+      document.getElementById("inputSubCategory").value = "";
       document.getElementById("inputFreeText").value = "";
       document.getElementById("inputUnit").value = "";
       document.getElementById("inputQty").value = "";
@@ -762,326 +688,488 @@
       document.getElementById("inputAmount").value = "";
       document.getElementById("inputDate").value = "";
       
-      syncLedgerRowSelectionStateToControls();
+      evaluateFormButtonControlsState();
+      recalculateActiveViewsAndLedgers();
     }
 
-    function constructActionTimestamp() {
-      const d = new Date();
-      return `[${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}]`;
-    }
-
-    function generateComprehensiveAuditString(previousData, updatedFields) {
-      let parts = [];
-      for (let key in updatedFields) {
-        if (previousData[key] !== updatedFields[key]) {
-          parts.push(`Field '${key}' altered from "${previousData[key]}" to "${updatedFields[key]}"`);
-        }
-      }
-      const stamp = constructActionTimestamp();
-      const summaryText = parts.length > 0 ? parts.join("; ") : "No spatial configuration value changed";
-      return `${stamp} Operator ${currentUser}: ${summaryText}`;
-    }
-
-    // --- WRITE ACTION CONTROLLERS AND MUTATION OPERATIONS ---
-    function submitFormAsNewRow() {
-      const guid = document.getElementById("inputProjectGUID").value.trim() || "PRJ-NEW";
-      const name = document.getElementById("inputProjectName").value.trim() || "Unspecified New Venture Project";
-      const mainProg = document.getElementById("inputMainProgramme").value.trim() || "General Pool Allocation";
-      const subProg = document.getElementById("inputSubProgramme").value.trim() || "Core Operational Subsidy";
-      const rollout = document.getElementById("inputRolloutFY").value.trim() || "2026/27";
+    function populateFormForEditing(rowIndex) {
+      currentEditingRowIndex = rowIndex;
+      let data = rawTableRows[rowIndex];
       
-      const mainCat = document.getElementById("inputMainCategory").value;
-      const subCat = document.getElementById("inputSubCategory").value;
-      const freeTxt = document.getElementById("inputFreeText").value.trim();
-      const unit = document.getElementById("inputUnit").value.trim() || "Units";
-      const qty = parseFloat(document.getElementById("inputQty").value) || 0;
-      const rate = parseFloat(document.getElementById("inputRate").value) || 0;
-      const amt = qty * rate;
-      const dt = document.getElementById("inputDate").value || new Date().toISOString().split('T')[0];
+      document.getElementById("inputProjectGUID").value = data.guid || "";
+      document.getElementById("inputProjectName").value = data.name || "";
+      document.getElementById("inputMainProgramme").value = data.mainProgramme || "";
+      document.getElementById("inputSubProgramme").value = data.subProgramme || "";
+      document.getElementById("inputRolloutFY").value = data.rolloutFY || "";
+      document.getElementById("inputMainCategory").value = data.mainCategory || "";
+      document.getElementById("inputSubCategory").value = data.subCategory || "";
+      document.getElementById("inputFreeText").value = data.freetext || "";
+      document.getElementById("inputUnit").value = data.unit || "";
+      document.getElementById("inputQty").value = data.qty || "";
+      document.getElementById("inputRate").value = data.rate || "";
+      document.getElementById("inputAmount").value = (data.amount || 0).toFixed(2);
+      document.getElementById("inputDate").value = data.date || "";
+      
+      evaluateFormButtonControlsState();
+    }
 
-      const initialAuditLog = `${constructActionTimestamp()} Created by ${currentUser} via Scratch Submission Data Deck Input Engine.`;
+    function evaluateFormButtonControlsState() {
+      const submitEditBtn = document.getElementById("btnSubmitExistingEdit");
+      const copyBtn = document.getElementById("btnCopySelectedRow");
+      const alertBanner = document.getElementById("engineModeAlertBanner");
 
-      const newRowObject = {
-        guid: guid,
-        name: name,
-        mainProgramme: mainProg,
-        subProgramme: subProg,
-        rolloutFY: rollout,
-        mainCategory: mainCat,
-        subCategory: subCat,
-        freetext: freeTxt,
-        unit: unit,
+      // Edit Controls explicitly surface ONLY if precisely 1 row is selected
+      if (highlightedRowIndices.length === 1) {
+        submitEditBtn.disabled = false;
+        copyBtn.disabled = false;
+        alertBanner.classList.remove("hidden");
+        // Ensure index matches selected row anchor
+        currentEditingRowIndex = highlightedRowIndices[0];
+      } else {
+        submitEditBtn.disabled = true;
+        copyBtn.disabled = true;
+        alertBanner.classList.add("hidden");
+        currentEditingRowIndex = null;
+      }
+    }
+
+    // --- CONCATENATED AUDIT GENERATION MACRO ENGINE ---
+    function createAuditStampString(existingAuditTrail, operationDescription) {
+      let now = new Date();
+      let timeStr = now.toISOString().replace('T', ' ').substring(0, 19);
+      let newEntry = `[${timeStr} - ${operationDescription}]`;
+      
+      if (!existingAuditTrail || existingAuditTrail.trim() === "" || existingAuditTrail.includes("System Auto-Ingest")) {
+        return newEntry;
+      }
+      return `${existingAuditTrail} | ${newEntry}`;
+    }
+
+    function submitFormAsNewRow() {
+      let qty = parseFloat(document.getElementById("inputQty").value) || 0;
+      let rate = parseFloat(document.getElementById("inputRate").value) || 0;
+      
+      let newRow = {
+        guid: document.getElementById("inputProjectGUID").value || "PRJ-NEW",
+        name: document.getElementById("inputProjectName").value || "Untitled Manual Entry",
+        mainProgramme: document.getElementById("inputMainProgramme").value || "General Portfolio",
+        subProgramme: document.getElementById("inputSubProgramme").value || "Sub Allocation Operational",
+        rolloutFY: document.getElementById("inputRolloutFY").value || "2026/27",
+        mainCategory: document.getElementById("inputMainCategory").value || "",
+        subCategory: document.getElementById("inputSubCategory").value || "",
+        freetext: document.getElementById("inputFreeText").value || "",
+        unit: document.getElementById("inputUnit").value || "Units",
         qty: qty,
         rate: rate,
-        amount: amt,
+        amount: qty * rate,
+        date: document.getElementById("inputDate").value || new Date().toISOString().substring(0,10),
         visible: true,
-        date: dt,
-        audit: initialAuditLog
+        audit: createAuditStampString("", "Row Form Created from Scratch")
       };
 
-      rawTableRows.push(newRowObject);
+      rawTableRows.push(newRow);
       clearSelectedFormState();
-      
-      // Auto-lock project filter explicitly to this newly created scope if not already bounded
-      if (!selectedProjectsFilterList.includes(guid) && activeNavContext === "Project") {
-        selectedProjectsFilterList = [guid];
-        renderGlobalFiltersLayout();
-      }
-      
-      routeAndExecuteWorkspaceRefresh();
     }
 
     function submitEditToExistingRow() {
       if (currentEditingRowIndex === null) return;
       
-      const target = rawTableRows[currentEditingRowIndex];
-      const updatedFields = {
-        guid: document.getElementById("inputProjectGUID").value.trim(),
-        name: document.getElementById("inputProjectName").value.trim(),
-        mainProgramme: document.getElementById("inputMainProgramme").value.trim(),
-        subProgramme: document.getElementById("inputSubProgramme").value.trim(),
-        rolloutFY: document.getElementById("inputRolloutFY").value.trim(),
-        mainCategory: document.getElementById("inputMainCategory").value,
-        subCategory: document.getElementById("inputSubCategory").value,
-        freetext: document.getElementById("inputFreeText").value.trim(),
-        unit: document.getElementById("inputUnit").value.trim(),
-        qty: parseFloat(document.getElementById("inputQty").value) || 0,
-        rate: parseFloat(document.getElementById("inputRate").value) || 0,
-        date: document.getElementById("inputDate").value
-      };
-      updatedFields.amount = updatedFields.qty * updatedFields.rate;
+      let qty = parseFloat(document.getElementById("inputQty").value) || 0;
+      let rate = parseFloat(document.getElementById("inputRate").value) || 0;
+      let rowRef = rawTableRows[currentEditingRowIndex];
 
-      const deltaAuditString = generateComprehensiveAuditString(target, updatedFields);
-      
-      // Concatenate the new operational change log separating entries with a pipeline character structural break
-      const comprehensiveCombinedLog = target.audit ? `${target.audit} | ${deltaAuditString}` : deltaAuditString;
+      rowRef.guid = document.getElementById("inputProjectGUID").value;
+      rowRef.name = document.getElementById("inputProjectName").value;
+      rowRef.mainProgramme = document.getElementById("inputMainProgramme").value;
+      rowRef.subProgramme = document.getElementById("inputSubProgramme").value;
+      rowRef.rolloutFY = document.getElementById("inputRolloutFY").value;
+      rowRef.mainCategory = document.getElementById("inputMainCategory").value;
+      rowRef.subCategory = document.getElementById("inputSubCategory").value;
+      rowRef.freetext = document.getElementById("inputFreeText").value;
+      rowRef.unit = document.getElementById("inputUnit").value;
+      rowRef.qty = qty;
+      rowRef.rate = rate;
+      rowRef.amount = qty * rate;
+      rowRef.date = document.getElementById("inputDate").value;
+      rowRef.audit = createAuditStampString(rowRef.audit, "Row Context Fields Edited");
 
-      Object.assign(target, updatedFields, { audit: comprehensiveCombinedLog });
-      
       clearSelectedFormState();
-      routeAndExecuteWorkspaceRefresh();
     }
 
     function makeCopyAndEditSelectedRow() {
-      if (chosenLedgerIndices.length !== 1) return;
-      const targetToDuplicate = rawTableRows[chosenLedgerIndices[0]];
-      if (!targetToDuplicate) return;
-
-      const duplicateObject = JSON.parse(JSON.stringify(targetToDuplicate));
-      duplicateObject.audit = `${constructActionTimestamp()} Duplicated from project entity baseline row parameters by operator ${currentUser}.`;
+      if (currentEditingRowIndex === null) return;
       
-      rawTableRows.push(duplicateObject);
-      const newlyCreatedIndex = rawTableRows.length - 1;
+      let sourceRow = rawTableRows[currentEditingRowIndex];
+      let copiedRow = Object.assign({}, sourceRow);
       
-      chosenLedgerIndices = [newlyCreatedIndex];
-      populateFormForEditing(newlyCreatedIndex);
-      routeAndExecuteWorkspaceRefresh();
+      copiedRow.audit = createAuditStampString(sourceRow.audit, "Row Cloned via Copy & Edit Trigger");
+      rawTableRows.push(copiedRow);
+      
+      // Auto highlight onto the newly pushed row item context
+      highlightedRowIndices = [rawTableRows.length - 1];
+      populateFormForEditing(rawTableRows.length - 1);
+      recalculateActiveViewsAndLedgers();
     }
 
-    function purgeSelectedLedgerRows() {
-      if (chosenLedgerIndices.length === 0) return;
+    // --- BULK DELETION HANDLER PROTOTYPES ---
+    function deleteSelectedRows() {
+      if (highlightedRowIndices.length === 0) return;
       
-      if (confirm(`Are you absolutely sure you want to permanently delete the ${chosenLedgerIndices.length} selected record structural entry lines?`)) {
-        // Sort indices downwards to slice items without skewing remaining position maps
-        chosenLedgerIndices.sort((a, b) => b - a);
-        
-        chosenLedgerIndices.forEach(idx => {
+      if (confirm(`Are you sure you want to permanently delete the ${highlightedRowIndices.length} selected row(s)?`)) {
+        // Sort descending to remove items without disrupting array indexes sequentially
+        highlightedRowIndices.sort((a, b) => b - a);
+        highlightedRowIndices.forEach(idx => {
           rawTableRows.splice(idx, 1);
         });
         
-        chosenLedgerIndices = [];
-        currentEditingRowIndex = null;
-        
-        // Safety lock: if active checked project guideline doesn't exist anywhere else, fall back securely
-        let existingGuids = rawTableRows.map(r => r.guid);
-        if (selectedProjectsFilterList.length > 0 && !existingGuids.includes(selectedProjectsFilterList[0])) {
-          initializeDefaultProjectFilter();
-          renderGlobalFiltersLayout();
-        }
-        
         clearSelectedFormState();
-        routeAndExecuteWorkspaceRefresh();
       }
     }
 
-    // --- ACTIVE DATASET COMPILATION RULES ---
-    function obtainActiveFilteredDataSet() {
-      let structuralSubset = rawTableRows.map((row, idx) => ({ ...row, originalIndex: idx }));
+    // --- RECKONING ENGINE VIEW COMPILATION ROUTINES ---
+    function recalculateActiveViewsAndLedgers() {
+      const contentZone = document.getElementById("infoPaneContentZone");
+      contentZone.innerHTML = "";
 
-      // Layer 1: Apply System Navigation Global Filter Scopes
-      if (activeNavContext === "Project") {
-        if (selectedProjectsFilterList.length > 0) {
-          structuralSubset = structuralSubset.filter(r => selectedProjectsFilterList.includes(r.guid));
+      // Step 1: Filter raw rows down to current Global Filter scopes
+      let globalFilteredRows = [];
+      rawTableRows.forEach((row, trueIndex) => {
+        let isMatched = false;
+        if (activeNavContext === "Project") {
+          if (selectedProjectsFilterList.length === 0 || selectedProjectsFilterList.includes(row.guid)) {
+            isMatched = true;
+          }
+        } else {
+          if (selectedProgrammesFilterList.length === 0 || selectedProgrammesFilterList.includes(row.mainProgramme)) {
+            isMatched = true;
+          }
         }
+        if (isMatched) {
+          globalFilteredRows.push({ row, trueIndex });
+        }
+      });
+
+      // Step 2: Render layouts context dependent on page selections
+      let activePageIndex = selectedPagesStore[activeNavContext];
+
+      if (activeNavContext === "Project" && activePageIndex === 0) {
+        // Itemized Cost Ledger View
+        document.getElementById("infoPaneTitle").innerText = "Project Itemized Cost Ledger Grid";
+        renderItemizedLedgerView(globalFilteredRows, contentZone);
       } else {
-        if (selectedProgrammesFilterList.length > 0) {
-          structuralSubset = structuralSubset.filter(r => selectedProgrammesFilterList.includes(r.mainProgramme));
-        }
+        // Fallback placeholder matrix tables to avoid code degradation
+        document.getElementById("infoPaneTitle").innerText = `${activeNavContext} - View Context Grid Matrix`;
+        renderMatrixAggregationFallback(globalFilteredRows, contentZone);
       }
+    }
 
-      // Layer 2: Apply Inline Field Search Parameter Overlays
-      Object.keys(inlineTableFilters).forEach(colId => {
-        let filterVal = inlineTableFilters[colId].trim().toLowerCase();
-        if (filterVal) {
-          structuralSubset = structuralSubset.filter(r => {
-            let fieldStringVal = String(r[colId] || "").toLowerCase();
-            return fieldStringVal.includes(filterVal);
+    function renderItemizedLedgerView(filteredRowsWithMeta, targetZone) {
+      // Inline Search Filter Processing Blocks
+      let fullyFilteredRows = filteredRowsWithMeta.filter(item => {
+        let pass = true;
+        Object.keys(inlineTableFilters).forEach(colId => {
+          let term = inlineTableFilters[colId];
+          if (term && term.trim() !== "") {
+            let val = String(item.row[colId] || "").toLowerCase();
+            if (!val.includes(term.toLowerCase())) pass = false;
+          }
+        });
+        return pass;
+      });
+
+      // Layout Controls Strip
+      let controlStrip = document.createElement("div");
+      controlStrip.className = "mb-3 flex justify-between items-center gap-2 bg-white p-2 rounded shadow-sm border border-gray-200";
+      
+      let leftSide = document.createElement("div");
+      leftSide.className = "flex items-center gap-4 text-[11px]";
+      leftSide.innerHTML = `
+        <span>Filtered Rows count: <strong class="text-blue-900 font-bold">${fullyFilteredRows.length}</strong> of ${filteredRowsWithMeta.length}</span>
+        <span>Selected: <strong class="text-amber-700 font-bold">${highlightedRowIndices.length} rows</strong></span>
+      `;
+      controlStrip.appendChild(leftSide);
+
+      let rightSide = document.createElement("div");
+      rightSide.className = "flex items-center gap-2";
+      
+      // Bulk Delete Action Trigger
+      let deleteBtn = document.createElement("button");
+      deleteBtn.className = "bg-red-700 hover:bg-red-800 text-white font-bold px-2.5 py-1 rounded shadow transition-all flex items-center gap-1 text-[11px] disabled:opacity-40 disabled:cursor-not-allowed";
+      deleteBtn.innerHTML = `<i class="fa-solid fa-trash-can"></i> Delete Selected`;
+      deleteBtn.disabled = highlightedRowIndices.length === 0;
+      deleteBtn.onclick = deleteSelectedRows;
+      rightSide.appendChild(deleteBtn);
+
+      let toggleSearchBtn = document.createElement("button");
+      toggleSearchBtn.className = "bg-gray-600 hover:bg-gray-700 text-white font-semibold px-2 py-1 rounded text-[10px] uppercase transition-colors";
+      toggleSearchBtn.innerText = isSearchFilterCollapsed ? "Show Filters" : "Hide Filters";
+      toggleSearchBtn.onclick = function() {
+        isSearchFilterCollapsed = !isSearchFilterCollapsed;
+        recalculateActiveViewsAndLedgers();
+      };
+      rightSide.appendChild(toggleSearchBtn);
+      controlStrip.appendChild(rightSide);
+      targetZone.appendChild(controlStrip);
+
+      // Wrapper Container Layout for Scroll Panes
+      let outerGridWrapper = document.createElement("div");
+      outerGridWrapper.className = "w-full overflow-auto custom-scrollbar border border-gray-200 rounded-lg shadow bg-white flex-1 relative";
+      outerGridWrapper.style.maxHeight = "calc(100% - 45px)";
+
+      let table = document.createElement("table");
+      table.className = "w-full text-left border-collapse table-auto";
+
+      // Header Row Assembly
+      let thead = document.createElement("thead");
+      thead.className = "bg-gray-100 text-gray-700 sticky-header font-bold text-[10px] uppercase tracking-wider border-b border-gray-300";
+      
+      let headerRow = document.createElement("tr");
+      
+      // Checkbox Master Column Element
+      let thCheck = document.createElement("th");
+      thCheck.className = "p-2 bg-gray-100 text-center sticky-header z-30 border-r border-gray-200 w-8";
+      let masterCheckbox = document.createElement("input");
+      masterCheckbox.type = "checkbox";
+      masterCheckbox.className = "rounded text-blue-600 border-gray-300 h-3 w-3 cursor-pointer";
+      
+      // Determine state of master checkbox trigger
+      let matchCount = 0;
+      fullyFilteredRows.forEach(item => {
+        if (highlightedRowIndices.includes(item.trueIndex)) matchCount++;
+      });
+      masterCheckbox.checked = fullyFilteredRows.length > 0 && matchCount === fullyFilteredRows.length;
+      
+      masterCheckbox.onchange = function() {
+        let isChecked = this.checked;
+        fullyFilteredRows.forEach(item => {
+          let idx = item.trueIndex;
+          if (isChecked) {
+            if (!highlightedRowIndices.includes(idx)) highlightedRowIndices.push(idx);
+          } else {
+            highlightedRowIndices = highlightedRowIndices.filter(v => v !== idx);
+          }
+        });
+        evaluateFormButtonControlsState();
+        recalculateActiveViewsAndLedgers();
+      };
+      thCheck.appendChild(masterCheckbox);
+      headerRow.appendChild(thCheck);
+
+      rawTableColumns.forEach(col => {
+        if (!col.visible) return;
+        let th = document.createElement("th");
+        th.className = "p-2 font-bold whitespace-nowrap bg-gray-100 border-r border-gray-200 text-gray-700";
+        th.innerText = col.label;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+
+      // Search Inputs Strip Header Row
+      if (!isSearchFilterCollapsed) {
+        let searchRow = document.createElement("tr");
+        searchRow.className = "bg-gray-50/80 border-b border-gray-200";
+        
+        let tdBlankCheck = document.createElement("td");
+        tdBlankCheck.className = "p-1 bg-gray-50 text-center border-r border-gray-100";
+        searchRow.appendChild(tdBlankCheck);
+
+        rawTableColumns.forEach(col => {
+          if (!col.visible) return;
+          let td = document.createElement("td");
+          td.className = "p-1 border-r border-gray-100";
+          
+          let input = document.createElement("input");
+          input.type = "text";
+          input.placeholder = `🔍 Filter...`;
+          input.value = inlineTableFilters[col.id] || "";
+          input.className = "w-full border border-gray-300 rounded px-1 py-0.5 text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500 font-normal text-gray-800";
+          
+          input.oninput = function() {
+            inlineTableFilters[col.id] = this.value;
+            // Clear selections when searches mutate view to avoid off-screen indices references
+            highlightedRowIndices = [];
+            evaluateFormButtonControlsState();
+            
+            // Retain absolute text focus handle smoothly via deferred rendering call loops
+            debounceInlineFiltering(() => {
+              recalculateActiveViewsAndLedgers();
+            }, 300);
+          };
+          
+          td.appendChild(input);
+          searchRow.appendChild(td);
+        });
+        thead.appendChild(searchRow);
+      }
+      table.appendChild(thead);
+
+      // Body Row Assembly
+      let tbody = document.createElement("tbody");
+      tbody.className = "divide-y divide-gray-200 bg-white font-mono text-[11px] text-gray-900";
+
+      if (fullyFilteredRows.length === 0) {
+        let emptyRow = document.createElement("tr");
+        let emptyTd = document.createElement("td");
+        emptyTd.colSpan = rawTableColumns.filter(c => c.visible).length + 1;
+        emptyTd.className = "p-8 text-center text-gray-400 font-sans italic";
+        emptyTd.innerText = "No itemized records correspond to the criteria selected.";
+        emptyRow.appendChild(emptyTd);
+        tbody.appendChild(emptyRow);
+      } else {
+        fullyFilteredRows.forEach(item => {
+          let rowData = item.row;
+          let trueIdx = item.trueIndex;
+          let isHighlighted = highlightedRowIndices.includes(trueIdx);
+
+          let tr = document.createElement("tr");
+          tr.className = `transition-colors cursor-pointer select-none ${isHighlighted ? 'bg-amber-100/80 font-medium hover:bg-amber-200/70' : 'hover:bg-slate-50'}`;
+          
+          // Selection logic rewrite: click toggles the current row context within selection matrix
+          tr.onclick = function(e) {
+            // Prevent tag routing interference on explicit checkbox target operations
+            if (e.target.type === 'checkbox') return;
+            
+            toggleRowHighlightState(trueIdx);
+          };
+
+          // Checkbox Column Cell
+          let tdCheck = document.createElement("td");
+          tdCheck.className = "p-2 text-center border-r border-gray-200 w-8";
+          let rowCheck = document.createElement("input");
+          rowCheck.type = "checkbox";
+          rowCheck.checked = isHighlighted;
+          rowCheck.className = "rounded text-blue-600 border-gray-300 h-3 w-3 cursor-pointer";
+          rowCheck.onchange = function() {
+            toggleRowHighlightState(trueIdx);
+          };
+          tdCheck.appendChild(rowCheck);
+          tr.appendChild(tdCheck);
+
+          // Data Content Render Blocks
+          rawTableColumns.forEach(col => {
+            if (!col.visible) return;
+            let td = document.createElement("td");
+            td.className = "p-2 whitespace-nowrap border-r border-gray-100 text-gray-800";
+            
+            // Format parameters contextually
+            let val = rowData[col.id];
+            if (col.id === 'rate' || col.id === 'amount') {
+              td.className += " text-right font-bold text-gray-700";
+              td.innerText = "R " + (parseFloat(val) || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            } else if (col.id === 'qty') {
+              td.className += " text-center font-semibold";
+              td.innerText = val;
+            } else if (col.id === 'audit') {
+              // Strictly avoid text wrapping in the audit column
+              td.className += " text-left text-slate-500 font-sans text-[10px]";
+              td.style.whiteSpace = "nowrap"; 
+              td.style.overflow = "hidden";
+              td.style.textOverflow = "ellipsis";
+              td.innerText = val || "";
+              td.title = val || ""; // Tooltip browser visualization handle fallback
+            } else {
+              td.innerText = val || "";
+            }
+            tr.appendChild(td);
           });
-        }
-      });
 
-      return structuralSubset;
+          tbody.appendChild(tr);
+        });
+      }
+      
+      table.appendChild(tbody);
+      outerGridWrapper.appendChild(table);
+      targetZone.appendChild(outerGridWrapper);
     }
 
-    // --- WORKSPACE VIEW RENDERING SWITCH CONTROLLER ---
-    function routeAndExecuteWorkspaceRefresh() {
-      const activeIdx = selectedPagesStore[activeNavContext];
-      const viewZone = document.getElementById("infoPaneContentZone");
-      const primaryTitle = document.getElementById("infoPaneTitle");
-
-      if (activeNavContext === "Programme") {
-        if (activeIdx === 0) {
-          primaryTitle.innerText = "Programme Level: Strategic Summary Matrix";
-          renderProgrammeStrategicSummaryMatrix(viewZone);
-        } else {
-          primaryTitle.innerText = "Programme Level: Financial Outlay Analytics";
-          renderProgrammeFinancialOutlayAnalytics(viewZone);
-        }
+    function toggleRowHighlightState(trueIdx) {
+      if (highlightedRowIndices.includes(trueIdx)) {
+        highlightedRowIndices = highlightedRowIndices.filter(v => v !== trueIdx);
       } else {
-        if (activeIdx === 0) {
-          primaryTitle.innerText = "Project Level: Operational Data Ledger";
-          renderProjectOperationalDataLedger(viewZone);
-        } else {
-          primaryTitle.innerText = "Project Level: Audit Matrix View";
-          renderProjectAuditMatrixView(viewZone);
-        }
+        highlightedRowIndices.push(trueIdx);
+      }
+      
+      // Context configuration checks for edit injection pipelines
+      if (highlightedRowIndices.length === 1) {
+        populateFormForEditing(highlightedRowIndices[0]);
+      } else {
+        evaluateFormButtonControlsState();
+      }
+      
+      recalculateActiveViewsAndLedgers();
+    }
+
+    // --- FALLBACK AGGREGATION TABLES FOR ADDITIONAL NAV CHANNELS ---
+    function renderMatrixAggregationFallback(filteredMeta, targetZone) {
+      let card = document.createElement("div");
+      card.className = "p-6 bg-white border border-gray-200 rounded-lg shadow-sm max-w-xl mx-auto mt-6 text-center";
+      card.innerHTML = `
+        <div class="text-[#003161] text-3xl mb-2"><i class="fa-solid fa-cubes"></i></div>
+        <h3 class="font-bold text-gray-700 text-sm mb-1 uppercase tracking-wide">${pageStructureConfig[activeNavContext][selectedPagesStore[activeNavContext]].name}</h3>
+        <p class="text-gray-500 font-sans mb-4 text-[11px]">Aggregating financial schema context summaries for ${filteredMeta.length} applicable rows in scope scope matrix...</p>
+        <div class="text-left font-mono bg-gray-50 border p-3 rounded text-[11px] max-h-48 overflow-y-auto custom-scrollbar">
+          ${filteredMeta.map(item => `• [${item.row.guid}] ${item.row.name} - R${(item.row.amount || 0).toFixed(2)}`).join('<br>')}
+        </div>
+      `;
+      targetZone.appendChild(card);
+    }
+
+    // Debounce wrapper utility pattern to retain operational focus
+    let debounceTimerId = null;
+    function debounceInlineFiltering(callback, delay) {
+      clearTimeout(debounceTimerId);
+      debounceTimerId = setTimeout(callback, delay);
+    }
+
+    // --- PANE VISIBILITY EXPANSION ENGINE MECHANICS ---
+    function collapsePane(paneId) {
+      const target = document.getElementById(paneId);
+      if (target) {
+        target.classList.add("collapsed-pane");
       }
     }
 
-    // --- RENDER SUITE 1: PROGRAMME LEVEL - STRATEGIC SUMMARY ---
-    function renderProgrammeStrategicSummaryMatrix(targetZone) {
-      const compilationDataset = obtainActiveFilteredDataSet();
-      
-      // Calculate aggregations dynamically
-      let aggregateCapitalExpenditure = 0;
-      let programVolumeMap = {};
-      
-      compilationDataset.forEach(row => {
-        aggregateCapitalExpenditure += row.amount;
-        programVolumeMap[row.mainProgramme] = (programVolumeMap[row.mainProgramme] || 0) + row.amount;
-      });
-
-      let container = document.createElement("div");
-      container.className = "flex flex-col gap-5 w-full h-full";
-
-      // KPI Widget Layout Outlines
-      container.innerHTML = `
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="bg-gradient-to-br from-[#003161] to-[#001F3F] text-white rounded-lg p-4 shadow border border-blue-900 flex flex-col justify-between">
-            <span class="text-[10px] font-bold uppercase tracking-widest text-blue-200">Aggregated Active Portfolio Capital</span>
-            <span class="text-xl font-bold tracking-tight mt-2 font-mono">R ${aggregateCapitalExpenditure.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
-            <div class="text-[9px] text-blue-300 mt-1 font-mono">Tracked Scope Size: ${compilationDataset.length} Segment Entries</div>
-          </div>
-          <div class="bg-white text-gray-700 rounded-lg p-4 shadow border border-gray-200 flex flex-col justify-between">
-            <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Main Focus Streams Assigned</span>
-            <span class="text-xl font-bold text-gray-800 tracking-tight mt-2 font-mono">${Object.keys(programVolumeMap).length} Branches</span>
-            <div class="w-full bg-gray-100 rounded-full h-1.5 mt-2 overflow-hidden">
-              <div class="bg-amber-500 h-1.5" style="width: 75%"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-lg border border-gray-200 shadow overflow-hidden flex flex-col flex-1">
-          <div class="bg-gray-50 border-b px-3 py-2 flex justify-between items-center">
-            <span class="font-bold text-gray-700 uppercase tracking-wider text-[10px]"><i class="fa-solid fa-chart-bar text-blue-800 mr-1"></i>Financial Allocation Apportionment Distribution Breakdown</span>
-          </div>
-          <div class="p-3 overflow-y-auto flex-1 custom-scrollbar">
-            <table class="w-full border-collapse text-left">
-              <thead>
-                <tr class="border-b border-gray-200 bg-gray-100/70 text-gray-500 uppercase font-bold tracking-wider text-[9px]">
-                  <th class="p-2">Main Strategic Cluster Programme</th>
-                  <th class="p-2 text-right">Sum of Allocated Resources</th>
-                  <th class="p-2 text-right">Proportional Weight</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100 text-xs text-gray-700">
-                ${Object.keys(programVolumeMap).map(key => {
-                  let amt = programVolumeMap[key];
-                  let ratio = aggregateCapitalExpenditure > 0 ? (amt / aggregateCapitalExpenditure * 100).toFixed(1) : 0;
-                  return `
-                    <tr class="hover:bg-gray-50/50">
-                      <td class="p-2 font-medium text-gray-900">${key}</td>
-                      <td class="p-2 text-right font-mono font-semibold">R ${amt.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</td>
-                      <td class="p-2 text-right font-mono text-amber-700 font-bold">${ratio}%</td>
-                    </tr>
-                  `;
-                }).join('')}
-                ${Object.keys(programVolumeMap).length === 0 ? '<tr><td colspan="3" class="p-8 text-center text-gray-400 italic">No operational data matches active target tracking boundaries.</td></tr>' : ''}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-      targetZone.appendChild(container);
+    function expandPane(paneId) {
+      const target = document.getElementById(paneId);
+      if (target) {
+        target.classList.remove("collapsed-pane");
+      }
     }
 
-    // --- RENDER SUITE 2: PROGRAMME LEVEL - FINANCIAL ANALYSIS ---
-    function renderProgrammeFinancialOutlayAnalytics(targetZone) {
-      const compilationDataset = obtainActiveFilteredDataSet();
+    // --- DRAG HANDLE DYNAMIC RESIZING STRUCTURAL HOOKS ---
+    function attachPaneResizeDynamics(resizerId, leftPaneId) {
+      const resizer = document.getElementById(resizerId);
+      const leftPane = document.getElementById(leftPaneId);
+      if (!resizer || !leftPane) return;
 
-      let categorySummaryMatrix = {};
-      compilationDataset.forEach(row => {
-        if (!categorySummaryMatrix[row.mainCategory]) {
-          categorySummaryMatrix[row.mainCategory] = { volume: 0, costTotal: 0 };
-        }
-        categorySummaryMatrix[row.mainCategory].volume += 1;
-        categorySummaryMatrix[row.mainCategory].costTotal += row.amount;
-      });
+      resizer.addEventListener('mousedown', initDragSequence);
 
-      let container = document.createElement("div");
-      container.className = "bg-white rounded-lg border border-gray-200 shadow overflow-hidden flex flex-col w-full h-full";
-      
-      container.innerHTML = `
-        <div class="bg-gray-50 border-b px-3 py-2">
-          <span class="font-bold text-gray-700 uppercase tracking-wider text-[10px]"><i class="fa-solid fa-receipt text-emerald-700 mr-1"></i>Expenditure Category Structural Profiling Matrix</span>
-        </div>
-        <div class="p-4 overflow-y-auto flex-1 custom-scrollbar flex flex-col gap-4">
-          <table class="w-full border-collapse text-left">
-            <thead>
-              <tr class="border-b border-gray-200 bg-gray-100/80 text-gray-500 uppercase font-bold tracking-wider text-[9px]">
-                <th class="p-2">Material Core Categorization</th>
-                <th class="p-2 text-center">Entry Row Counts</th>
-                <th class="p-2 text-right">Aggregated Budget Burden</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100 text-xs text-gray-700">
-              ${Object.keys(categorySummaryMatrix).map(catKey => {
-                let stats = categorySummaryMatrix[catKey];
-                return `
-                  <tr class="hover:bg-gray-50/50">
-                    <td class="p-2 font-medium text-gray-800">${catKey}</td>
-                    <td class="p-2 text-center font-mono">${stats.volume} lines</td>
-                    <td class="p-2 text-right font-mono font-bold text-emerald-800">R ${stats.costTotal.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</td>
-                  </tr>
-                `;
-              }).join('')}
-              ${Object.keys(categorySummaryMatrix).length === 0 ? '<tr><td colspan="3" class="p-8 text-center text-gray-400 italic">No structured classifications match active target boundaries.</td></tr>' : ''}
-            </tbody>
-          </table>
-        </div>
-      `;
-      targetZone.appendChild(container);
+      function initDragSequence(e) {
+        e.preventDefault();
+        resizer.classList.add('dragging');
+        document.addEventListener('mousemove', executeDragMovement);
+        document.addEventListener('mouseup', terminateDragSequence);
+      }
+
+      function executeDragMovement(e) {
+        let computeWidth = e.clientX - leftPane.getBoundingClientRect().left;
+        leftPane.style.width = computeWidth + 'px';
+      }
+
+      function terminateDragSequence() {
+        resizer.classList.remove('dragging');
+        document.removeEventListener('mousemove', executeDragMovement);
+        document.removeEventListener('mouseup', terminateDragSequence);
+      }
     }
 
-    // --- RENDER SUITE 3: PROJECT LEVEL - OPERATIONAL DATA LEDGER WITH STABLE SELECTION HIGHLIGHTS ---
-    function renderProjectOperationalDataLedger(targetZone) {
-      const activeRows = obtainActiveFilteredDataSet();
+    // Initialize layout dynamics loops
+    attachPaneResizeDynamics('resizer-secondaryNav', 'secondaryNavPane');
+    attachPaneResizeDynamics('resizer-dataInput', 'dataInputPane');
+    attachPaneResizeDynamics('resizer-information', 'informationPane');
 
-      let mainContainer = document.createElement("div");
-      mainContainer.className = "flex flex-col h-full w-full gap-3";
-
-      // Structural Search Toggle Strip Header layout block
-      let manipulationStrip = document.createElement("div");
-      manipulationStrip.className = "flex flex-wrap items-center justify-between gap-2 bg-gray-100 p-2 rounded-lg border border-gray-200 shrink-0";
-      
-      let filteringContextLabel = document
+    // Boot default routing execution
+    changeNavContext("Project");
+  </script>
+</body>
+</html>
