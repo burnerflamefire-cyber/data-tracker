@@ -39,7 +39,7 @@
       transition: background-color 0.15s;
     }
     .pane-resizer:hover, .pane-resizer.dragging {
-      background-color: #008069;
+      background-color: #003161;
     }
     /* Handle collapsed states elegantly */
     .pane-content {
@@ -59,44 +59,62 @@
 </head>
 <body class="h-screen flex flex-col overflow-hidden text-gray-800 antialiased select-none text-xs">
 
-  <header class="bg-[#008069] text-white px-4 py-2.5 shadow-md flex justify-between items-center shrink-0 z-20">
+  <header class="bg-[#003161] text-white px-4 py-2.5 shadow-md flex justify-between items-center shrink-0 z-20 border-b-2 border-[#16404D]">
     <div class="flex items-center gap-3">
-      <div class="bg-white text-[#008069] rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shadow shrink-0">
+      <div class="bg-white text-[#003161] rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shadow shrink-0">
         <i class="fa-solid fa-layer-group"></i>
       </div>
       <div>
         <h1 class="font-bold text-base leading-tight tracking-wide">Project Data Tracker</h1>
         <div class="flex items-center gap-2 mt-0.5">
-          <p id="userBadge" class="text-[10px] text-teal-100 opacity-90"></p>
-          <div id="authStatusPanel" class="bg-teal-900/60 border border-teal-700/50 rounded px-1.5 py-0.5 text-[9px] font-mono inline-flex items-center gap-1 shadow-inner">
-            <span id="authStatusText" class="text-teal-200"><i class="fa-solid fa-circle-notch animate-spin mr-0.5"></i>Connecting System Auth...</span>
-            <span id="authUidDisplay" class="text-white hidden ml-1 pl-1 border-l border-teal-700"></span>
+          <p id="userBadge" class="text-[10px] text-blue-100 opacity-90"></p>
+          <div id="authStatusPanel" class="bg-blue-950/60 border border-blue-700/50 rounded px-1.5 py-0.5 text-[9px] font-mono inline-flex items-center gap-1 shadow-inner">
+            <span id="authStatusText" class="text-blue-200"><i class="fa-solid fa-circle-notch animate-spin mr-0.5"></i>Connecting System Auth...</span>
+            <span id="authUidDisplay" class="text-white hidden ml-1 pl-1 border-l border-blue-700"></span>
           </div>
         </div>
       </div>
     </div>
     
-    <div id="headerDetailsExtensionZone" class="flex items-center gap-2 text-teal-100 font-mono text-[11px] bg-teal-900/30 px-3 py-1.5 rounded-md border border-teal-700/30">
-      <i class="fa-solid fa-cubes"></i> Environment Active
+    <div id="headerDetailsExtensionZone" class="flex flex-wrap items-center gap-x-4 gap-y-1 text-blue-100 font-mono text-[11px] bg-blue-950/40 px-3 py-1.5 rounded-md border border-blue-800/60 shadow-inner">
+      <div class="flex items-center gap-1">
+        <i class="fa-solid fa-calendar-days text-[#A6CDC6]"></i>
+        <span>FY: <strong id="fyDisplay" class="text-white font-bold">--/--</strong></span>
+      </div>
+      <div class="h-3 border-l border-blue-800 hidden sm:block"></div>
+      <div class="flex items-center gap-1">
+        <i class="fa-solid fa-chart-pie text-[#A6CDC6]"></i>
+        <span>Period: <strong id="fqDisplay" class="text-white font-bold">--</strong></span>
+      </div>
+      <div class="h-3 border-l border-blue-800 hidden sm:block"></div>
+      <div class="flex items-center gap-1">
+        <i class="fa-solid fa-hourglass-half text-[#A6CDC6]"></i>
+        <span>Elapsed: <strong id="fyPercentDisplay" class="text-white font-bold">--%</strong></span>
+      </div>
+      <div class="h-3 border-l border-blue-800 hidden md:block"></div>
+      <div class="flex items-center gap-1">
+        <i class="fa-solid fa-clock text-[#A6CDC6]"></i>
+        <span>Countdown: <strong id="fyCountdownDisplay" class="text-white font-bold">--d --h</strong></span>
+      </div>
     </div>
   </header>
 
   <div class="flex-1 flex overflow-hidden relative w-full">
     
-    <div id="primaryNavPane" class="w-12 bg-slate-900 flex flex-col items-center py-4 gap-6 shrink-0 z-10 border-r border-slate-800 shadow-xl">
-      <button onclick="toggleSecondaryNav('Programme')" id="btnNavProgramme" class="text-slate-400 hover:text-white transition-colors py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-slate-800 w-full">
+    <div id="primaryNavPane" class="w-12 bg-[#001F3F] flex flex-col items-center py-4 gap-6 shrink-0 z-10 border-r border-blue-950 shadow-xl">
+      <button onclick="toggleSecondaryNav('Programme')" id="btnNavProgramme" class="text-blue-300/70 hover:text-white transition-all py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-[#003161]/50 w-full border-l-2 border-transparent">
         <span class="vertical-text font-bold tracking-widest text-[11px] uppercase"><i class="fa-solid fa-grip-vertical mr-1.5 rotate-90"></i> Programme Level</span>
       </button>
-      <div class="w-8 border-b border-slate-800"></div>
-      <button onclick="toggleSecondaryNav('Project')" id="btnNavProject" class="text-slate-400 hover:text-white transition-colors py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-slate-800 w-full">
+      <div class="w-8 border-b border-blue-950"></div>
+      <button onclick="toggleSecondaryNav('Project')" id="btnNavProject" class="text-blue-300/70 hover:text-white transition-all py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-[#003161]/50 w-full border-l-2 border-transparent">
         <span class="vertical-text font-bold tracking-widest text-[11px] uppercase"><i class="fa-solid fa-diagram-project mr-1.5 rotate-90"></i> Project Level</span>
       </button>
     </div>
 
-    <div id="secondaryNavPane" class="bg-slate-800 border-r border-slate-700 text-slate-200 flex flex-col shrink-0 relative collapsed-pane" style="width: 200px; min-width: 140px; max-width: 350px;">
+    <div id="secondaryNavPane" class="bg-[#0F2027] border-r border-slate-800 text-slate-200 flex flex-col shrink-0 relative collapsed-pane" style="width: 200px; min-width: 140px; max-width: 350px;">
       <div class="pane-content flex flex-col h-full w-full overflow-hidden">
-        <div class="p-3 border-b border-slate-700 flex justify-between items-center bg-slate-800/50">
-          <h2 id="secondaryNavHeading" class="font-bold text-slate-300 uppercase tracking-wider text-[10px]">Pages</h2>
+        <div class="p-3 border-b border-slate-800 flex justify-between items-center bg-black/20">
+          <h2 id="secondaryNavHeading" class="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Pages</h2>
           <button onclick="collapsePane('secondaryNavPane')" class="text-slate-400 hover:text-white p-1"><i class="fa-solid fa-chevron-left"></i></button>
         </div>
         <div id="secondaryNavButtonsZone" class="p-2 flex flex-col gap-1 overflow-y-auto custom-scrollbar flex-1">
@@ -109,7 +127,7 @@
       <div class="pane-content flex flex-col h-full w-full overflow-hidden">
         <div class="p-3 border-b bg-gray-50 flex justify-between items-center">
           <div class="flex items-center gap-1.5 font-bold text-gray-700 uppercase tracking-wider text-[10px]">
-            <i class="fa-solid fa-pen-to-square text-[#008069]"></i> Data Input Engine
+            <i class="fa-solid fa-pen-to-square text-[#003161]"></i> Data Input Engine
           </div>
           <button onclick="collapsePane('dataInputPane')" class="text-gray-400 hover:text-gray-600 p-1"><i class="fa-solid fa-chevron-left"></i></button>
         </div>
@@ -126,7 +144,7 @@
       <div class="pane-content flex flex-col h-full w-full overflow-hidden">
         <div class="p-3 border-b bg-gray-50 flex justify-between items-center">
           <div class="flex items-center gap-1.5 font-bold text-gray-700 uppercase tracking-wider text-[10px]">
-            <i class="fa-solid fa-circle-info text-blue-600"></i> Analytics &amp; Ledger Information
+            <i class="fa-solid fa-circle-info text-blue-800"></i> Analytics &amp; Ledger Information
           </div>
           <button onclick="collapsePane('informationPane')" class="text-gray-400 hover:text-gray-600 p-1"><i class="fa-solid fa-expand"></i></button>
         </div>
@@ -143,7 +161,7 @@
       <div class="pane-content flex flex-col h-full w-full overflow-hidden">
         <div class="p-3 border-b bg-gray-100/80 flex justify-between items-center">
           <div class="flex items-center gap-1.5 font-bold text-gray-700 uppercase tracking-wider text-[10px]">
-            <i class="fa-solid fa-filter text-amber-600"></i> Global Filters
+            <i class="fa-solid fa-filter text-amber-700"></i> Global Filters
           </div>
           <button onclick="collapsePane('filtersPane')" class="text-gray-400 hover:text-gray-600 p-1"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
@@ -187,7 +205,7 @@
         const user = userCredential.user;
         window.globalUserUid = user.uid;
 
-        authStatusPanel.className = "bg-[#004d3e] border border-[#00a884] rounded px-1.5 py-0.5 text-[9px] font-mono inline-flex items-center gap-1 shadow-md";
+        authStatusPanel.className = "bg-[#002244] border border-[#004488] rounded px-1.5 py-0.5 text-[9px] font-mono inline-flex items-center gap-1 shadow-md";
         authStatusText.innerHTML = "Connected ✔";
         authUidDisplay.innerText = "UID: " + window.globalUserUid.substring(0,5);
         authUidDisplay.classList.remove("hidden");
@@ -200,6 +218,56 @@
         authStatusText.innerHTML = "Auth Broken ✘";
       });
 
+    // --- FINANCIAL METRICS RECKONING ENGINE ---
+    function updateGovernmentFinancialMetrics() {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      
+      let fyStartYear, fyEndYear;
+      
+      // Government financial cycle baseline setup: April 1st of current cycle to March 31st of following year
+      if (now.getMonth() >= 3) { // April onwards
+        fyStartYear = currentYear;
+        fyEndYear = currentYear + 1;
+      } else { // Jan, Feb, March
+        fyStartYear = currentYear - 1;
+        fyEndYear = currentYear;
+      }
+      
+      const fyStartDate = new Date(fyStartYear, 3, 1, 0, 0, 0); // April 1st
+      const fyEndDate = new Date(fyEndYear, 3, 31, 23, 59, 59); // March 31st
+      
+      // Calculate active Quarter designation
+      let quarter = "Q1";
+      const monthIndex = now.getMonth(); // 0-indexed
+      if (monthIndex >= 3 && monthIndex <= 5) quarter = "Q1";      // Apr - Jun
+      else if (monthIndex >= 6 && monthIndex <= 8) quarter = "Q2"; // Jul - Sep
+      else if (monthIndex >= 9 && monthIndex <= 11) quarter = "Q3"; // Oct - Dec
+      else if (monthIndex >= 0 && monthIndex <= 2) quarter = "Q4";  // Jan - Mar
+      
+      // Percentage Elapsed calculations
+      const totalDuration = fyEndDate - fyStartDate;
+      const progressDuration = now - fyStartDate;
+      let percentElapsed = ((progressDuration / totalDuration) * 100).toFixed(2);
+      if (percentElapsed < 0) percentElapsed = 0;
+      if (percentElapsed > 100) percentElapsed = 100;
+      
+      // Remaining delta countdown variables
+      const timeDelta = fyEndDate - now;
+      const daysRemaining = Math.floor(timeDelta / (1000 * 60 * 60 * 24));
+      const hoursRemaining = Math.floor((timeDelta % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      
+      // DOM Injection bindings
+      document.getElementById("fyDisplay").innerText = `${fyStartYear}/${fyEndYear.toString().substring(2)}`;
+      document.getElementById("fqDisplay").innerText = quarter;
+      document.getElementById("fyPercentDisplay").innerText = `${percentElapsed}%`;
+      document.getElementById("fyCountdownDisplay").innerText = `${daysRemaining}d ${hoursRemaining}h`;
+    }
+    
+    // Core Clock Initializer Initialization
+    updateGovernmentFinancialMetrics();
+    setInterval(updateGovernmentFinancialMetrics, 60000); // Compute fresh metrics every minute
+
     // --- STRUCTURAL SHELL INTERACTION CONTROLLER MECHANICS ---
     let activeNavContext = null;
 
@@ -208,6 +276,15 @@
       const pane = document.getElementById('secondaryNavPane');
       const heading = document.getElementById('secondaryNavHeading');
       const zone = document.getElementById('secondaryNavButtonsZone');
+      
+      const btnProgramme = document.getElementById('btnNavProgramme');
+      const btnProject = document.getElementById('btnNavProject');
+      
+      // Clear visual button indicator hooks
+      btnProgramme.classList.remove('bg-[#003161]', 'text-white', 'border-blue-400');
+      btnProject.classList.remove('bg-[#003161]', 'text-white', 'border-blue-400');
+      btnProgramme.classList.add('text-blue-300/70', 'border-transparent');
+      btnProject.classList.add('text-blue-300/70', 'border-transparent');
       
       if (activeNavContext === context && !pane.classList.contains('collapsed-pane')) {
         pane.classList.add('collapsed-pane');
@@ -219,17 +296,22 @@
       heading.innerText = `${context} Level Pages`;
       pane.classList.remove('collapsed-pane');
       
+      // Highlighting selected primary pillar anchor item
+      const activeBtn = context === 'Programme' ? btnProgramme : btnProject;
+      activeBtn.classList.remove('text-blue-300/70', 'border-transparent');
+      activeBtn.classList.add('bg-[#003161]', 'text-white', 'border-blue-400');
+      
       // Clear and insert functional page layout selection anchors
       zone.innerHTML = '';
       const dummyPages = ['Overview Matrix', 'Financial Engine Metrics', 'Performance Analytics', 'Audit Logging Ledger'];
       
       dummyPages.forEach((pageName, idx) => {
         const btn = document.createElement('button');
-        btn.className = "w-full text-left py-2 px-3 rounded text-[11px] text-slate-300 hover:bg-slate-700 hover:text-white transition flex items-center gap-2 border border-transparent hover:border-slate-600";
+        btn.className = "w-full text-left py-2 px-3 rounded text-[11px] text-slate-300 hover:bg-[#003161]/40 hover:text-white transition flex items-center gap-2 border border-transparent hover:border-slate-700/80";
         btn.innerHTML = `<i class="fa-solid fa-file-invoice text-slate-500 text-[10px]"></i> <span>${pageName}</span>`;
         btn.onclick = () => {
-          document.querySelectorAll('#secondaryNavButtonsZone button').forEach(b => b.classList.remove('bg-slate-900', 'text-white', 'border-slate-600'));
-          btn.classList.add('bg-slate-900', 'text-white', 'border-slate-600');
+          document.querySelectorAll('#secondaryNavButtonsZone button').forEach(b => b.classList.remove('bg-[#001F3F]', 'text-white', 'border-blue-800/80', 'font-semibold'));
+          btn.classList.add('bg-[#001F3F]', 'text-white', 'border-blue-800/80', 'font-semibold');
         };
         zone.appendChild(btn);
       });
@@ -238,6 +320,11 @@
     // Explicit Utility wrapper to enforce global component breakdown states
     function collapsePane(paneId) {
       document.getElementById(paneId).classList.add('collapsed-pane');
+      if(paneId === 'secondaryNavPane') {
+        document.getElementById('btnNavProgramme').classList.remove('bg-[#003161]', 'text-white', 'border-blue-400');
+        document.getElementById('btnNavProject').classList.remove('bg-[#003161]', 'text-white', 'border-blue-400');
+        activeNavContext = null;
+      }
     }
 
     function expandPane(paneId) {
