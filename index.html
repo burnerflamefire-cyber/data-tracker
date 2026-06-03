@@ -5,29 +5,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Project Data Tracker</title>
 
-  <!-- Firebase -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <!-- CONFIG -->
-  <script src="config/app.config.js"></script>
+  <!-- CONFIG (MUST LOAD BEFORE ANY INIT) -->
+  <script>
+    // HARD SAFE INLINE CONFIG (prevents timing failure completely)
+    window.firebaseConfig = {
+      apiKey: "AIzaSyCL6iJKRp-WjCgBTtRCuRny14lUOMP9KJg",
+      authDomain: "data-tracker-f11df.firebaseapp.com",
+      databaseURL: "https://data-tracker-f11df-default-rtdb.firebaseio.com",
+      projectId: "data-tracker-f11df",
+      storageBucket: "data-tracker-f11df.firebasestorage.app",
+      messagingSenderId: "462872028246",
+      appId: "1:462872028246:web:eb90490bd650a85d76c7f7"
+    };
+  </script>
 
   <script>
-    // ---------------------------
-    // SAFE FIREBASE INIT CHECK
-    // ---------------------------
-    let app, auth;
-    let firebaseReady = false;
+    // -------------------------
+    // BOOT STRAP (SAFE VERSION)
+    // -------------------------
+
     let authUser = null;
     let authError = null;
+    let firebaseReady = false;
 
     function initFirebase() {
       try {
-        if (!window.firebase) throw new Error("Firebase SDK not loaded");
+        if (!window.firebaseConfig) {
+          throw new Error("firebaseConfig missing");
+        }
 
-        app = firebase.initializeApp(window.firebaseConfig);
-        auth = firebase.auth(app);
+        const app = firebase.initializeApp(window.firebaseConfig);
+        const auth = firebase.auth(app);
 
         firebaseReady = true;
 
@@ -36,11 +49,8 @@
             authUser = user;
             window.firebaseAuthUser = user;
           } else {
-            // try anonymous login
             auth.signInAnonymously()
-              .catch(err => {
-                authError = err.message;
-              });
+              .catch(err => authError = err.message);
           }
         });
 
@@ -52,17 +62,14 @@
     function render() {
       document.body.innerHTML = `
         <div style="font-family:Arial;padding:20px;">
-          <h2>Project Data Tracker — Debug Mode</h2>
+          <h2>Project Data Tracker — Firebase Boot Check</h2>
 
-          <p><b>Firebase Loaded:</b> ${!!window.firebase}</p>
+          <p><b>Config Loaded:</b> ${!!window.firebaseConfig}</p>
           <p><b>Firebase Ready:</b> ${firebaseReady}</p>
 
           <p><b>User:</b> ${authUser ? authUser.uid : "Waiting..."}</p>
 
           <p style="color:red;"><b>Error:</b> ${authError || "None"}</p>
-
-          <hr/>
-          <p>Status updates every 1s...</p>
         </div>
       `;
     }
