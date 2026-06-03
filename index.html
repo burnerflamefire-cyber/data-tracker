@@ -193,6 +193,64 @@
                 <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Rollout FY</label>
                 <input type="text" id="inputRolloutFY" placeholder="e.g. 2026/27" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs font-mono">
               </div>
+              
+              <div class="border-t border-gray-200 pt-3 mt-1 flex flex-col gap-2.5">
+                <div>
+                  <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Main Category</label>
+                  <select id="inputMainCategory" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs bg-white">
+                    <option value="">Select Main Category...</option>
+                    <option value="Material Cycle Data">Material Cycle Data</option>
+                    <option value="Structural Engineering">Structural Engineering</option>
+                    <option value="Utility Automation">Utility Automation</option>
+                    <option value="Civil Works">Civil Works</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Sub Category</label>
+                  <select id="inputSubCategory" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs bg-white">
+                    <option value="">Select Sub Category...</option>
+                    <option value="Foundations">Foundations</option>
+                    <option value="Insulation">Insulation</option>
+                    <option value="Distribution Valves">Distribution Valves</option>
+                    <option value="Surfacing Layout">Surfacing Layout</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Free Text</label>
+                  <input type="text" id="inputFreeText" placeholder="Enter specifications or descriptive notes" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Unit</label>
+                    <input type="text" id="inputUnit" placeholder="e.g. Tons, Sqm" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Qty</label>
+                    <input type="number" id="inputQty" placeholder="0" oninput="calculateAmountEngine()" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs font-mono">
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Rate (ZAR)</label>
+                    <div class="relative">
+                      <span class="absolute left-2 top-1.5 text-gray-400 text-xs font-mono">R</span>
+                      <input type="number" id="inputRate" placeholder="0.00" oninput="calculateAmountEngine()" class="w-full border border-gray-300 rounded pl-5 pr-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs font-mono">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Amount (ZAR)</label>
+                    <div class="relative">
+                      <span class="absolute left-2 top-1.5 text-gray-400 text-xs font-mono">R</span>
+                      <input type="text" id="inputAmount" placeholder="0.00" readonly class="w-full border border-gray-300 bg-gray-50 rounded pl-5 pr-2 py-1.5 focus:outline-none text-xs font-mono text-gray-600">
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Date</label>
+                  <input type="date" id="inputDate" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs font-mono">
+                </div>
+              </div>
+
             </div>
           </div>
 
@@ -343,7 +401,8 @@
     const rawTableColumns = [
       { id: "guid", label: "Project GUID", visible: true, frozen: false },
       { id: "name", label: "Project Name", visible: true, frozen: false },
-      { id: "category", label: "Data Category", visible: true, frozen: false },
+      { id: "mainCategory", label: "Main Category", visible: true, frozen: false },
+      { id: "subCategory", label: "Sub Category", visible: true, frozen: false },
       { id: "freetext", label: "Free Text", visible: true, frozen: false },
       { id: "unit", label: "Unit", visible: true, frozen: false },
       { id: "qty", label: "Qty", visible: true, frozen: false },
@@ -354,11 +413,11 @@
     ];
 
     let rawTableRows = [
-      { guid: "PRJ-0824", name: "Klipfontein Hospital Upgrade", category: "Material Cycle Data", freetext: "Grade A Reinforced Steel Framework Foundations", unit: "Tons", qty: 45, rate: 14500, visible: true, date: "2026-05-12", audit: "System Auto-Ingest Base Schema" },
-      { guid: "PRJ-1192", name: "Mitchells Plain Education Hub", category: "Structural Engineering", freetext: "Double-Glazed Energy Efficient Insulation Units", unit: "Sqm", qty: 220, rate: 1850, visible: true, date: "2026-04-29", audit: "Operator Review Verification" },
-      { guid: "PRJ-0431", name: "George Bulk Water Infrastructure", category: "Utility Automation", freetext: "High-Pressure Hydraulic Submersible Distribution Valves", unit: "Units", qty: 12, rate: 42300, visible: true, date: "2026-05-20", audit: "API Payload Modification Execution" },
-      { guid: "PRJ-0954", name: "Khayelitsha Athletics Facility", category: "Civil Works", freetext: "Synthetic Premium Polyurethane Surfacing Layout", unit: "Sqm", qty: 1200, rate: 650, visible: true, date: "2026-06-01", audit: "Batch Script Verification Registry" },
-      { guid: "PRJ-0711", name: "Paarl Sustainable Housing Phase 2", category: "Material Cycle Data", freetext: "Pre-fabricated Eco-Lite Cellular Concrete Walling", unit: "Blocks", qty: 8500, rate: 48, visible: true, date: "2026-03-15", audit: "System Auto-Ingest Base Schema" }
+      { guid: "PRJ-0824", name: "Klipfontein Hospital Upgrade", mainCategory: "Material Cycle Data", subCategory: "Foundations", freetext: "Grade A Reinforced Steel Framework Foundations", unit: "Tons", qty: 45, rate: 14500, amount: 652500, visible: true, date: "2026-05-12", audit: "System Auto-Ingest Base Schema" },
+      { guid: "PRJ-1192", name: "Mitchells Plain Education Hub", mainCategory: "Structural Engineering", subCategory: "Insulation", freetext: "Double-Glazed Energy Efficient Insulation Units", unit: "Sqm", qty: 220, rate: 1850, amount: 407000, visible: true, date: "2026-04-29", audit: "Operator Review Verification" },
+      { guid: "PRJ-0431", name: "George Bulk Water Infrastructure", mainCategory: "Utility Automation", subCategory: "Distribution Valves", freetext: "High-Pressure Hydraulic Submersible Distribution Valves", unit: "Units", qty: 12, rate: 42300, amount: 507600, visible: true, date: "2026-05-20", audit: "API Payload Modification Execution" },
+      { guid: "PRJ-0954", name: "Khayelitsha Athletics Facility", mainCategory: "Civil Works", subCategory: "Surfacing Layout", freetext: "Synthetic Premium Polyurethane Surfacing Layout", unit: "Sqm", qty: 1200, rate: 650, amount: 780000, visible: true, date: "2026-06-01", audit: "Batch Script Verification Registry" },
+      { guid: "PRJ-0711", name: "Paarl Sustainable Housing Phase 2", mainCategory: "Material Cycle Data", subCategory: "Foundations", freetext: "Pre-fabricated Eco-Lite Cellular Concrete Walling", unit: "Blocks", qty: 8500, rate: 48, amount: 408000, visible: true, date: "2026-03-15", audit: "System Auto-Ingest Base Schema" }
     ];
 
     let currentTableFilters = {};
@@ -466,6 +525,14 @@
       }
     }
 
+    /* CALCULATION AUXILIARY ENGINE */
+    function calculateAmountEngine() {
+      const qty = parseFloat(document.getElementById('inputQty').value) || 0;
+      const rate = parseFloat(document.getElementById('inputRate').value) || 0;
+      const total = qty * rate;
+      document.getElementById('inputAmount').value = total.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
     // --- RAW DATA ENGINE GENERATOR ENGINE (GRID VIEWPORT DETACHED) ---
     function renderRawDataTableEngine() {
       const targetZone = document.getElementById("infoPaneContentZone");
@@ -549,69 +616,49 @@
             <tbody class="divide-y divide-gray-200 font-mono text-[10px]">
       `;
 
-      let visibleRowsCounter = 0;
-      rawTableRows.forEach((row) => {
-        if (!row.visible) return;
-
-        let passesFilter = true;
-        for (let key in currentTableFilters) {
-          if (currentTableFilters[key]) {
-            let filterValue = currentTableFilters[key].toLowerCase();
-            let targetValue = (row[key] !== undefined ? row[key] : '').toString().toLowerCase();
-            if (!targetValue.includes(filterValue)) {
-              passesFilter = false;
-              break;
-            }
-          }
-        }
-
-        if (!passesFilter) return;
-        visibleRowsCounter++;
-
-        const generatedAmt = row.qty * row.rate;
-
-        dynamicHTML += `<tr class="hover:bg-slate-50 transition-colors">`;
-
-        let rowLeftOffsetAccumulator = 0;
-        rawTableColumns.forEach((col) => {
-          if (!col.visible) return;
-
-          let stickyClass = "";
-          let inlineStyle = "";
-          if (col.frozen) {
-            stickyClass = "sticky-column border-r border-gray-300/50 shadow-sm";
-            inlineStyle = `style="left: ${rowLeftOffsetAccumulator}px;"`;
-            rowLeftOffsetAccumulator += 120;
-          }
-
-          let displayCellContent = "";
-          if (col.id === "amount") {
-            displayCellContent = "R " + generatedAmt.toLocaleString('en-ZA');
-          } else if (col.id === "rate") {
-            displayCellContent = "R " + row.rate.toLocaleString('en-ZA');
-          } else {
-            displayCellContent = row[col.id] !== undefined ? row[col.id] : "";
-          }
-
-          dynamicHTML += `
-            <td ${inlineStyle} class="p-2 border-b border-gray-200 bg-white truncate max-w-[180px] ${stickyClass}">
-              ${displayCellContent}
-            </td>
-          `;
+      let activeRowRenderingList = rawTableRows.filter(row => {
+        if (!row.visible) return false;
+        return Object.keys(currentTableFilters).every(key => {
+          if (!currentTableFilters[key]) return true;
+          const cellVal = String(row[key] || '').toLowerCase();
+          return cellVal.includes(currentTableFilters[key].toLowerCase());
         });
-
-        dynamicHTML += `</tr>`;
       });
 
-      if (visibleRowsCounter === 0) {
-        let totalActiveCols = rawTableColumns.filter(c => c.visible).length;
+      if (activeRowRenderingList.length === 0) {
+        let spanCount = rawTableColumns.filter(c => c.visible).length;
         dynamicHTML += `
           <tr>
-            <td colspan="${totalActiveCols}" class="p-8 text-center text-gray-400 bg-gray-50 italic">
-              No matching ledger entry chains identified matching criteria. Reset configurations to track data elements.
+            <td colspan="${spanCount}" class="p-8 text-center text-gray-400 font-sans">
+              <i class="fa-solid fa-folder-open text-xl block mb-2 opacity-50"></i> No historical rows match current filtration arrays.
             </td>
-          </tr>
-        `;
+          </tr>`;
+      } else {
+        activeRowRenderingList.forEach(row => {
+          dynamicHTML += `<tr class="hover:bg-slate-50 transition-colors">`;
+          let rowLeftOffsetAccumulator = 0;
+          
+          rawTableColumns.forEach(col => {
+            if (!col.visible) return;
+            
+            let stickyClass = "";
+            let inlineStyle = "";
+            if (col.frozen) {
+              stickyClass = "sticky-column border-r border-gray-200";
+              inlineStyle = `style="left: ${rowLeftOffsetAccumulator}px;"`;
+              rowLeftOffsetAccumulator += 120;
+            }
+
+            let renderedValue = row[col.id] !== undefined ? row[col.id] : "";
+            
+            if (col.id === "rate" || col.id === "amount") {
+              renderedValue = "R " + parseFloat(renderedValue || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            dynamicHTML += `<td ${inlineStyle} class="p-2 border-b border-gray-100 truncate max-w-[200px] ${stickyClass}">${renderedValue}</td>`;
+          });
+          dynamicHTML += `</tr>`;
+        });
       }
 
       dynamicHTML += `
@@ -624,52 +671,48 @@
     }
 
     function toggleTableDropdown(dropdownId) {
-      const el = document.getElementById(dropdownId);
-      if(!el) return;
-      const isHidden = el.classList.contains("hidden");
-      
-      document.getElementById("colToggleDropdown")?.classList.add("hidden");
-      document.getElementById("rowToggleDropdown")?.classList.add("hidden");
-      
-      if(isHidden) el.classList.remove("hidden");
+      const drop = document.getElementById(dropdownId);
+      if(drop) drop.classList.toggle('hidden');
     }
 
-    function toggleColumnVisibility(index) {
-      rawTableColumns[index].visible = !rawTableColumns[index].visible;
+    function toggleColumnVisibility(idx) {
+      rawTableColumns[idx].visible = !rawTableColumns[idx].visible;
       renderRawDataTableEngine();
     }
 
-    function toggleRowVisibility(index) {
-      rawTableRows[index].visible = !rawTableRows[index].visible;
+    function toggleRowVisibility(idx) {
+      rawTableRows[idx].visible = !rawTableRows[idx].visible;
       renderRawDataTableEngine();
     }
 
-    function toggleColumnFreezeAnchor(index) {
-      rawTableColumns[index].frozen = !rawTableColumns[index].frozen;
+    function toggleColumnFreezeAnchor(idx) {
+      rawTableColumns[idx].frozen = !rawTableColumns[idx].frozen;
       renderRawDataTableEngine();
     }
 
-    function applyColumnTextFilter(columnId, value) {
-      currentTableFilters[columnId] = value;
+    function applyColumnTextFilter(colId, textStr) {
+      currentTableFilters[colId] = textStr;
       renderRawDataTableEngine();
     }
 
     function clearAllTableFilters() {
       currentTableFilters = {};
-      rawTableColumns.forEach(c => c.visible = true);
       rawTableRows.forEach(r => r.visible = true);
+      rawTableColumns.forEach(c => c.visible = true);
       renderRawDataTableEngine();
     }
 
     function exportTableToExcelFormat() {
-      alert("System Action: Commencing Structured XML/CSV Spreadsheet stream extraction for active ledger dataset rows.");
+      alert("System Action: Intercepting structural UI context metrics array to package tabular dataset schema into structured CSV / spreadsheet runtime.");
     }
 
-    document.addEventListener("click", function(e) {
-      if (!e.target.closest('.relative')) {
-        document.getElementById("colToggleDropdown")?.classList.add("hidden");
-        document.getElementById("rowToggleDropdown")?.classList.add("hidden");
-      }
+    document.addEventListener('click', function(e) {
+      ['colToggleDropdown', 'rowToggleDropdown'].forEach(id => {
+        const drop = document.getElementById(id);
+        if (drop && !drop.classList.contains('hidden') && !drop.parentElement.contains(e.target)) {
+          drop.classList.add('hidden');
+        }
+      });
     });
   </script>
 </body>
