@@ -15,8 +15,8 @@
   
   <style>
     body {
-      background-color: #efeae2;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f8fafc;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
     .custom-scrollbar::-webkit-scrollbar {
@@ -24,284 +24,333 @@
       height: 6px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-      background-color: rgba(0, 0, 0, 0.18);
+      background-color: rgba(100, 116, 139, 0.2);
       border-radius: 10px;
     }
     .active-nav-tab {
-      background-color: #004d3e !important;
-      color: #ffffff !important;
-      border-color: #ffffff !important;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+      background-color: #ffffff !important;
+      color: #4f46e5 !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
     }
     #authStatusPanel {
       transition: all 0.2s ease-in-out;
     }
     .auth-panel-success {
-      background-color: #004d3e !important;
-      border-color: #00a884 !important;
+      background-color: #065f46 !important;
+      border-color: #34d399 !important;
     }
     .auth-panel-failed {
-      background-color: #721c24 !important;
-      border-color: #f5c6cb !important;
+      background-color: #991b1b !important;
+      border-color: #fca5a5 !important;
     }
   </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden text-gray-800 antialiased select-none">
+<body class="h-screen flex flex-col overflow-hidden text-slate-800 antialiased select-none">
 
-  <header class="bg-[#008069] text-white px-3 py-2 sm:px-4 sm:py-3 shadow-md flex flex-col gap-2 shrink-0 z-20">
+  <header class="bg-slate-900 text-white px-4 py-3 sm:px-6 sm:py-4 shadow-xl flex flex-col gap-3 shrink-0 z-20 border-b border-slate-800">
     <div class="flex justify-between items-center">
-      <div class="flex items-center gap-2.5">
-        <div class="bg-white text-[#008069] rounded-full w-9 h-9 flex items-center justify-center font-bold text-lg shadow">
+      <div class="flex items-center gap-3">
+        <div class="bg-indigo-600 text-white rounded-xl w-10 h-10 flex items-center justify-center font-bold text-xl shadow-lg shadow-indigo-500/20 ring-2 ring-indigo-400/20">
           <i class="fa-solid fa-square-poll-horizontal"></i>
         </div>
         <div>
-          <h1 class="font-bold text-base sm:text-lg leading-tight">QuickTask Polls</h1>
-          <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-            <p id="userBadge" class="text-[11px] text-teal-100 opacity-90 cursor-pointer hover:underline"></p>
-            <div id="authStatusPanel" class="bg-teal-900/60 border border-teal-700 rounded px-1.5 py-0.5 text-[10px] font-mono inline-flex items-center gap-1 shadow-inner">
-              <span id="authStatusText" class="text-teal-200"><i class="fa-solid fa-circle-notch animate-spin mr-0.5"></i>Connecting Auth...</span>
-              <span id="authUidDisplay" class="text-white hidden ml-1 pl-1 border-l border-teal-700"></span>
+          <h1 class="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r cb from-white to-slate-300 bg-clip-text text-transparent">QuickTask Polls</h1>
+          <div class="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 mt-0.5">
+            <p id="userBadge" class="text-xs text-slate-400 hover:text-indigo-400 cursor-pointer transition flex items-center"></p>
+            <div id="authStatusPanel" class="bg-slate-800 border border-slate-700 rounded-full px-2.5 py-0.5 text-[10px] font-mono inline-flex items-center gap-1.5 shadow-inner">
+              <span id="authStatusText" class="text-slate-400"><i class="fa-solid fa-circle-notch animate-spin mr-1"></i>Connecting Auth...</span>
+              <span id="authUidDisplay" class="text-indigo-300 hidden ml-1 pl-1.5 border-l border-slate-700"></span>
             </div>
           </div>
         </div>
       </div>
       
-      <div class="flex items-center gap-2">
-        <select id="projectSelector" class="bg-teal-800 text-white text-xs font-semibold rounded-lg px-2.5 py-1.5 border border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-400 cursor-pointer">
+      <div class="flex items-center gap-2.5">
+        <select id="projectSelector" class="bg-slate-800 text-slate-200 text-xs font-semibold rounded-xl px-3 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer transition">
           <option value="General">📁 General</option>
           <option value="Marketing">📁 Marketing</option>
           <option value="Development">📁 Development</option>
           <option value="Operations">📁 Operations</option>
         </select>
         
-        <button id="openModalBtn" disabled class="bg-gray-400 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1.5 cursor-not-allowed opacity-60">
-          <i class="fa-solid fa-lock text-[10px]"></i> <span>New Poll</span>
+        <button id="openModalBtn" disabled class="bg-slate-700 text-slate-400 font-bold text-xs px-4 py-2 rounded-xl shadow-sm transition flex items-center gap-2 cursor-not-allowed opacity-50">
+          <i class="fa-solid fa-lock text-[11px]"></i> <span>New Poll</span>
         </button>
       </div>
     </div>
 
-    <nav class="flex bg-teal-900/40 p-1 rounded-lg border border-teal-700/50 gap-1.5 text-xs font-semibold mt-1">
-      <button onclick="switchView('feed')" id="tab-feed" class="flex-1 py-2 rounded-md text-center border-b-2 border-transparent text-teal-100 bg-teal-800/40 hover:bg-teal-800/80 hover:text-white transition duration-150 flex items-center justify-center gap-1.5 active:scale-[0.99]">
+    <div class="max-w-md w-full bg-slate-950/60 p-1 rounded-xl border border-slate-800 flex gap-1 text-xs font-medium mt-1">
+      <button onclick="switchView('feed')" id="tab-feed" class="flex-1 py-2 rounded-lg text-center text-slate-400 hover:bg-slate-800/50 hover:text-white transition duration-150 flex items-center justify-center gap-1.5 active:scale-[0.98]">
         <i class="fa-solid fa-comments"></i> Feed
       </button>
-      <button onclick="switchView('dashboard')" id="tab-dashboard" class="flex-1 py-2 rounded-md text-center border-b-2 border-transparent text-teal-100 bg-teal-800/40 hover:bg-teal-800/80 hover:text-white transition duration-150 flex items-center justify-center gap-1.5 active:scale-[0.99]">
+      <button onclick="switchView('dashboard')" id="tab-dashboard" class="flex-1 py-2 rounded-lg text-center text-slate-400 hover:bg-slate-800/50 hover:text-white transition duration-150 flex items-center justify-center gap-1.5 active:scale-[0.98]">
         <i class="fa-solid fa-chart-line"></i> Dashboard
       </button>
-      <button onclick="switchView('table')" id="tab-table" class="flex-1 py-2 rounded-md text-center border-b-2 border-transparent text-teal-100 bg-teal-800/40 hover:bg-teal-800/80 hover:text-white transition duration-150 flex items-center justify-center gap-1.5 active:scale-[0.99]">
+      <button onclick="switchView('table')" id="tab-table" class="flex-1 py-2 rounded-lg text-center text-slate-400 hover:bg-slate-800/50 hover:text-white transition duration-150 flex items-center justify-center gap-1.5 active:scale-[0.98]">
         <i class="fa-solid fa-table-list"></i> Ledger Grid
       </button>
-    </nav>
+    </div>
   </header>
 
   <div class="flex-1 overflow-hidden relative">
 
     <section id="view-feed" class="absolute inset-0 flex flex-col">
-      <div class="bg-white/95 border-b p-3 shadow-xs flex flex-col gap-3 shrink-0 z-10">
-        
+      <div class="bg-white border-b border-slate-200 p-4 shadow-xs flex flex-col gap-3 shrink-0 z-10">
         <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3 justify-between">
           <div class="flex flex-wrap items-center gap-2 flex-1">
             <div class="relative flex-1 max-w-xs min-w-[200px]">
-              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
-              <input type="text" id="feedSearch" placeholder="Search feed items..." class="w-full text-xs border rounded-lg pl-8 pr-3 py-2 focus:ring-2 focus:ring-[#00a884] focus:outline-none bg-gray-50">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
+              <input type="text" id="feedSearch" placeholder="Search feed items..." class="w-full text-xs border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none bg-slate-50/50">
             </div>
 
-            <select id="feedFilterState" class="text-xs border rounded-lg px-2 py-2 bg-gray-50 text-gray-700 focus:outline-none cursor-pointer">
+            <select id="feedFilterState" class="text-xs border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50/50 text-slate-600 font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer">
               <option value="all">All States</option>
               <option value="open">🟢 Active / Open</option>
               <option value="closed">🔒 Closed History</option>
             </select>
 
-            <select id="feedFilterType" class="text-xs border rounded-lg px-2 py-2 bg-gray-50 text-gray-700 focus:outline-none cursor-pointer">
+            <select id="feedFilterType" class="text-xs border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50/50 text-slate-600 font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer">
               <option value="all">All Task Types</option>
               <option value="status">Status Polls</option>
               <option value="decision">Decision Polls</option>
               <option value="checklist">Checklist Polls</option>
             </select>
             
-            <button id="feedClearAllFiltersBtn" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-3 py-2 rounded-lg border transition flex items-center gap-1 active:scale-95">
-              <i class="fa-solid fa-broom text-teal-600"></i> Clear all filters
+            <button id="feedClearAllFiltersBtn" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold px-3 py-2.5 rounded-xl border border-slate-200 transition flex items-center gap-1.5 active:scale-95">
+              <i class="fa-solid fa-broom text-indigo-600"></i> Clear filters
             </button>
           </div>
 
-          <div class="flex items-center gap-2 justify-end shrink-0">
-            <button id="expandAllCardsBtn" class="text-[11px] font-bold text-teal-700 hover:text-teal-900 bg-teal-50 border border-teal-100 px-2.5 py-1.5 rounded-lg transition active:scale-95">
-              <i class="fa-solid fa-angles-down mr-0.5"></i> Expand All
+          <div class="flex items-center gap-2 justify-end shrink-0 border-t border-slate-100 pt-3 md:pt-0 md:border-t-0">
+            <button id="expandAllCardsBtn" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100/70 border border-indigo-100 px-3 py-2 rounded-xl transition active:scale-95">
+              <i class="fa-solid fa-angles-down mr-1"></i> Expand All
             </button>
-            <button id="collapseAllCardsBtn" class="text-[11px] font-bold text-gray-600 hover:text-gray-800 bg-gray-100 border border-gray-200 px-2.5 py-1.5 rounded-lg transition active:scale-95">
-              <i class="fa-solid fa-angles-up mr-0.5"></i> Collapse All
+            <button id="collapseAllCardsBtn" class="text-[11px] font-bold text-slate-600 hover:text-slate-700 bg-slate-100 hover:bg-slate-200/70 border border-slate-200 px-3 py-2 rounded-xl transition active:scale-95">
+              <i class="fa-solid fa-angles-up mr-1"></i> Collapse All
             </button>
           </div>
         </div>
       </div>
 
-      <div id="feedScrollContainer" class="flex-1 overflow-y-auto px-3 py-4 sm:px-4 max-w-xl mx-auto w-full space-y-3.5 custom-scrollbar pb-20">
-        <div id="feedPlaceholder" class="text-center py-20 text-gray-500">
-          <i class="fa-solid fa-circle-notch animate-spin text-3xl text-[#008069] mb-3"></i>
-          <p class="text-sm font-medium">Synchronizing live parameters...</p>
+      <div id="feedScrollContainer" class="flex-1 overflow-y-auto px-4 py-6 max-w-xl mx-auto w-full space-y-4 custom-scrollbar pb-24">
+        <div id="feedPlaceholder" class="text-center py-24 bg-white border border-dashed border-slate-200 rounded-2xl p-6 shadow-xs">
+          <i class="fa-solid fa-circle-notch animate-spin text-3xl text-indigo-600 mb-3"></i>
+          <p class="text-sm font-medium text-slate-600">Synchronizing live parameters from server...</p>
         </div>
       </div>
     </section>
 
-    <section id="view-dashboard" class="absolute inset-0 overflow-y-auto p-4 max-w-5xl mx-auto hidden custom-scrollbar pb-20 space-y-5">
-      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div class="bg-white p-3 rounded-xl border shadow-2xs text-center">
-          <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total Tasks</p>
-          <p id="stat-total" class="text-xl font-black text-gray-800 mt-0.5">0</p>
+    <section id="view-dashboard" class="absolute inset-0 overflow-y-auto p-4 sm:p-6 max-w-5xl mx-auto hidden custom-scrollbar pb-24 space-y-6">
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs text-center relative overflow-hidden group hover:shadow-md transition">
+          <div class="absolute inset-x-0 top-0 h-1 bg-slate-400"></div>
+          <p class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Total Tasks</p>
+          <p id="stat-total" class="text-2xl font-black text-slate-800 mt-1">0</p>
         </div>
-        <div class="bg-white p-3 rounded-xl border shadow-2xs text-center">
-          <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Active Run</p>
-          <p id="stat-active" class="text-xl font-black text-[#008069] mt-0.5">0</p>
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs text-center relative overflow-hidden group hover:shadow-md transition">
+          <div class="absolute inset-x-0 top-0 h-1 bg-emerald-500"></div>
+          <p class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Active Run</p>
+          <p id="stat-active" class="text-2xl font-black text-emerald-600 mt-1">0</p>
         </div>
-        <div class="bg-white p-3 rounded-xl border shadow-2xs text-center">
-          <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Concluded</p>
-          <p id="stat-closed" class="text-xl font-black text-gray-400 mt-0.5">0</p>
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs text-center relative overflow-hidden group hover:shadow-md transition">
+          <div class="absolute inset-x-0 top-0 h-1 bg-slate-300"></div>
+          <p class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Concluded</p>
+          <p id="stat-closed" class="text-2xl font-black text-slate-400 mt-1">0</p>
         </div>
-        <div class="bg-white p-3 rounded-xl border shadow-2xs text-center">
-          <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Gross Votes</p>
-          <p id="stat-votes" class="text-xl font-black text-purple-600 mt-0.5">0</p>
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs text-center relative overflow-hidden group hover:shadow-md transition">
+          <div class="absolute inset-x-0 top-0 h-1 bg-indigo-500"></div>
+          <p class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Gross Votes</p>
+          <p id="stat-votes" class="text-2xl font-black text-indigo-600 mt-1">0</p>
         </div>
-        <div class="bg-white p-3 rounded-xl border shadow-2xs text-center col-span-2 sm:col-span-1">
-          <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Avg Duration</p>
-          <p id="stat-avg-duration" class="text-xl font-black text-amber-600 mt-0.5">0 days</p>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-white p-3.5 rounded-xl border shadow-2xs flex flex-col items-center">
-          <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 self-start"><i class="fa-solid fa-chart-pie mr-1 text-teal-600"></i> Task Lifecycle States</h3>
-          <div class="w-full max-w-[180px]"><canvas id="chartStatus"></canvas></div>
-        </div>
-        <div class="bg-white p-3.5 rounded-xl border shadow-2xs flex flex-col items-center">
-          <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 self-start"><i class="fa-solid fa-layer-group mr-1 text-blue-600"></i> Types Distribution</h3>
-          <div class="w-full max-w-[180px]"><canvas id="chartType"></canvas></div>
-        </div>
-        <div class="bg-white p-3.5 rounded-xl border shadow-2xs flex flex-col items-center">
-          <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 self-start"><i class="fa-solid fa-hourglass-half mr-1 text-amber-500"></i> Task Lifespan Durations</h3>
-          <div class="w-full max-w-[180px]"><canvas id="chartDurationRange"></canvas></div>
-        </div>
-        <div class="bg-white p-4 rounded-xl border shadow-2xs md:col-span-3">
-          <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2"><i class="fa-solid fa-user-group mr-1 text-purple-600"></i> Team Allocation, Engagement &amp; Operational Efficiency Metrics</h3>
-          <div class="w-full h-[220px]"><canvas id="chartUserPerformance"></canvas></div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs text-center relative overflow-hidden group hover:shadow-md transition col-span-2 sm:col-span-1">
+          <div class="absolute inset-x-0 top-0 h-1 bg-amber-500"></div>
+          <p class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Avg Duration</p>
+          <p id="stat-avg-duration" class="text-2xl font-black text-amber-600 mt-1">0 days</p>
         </div>
       </div>
 
-      <div class="bg-white p-4 rounded-xl border shadow-2xs">
-        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2"><i class="fa-solid fa-clock-rotate-left mr-1 text-amber-600"></i> Live Core Workspace Event Log Stream</h3>
-        <div id="dashboardAuditTrail" class="text-xs text-gray-600 divide-y max-h-[140px] overflow-y-auto custom-scrollbar pr-1"></div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs flex flex-col items-center hover:shadow-md transition">
+          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4 self-start flex items-center"><i class="fa-solid fa-chart-pie mr-1.5 text-indigo-600"></i> Task Lifecycle States</h3>
+          <div class="w-full max-w-[170px] aspect-square"><canvas id="chartStatus"></canvas></div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs flex flex-col items-center hover:shadow-md transition">
+          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4 self-start flex items-center"><i class="fa-solid fa-layer-group mr-1.5 text-sky-600"></i> Types Distribution</h3>
+          <div class="w-full max-w-[170px] aspect-square"><canvas id="chartType"></canvas></div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs flex flex-col items-center hover:shadow-md transition">
+          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4 self-start flex items-center"><i class="fa-solid fa-hourglass-half mr-1.5 text-amber-500"></i> Task Lifespan Durations</h3>
+          <div class="w-full max-w-[170px] aspect-square"><canvas id="chartDurationRange"></canvas></div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs md:col-span-3 hover:shadow-md transition">
+          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4 flex items-center"><i class="fa-solid fa-user-group mr-1.5 text-violet-600"></i> Team Allocation, Engagement &amp; Operational Efficiency Metrics</h3>
+          <div class="w-full h-[240px]"><canvas id="chartUserPerformance"></canvas></div>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs hover:shadow-md transition">
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3 flex items-center"><i class="fa-solid fa-clock-rotate-left mr-1.5 text-slate-600"></i> Live Core Workspace Event Log Stream</h3>
+        <div id="dashboardAuditTrail" class="text-xs text-slate-600 divide-y divide-slate-100 max-h-[160px] overflow-y-auto custom-scrollbar pr-2"></div>
       </div>
     </section>
 
-    <section id="view-table" class="absolute inset-0 flex flex-col p-3 sm:p-4 hidden">
-      <div class="bg-white p-3 rounded-t-xl border-x border-t flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-2.5 shadow-2xs">
+    <section id="view-table" class="absolute inset-0 flex flex-col p-4 sm:p-6 hidden">
+      <div class="bg-white p-4 rounded-t-2xl border-t border-x border-slate-200 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3 shadow-xs">
         <div class="flex flex-wrap flex-1 gap-2 items-center">
           <div class="relative flex-1 max-w-xs min-w-[160px]">
-            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
-            <input type="text" id="tableSearch" placeholder="Search parameters..." class="w-full text-xs border rounded-lg pl-8 pr-3 py-2 focus:ring-2 focus:ring-[#00a884] focus:outline-none">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
+            <input type="text" id="tableSearch" placeholder="Search parameters..." class="w-full text-xs border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
           </div>
-          <select id="tableFilterState" class="text-xs border rounded-lg px-2 py-2 bg-gray-50 text-gray-700 focus:outline-none cursor-pointer">
+          <select id="tableFilterState" class="text-xs border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 text-slate-600 font-medium focus:outline-none cursor-pointer">
             <option value="all">All States</option>
             <option value="open">🟢 Active / Open</option>
             <option value="closed">🔒 Closed</option>
           </select>
-          <select id="tableFilterType" class="text-xs border rounded-lg px-2 py-2 bg-gray-50 text-gray-700 focus:outline-none cursor-pointer">
+          <select id="tableFilterType" class="text-xs border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 text-slate-600 font-medium focus:outline-none cursor-pointer">
             <option value="all">All Task Types</option>
             <option value="status">Status Polls</option>
             <option value="decision">Decision Polls</option>
             <option value="checklist">Checklist Polls</option>
           </select>
-          <button id="tableClearAllFiltersBtn" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-3 py-2 rounded-lg border transition flex items-center gap-1 active:scale-95">
-            <i class="fa-solid fa-broom text-teal-600"></i> Clear all filters
+          <button id="tableClearAllFiltersBtn" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold px-3 py-2.5 rounded-xl border border-slate-200 transition flex items-center gap-1.5 active:scale-95">
+            <i class="fa-solid fa-broom text-indigo-600"></i> Clear filters
           </button>
         </div>
         
-        <div class="flex items-center gap-2">
-          <button onclick="exportToCSV()" class="flex-1 md:flex-initial bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold text-xs px-3 py-2 rounded-lg border transition flex items-center justify-center gap-1.5 active:scale-95">
-            <i class="fa-solid fa-file-csv text-emerald-700"></i> Export CSV
+        <div class="flex items-center gap-2 border-t border-slate-100 pt-3 lg:pt-0 lg:border-t-0">
+          <button onclick="exportToCSV()" class="flex-1 md:flex-initial bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs px-4 py-2.5 rounded-xl border border-slate-200 transition flex items-center justify-center gap-2 shadow-xs active:scale-95">
+            <i class="fa-solid fa-file-csv text-emerald-600 text-sm"></i> Export CSV
           </button>
-          <button onclick="exportToPDF()" class="flex-1 md:flex-initial bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold text-xs px-3 py-2 rounded-lg transition flex items-center justify-center gap-1.5 shadow-2xs active:scale-95">
-            <i class="fa-solid fa-file-pdf"></i> Export Wrapped Report PDF
+          <button onclick="exportToPDF()" class="flex-1 md:flex-initial bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-xs active:scale-95">
+            <i class="fa-solid fa-file-pdf text-sm"></i> Export Wrapped Report PDF
           </button>
         </div>
       </div>
 
-      <div class="flex-1 overflow-auto border rounded-b-xl bg-white shadow-2xs custom-scrollbar">
+      <div class="flex-1 overflow-auto border border-slate-200 rounded-b-2xl bg-white shadow-xs custom-scrollbar">
         <table class="w-full text-left border-collapse text-xs min-w-[1250px]">
-          <thead class="bg-gray-50 border-b text-gray-600 font-bold uppercase tracking-wider sticky top-0 z-10">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider sticky top-0 z-10">
             <tr>
-              <th class="p-3">Task Title</th>
-              <th class="p-3">Description</th>
-              <th class="p-3">Type</th>
-              <th class="p-3">State Status</th>
-              <th class="p-3">Created By</th>
-              <th class="p-3">Start Date</th>
-              <th class="p-3">End Date</th>
-              <th class="p-3">Tracked Lifespan</th>
-              <th class="p-3">Total Responses</th>
-              <th class="p-3">Leading Choice</th>
-              <th class="p-3 text-right">Actions</th>
+              <th class="p-4">Task Title</th>
+              <th class="p-4">Description</th>
+              <th class="p-4">Type</th>
+              <th class="p-4">State Status</th>
+              <th class="p-4">Created By</th>
+              <th class="p-4">Start Date</th>
+              <th class="p-4">End Date</th>
+              <th class="p-4">Tracked Lifespan</th>
+              <th class="p-4">Total Responses</th>
+              <th class="p-4">Leading Choice</th>
+              <th class="p-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody id="tableBody" class="divide-y text-gray-700"></tbody>
+          <tbody id="tableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
         </table>
       </div>
     </section>
   </div>
 
-  <div id="taskModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200">
-    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden transform scale-95 transition-transform duration-200">
-      <div class="bg-[#008069] text-white p-4 flex justify-between items-center">
-        <h3 class="font-bold text-base"><i class="fa-solid fa-file-circle-plus mr-1.5"></i>Create Task Poll</h3>
-        <button id="closeModalBtn" class="text-white/80 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+  <div id="taskModal" class="fixed inset-0 bg-slate-950/40 z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200 backdrop-blur-xs">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200 border border-slate-100">
+      <div class="bg-slate-900 text-white p-5 flex justify-between items-center border-b border-slate-800">
+        <h3 class="font-extrabold text-base flex items-center"><i class="fa-solid fa-file-circle-plus mr-2 text-indigo-400"></i>Create Task Poll</h3>
+        <button id="closeModalBtn" class="text-slate-400 hover:text-white text-lg transition"><i class="fa-solid fa-xmark"></i></button>
       </div>
       
-      <form id="taskForm" class="p-4 space-y-3.5 text-xs">
+      <form id="taskForm" class="p-5 space-y-4 text-xs">
         <div>
-          <label class="block font-semibold text-gray-700 mb-1">Task Title *</label>
-          <input type="text" id="taskTitle" required placeholder="What needs doing or deciding?" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00a884] text-xs">
+          <label class="block font-bold text-slate-700 mb-1.5">Task Title *</label>
+          <input type="text" id="taskTitle" required placeholder="What needs doing or deciding?" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs bg-slate-50/50">
         </div>
         <div>
-          <label class="block font-semibold text-gray-700 mb-1">Description (Optional)</label>
-          <textarea id="taskDescription" rows="2" placeholder="Add metrics or validation configurations..." class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00a884] text-xs"></textarea>
+          <label class="block font-bold text-slate-700 mb-1.5">Description (Optional)</label>
+          <textarea id="taskDescription" rows="3" placeholder="Add metrics or validation configurations..." class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs bg-slate-50/50"></textarea>
         </div>
         <div>
-          <label class="block font-semibold text-gray-700 mb-1">Poll Context Configuration Template</label>
-          <select id="pollType" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00a884] bg-gray-50 text-xs cursor-pointer">
+          <label class="block font-bold text-slate-700 mb-1.5">Poll Context Configuration Template</label>
+          <select id="pollType" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 text-xs font-medium text-slate-700 cursor-pointer">
             <option value="status">🟢 Status Poll (Not Started, In Progress, Blocked, Done)</option>
             <option value="decision">🔵 Decision Poll (Yes, No, Unsure)</option>
             <option value="checklist">🟣 Checklist Poll (Not Done, Done)</option>
           </select>
         </div>
-        <div class="flex justify-end gap-2 pt-1">
-          <button type="button" id="cancelModalBtn" class="px-3 py-2 font-medium text-gray-500 hover:text-gray-700">Cancel</button>
-          <button type="submit" class="bg-[#008069] hover:bg-[#01604f] text-white font-bold px-4 py-2 rounded-lg shadow">Deploy Poll</button>
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+          <button type="button" id="cancelModalBtn" class="px-4 py-2.5 font-bold text-slate-500 hover:text-slate-700 transition">Cancel</button>
+          <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md shadow-indigo-500/10 transition active:scale-[0.97]">Deploy Poll</button>
         </div>
       </form>
     </div>
   </div>
 
-  <div id="deleteConfirmationModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200">
-    <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200 border border-red-100">
-      <div class="p-5 flex flex-col items-center text-center gap-3.5">
-        <div class="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center text-xl shadow-sm border border-red-100">
-          <i class="fa-solid fa-triangle-exclamation animate-bounce"></i>
+  <div id="deleteConfirmationModal" class="fixed inset-0 bg-slate-950/50 z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200 backdrop-blur-xs">
+    <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200 border border-slate-100">
+      <div class="p-6 flex flex-col items-center text-center gap-4">
+        <div class="w-14 h-14 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center text-2xl shadow-xs border border-rose-100">
+          <i class="fa-solid fa-triangle-exclamation animate-pulse"></i>
         </div>
         <div>
-          <h3 class="font-black text-gray-900 text-sm tracking-tight">Confirm Task Deletion</h3>
-          <p class="text-xs text-gray-500 mt-1.5 leading-normal">
-            Warning: This process is <strong class="text-red-600 font-bold">permanent and irreversible</strong>. All collected responses and timeline parameters will be wiped from the live registry. Are you sure you want to proceed?
+          <h3 class="font-black text-slate-900 text-base tracking-tight">Confirm Task Deletion</h3>
+          <p class="text-xs text-slate-500 mt-2 leading-relaxed px-1">
+            Warning: This process is <strong class="text-rose-600 font-extrabold">permanent and irreversible</strong>. All collected responses and timeline parameters will be wiped from the live registry. Are you sure you want to proceed?
           </p>
         </div>
       </div>
-      <div class="bg-gray-50 px-4 py-3 flex items-center gap-2 justify-end border-t">
-        <button id="cancelDeleteBtn" class="text-xs font-semibold text-gray-500 hover:text-gray-700 px-3 py-2 transition">
+      <div class="bg-slate-50 px-5 py-4 flex items-center gap-2 justify-end border-t border-slate-100">
+        <button id="cancelDeleteBtn" class="text-xs font-bold text-slate-500 hover:text-slate-700 px-3 py-2 transition">
           Cancel, Keep Task
         </button>
-        <button id="confirmDeleteBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow transition active:scale-95">
+        <button id="confirmDeleteBtn" class="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md shadow-rose-500/10 transition active:scale-95">
           Yes, Delete Permanently
         </button>
       </div>
     </div>
   </div>
+
+  <template id="taskCardBlueprint">
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-xs transition hover:shadow-md relative overflow-hidden group">
+      <div class="card-ribbon absolute left-0 inset-y-0 w-1.5 bg-slate-300"></div>
+      
+      <div class="p-4 sm:p-5 pl-5 sm:pl-6">
+        <div class="flex justify-between items-start gap-3">
+          <div class="space-y-1 flex-1">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="card-badge-type text-[9px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-full"></span>
+              <span class="card-badge-state text-[9px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-full bg-slate-100 text-slate-600"></span>
+            </div>
+            <h4 class="card-title font-bold text-slate-900 text-sm sm:text-base leading-snug pt-0.5"></h4>
+            <p class="card-desc text-slate-500 text-xs leading-relaxed hidden"></p>
+          </div>
+          
+          <div class="flex items-center gap-1 shrink-0">
+            <button class="card-toggle-btn text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition"><i class="fa-solid fa-chevron-up text-[11px] transition-transform duration-200"></i></button>
+            <button class="card-delete-btn text-slate-300 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition"><i class="fa-solid fa-trash-can text-[11px]"></i></button>
+          </div>
+        </div>
+
+        <div class="card-expandable-content mt-4 pt-4 border-t border-slate-100 space-y-3">
+          <div class="card-options-zone space-y-2"></div>
+          
+          <div class="bg-slate-50/70 border border-slate-100 rounded-xl p-2.5 flex justify-between items-center text-[11px] font-medium text-slate-600">
+            <span class="flex items-center"><i class="fa-solid fa-trophy mr-1.5 text-amber-500"></i> Leading: <strong class="card-metrics-winner text-slate-800 ml-1">None</strong></span>
+            <span class="text-slate-400 font-mono card-metrics-count">0 votes</span>
+          </div>
+
+          <div class="flex justify-between items-center text-[10px] text-slate-400 pt-1">
+            <span class="flex items-center gap-1"><i class="fa-solid fa-circle-user text-slate-300 text-xs"></i> Author: <strong class="card-author-name text-slate-500"></strong></span>
+            <span class="card-timestamp-date font-mono"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="optionWidgetBlueprint">
+    <button class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50/50 hover:border-slate-300 transition relative overflow-hidden flex items-center justify-between group active:scale-[0.99]">
+      <div class="option-progress-bar absolute inset-y-0 left-0 bg-indigo-50/60 transition-all duration-300 z-0"></div>
+      <span class="option-label text-xs font-semibold text-slate-700 z-10 pr-2 flex items-center gap-2"></span>
+      <span class="option-stats font-mono text-[11px] font-bold text-slate-400 group-hover:text-slate-600 transition z-10 shrink-0"></span>
+    </button>
+  </template>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -388,7 +437,7 @@
         } else {
           currentUser = requestedAlias;
           localStorage.setItem("qt_username", currentUser);
-          document.getElementById("userBadge").innerHTML = `<i class="fa-solid fa-user-circle mr-0.5"></i> Alias: <strong>${escapeHtml(currentUser)}</strong>`;
+          document.getElementById("userBadge").innerHTML = `<i class="fa-solid fa-user-circle mr-1.5 text-slate-400"></i> Alias: <strong class="text-slate-200 ml-1">${escapeHtml(currentUser)}</strong>`;
           if (!isInitialLoad) {
             renderApplicationPipeline();
           }
@@ -434,25 +483,25 @@
         const user = userCredential.user;
         window.globalUserUid = user.uid;
 
-        authStatusPanel.className = "bg-[#004d3e] border border-[#00a884] rounded px-1.5 py-0.5 text-[10px] font-mono inline-flex items-center gap-1 shadow-md";
-        authStatusText.innerHTML = "Auth Success ✔";
+        authStatusPanel.className = "bg-emerald-950 border border-emerald-500 rounded-full px-2.5 py-0.5 text-[10px] font-mono inline-flex items-center gap-1.5 shadow-md";
+        authStatusText.innerHTML = "<span class='text-emerald-400 font-bold'>Active Connection ✔</span>";
         authUidDisplay.innerText = "UID: " + window.globalUserUid;
         authUidDisplay.classList.remove("hidden");
 
         openModalBtn.disabled = false;
-        openModalBtn.className = "bg-[#00a884] hover:bg-[#00cc99] text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1.5 active:scale-95 cursor-pointer opacity-100";
-        openModalBtn.querySelector("i").className = "fa-solid fa-plus text-[10px]";
+        openModalBtn.className = "bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-lg shadow-indigo-500/10 transition flex items-center gap-2 active:scale-95 cursor-pointer opacity-100";
+        openModalBtn.querySelector("i").className = "fa-solid fa-plus text-[11px]";
 
         validateAndSetAlias(currentUser, true);
         initDatabaseStreamingChannel();
       })
       .catch(function(error) {
         console.error(" Handshake Loop Exception: ", error);
-        authStatusPanel.className = "bg-red-900 border border-red-500 rounded px-1.5 py-0.5 text-[10px] font-mono inline-flex items-center gap-1 shadow-md";
-        authStatusText.innerHTML = "Auth Failed ❌ " + escapeHtml(error.message);
+        authStatusPanel.className = "bg-rose-950 border border-rose-500 rounded-full px-2.5 py-0.5 text-[10px] font-mono inline-flex items-center gap-1.5 shadow-md";
+        authStatusText.innerHTML = "<span class='text-rose-400 font-bold'>Auth Failed ❌</span> " + escapeHtml(error.message);
       });
 
-    document.getElementById("userBadge").innerHTML = `<i class="fa-solid fa-user-circle mr-0.5"></i> Alias: <strong>${escapeHtml(currentUser)}</strong>`;
+    document.getElementById("userBadge").innerHTML = `<i class="fa-solid fa-user-circle mr-1.5 text-slate-400"></i> Alias: <strong class="text-slate-200 ml-1">${escapeHtml(currentUser)}</strong>`;
     document.getElementById("userBadge").addEventListener("click", () => {
       const n = prompt("Modify current operational profile string name:", currentUser);
       if (n && n.trim() !== "") {
@@ -557,16 +606,24 @@
       }
     };
     document.getElementById("cancelDeleteBtn").addEventListener("click", () => setDeleteModalVisibility(false));
+
     document.getElementById("confirmDeleteBtn").addEventListener("click", () => {
-      if (targetTaskIdForDeletion) {
-        db.ref(`tasks/${targetTaskIdForDeletion}`).remove()
-          .then(() => {
-            SoundEffects.playDelete();
-            appendAuditTrailLog("DELETION", `Permanently dropped asset identity hash context allocation point.`);
-            setDeleteModalVisibility(false);
-          })
-          .catch(e => alert("Deletion sync exception occurred: " + e.message));
-      }
+      if (!targetTaskIdForDeletion) return;
+      
+      const auditPayload = {
+        action: "DELETED",
+        taskTitle: localDataStore[targetTaskIdForDeletion].title,
+        operator: currentUser,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+      };
+
+      db.ref(`tasks/${targetTaskIdForDeletion}`).remove()
+        .then(() => {
+          db.ref("auditTrail").push(auditPayload);
+          SoundEffects.playDelete();
+          setDeleteModalVisibility(false);
+        })
+        .catch(err => alert("Deletion Error: " + err.message));
     });
 
     taskForm.addEventListener("submit", (e) => {
@@ -574,595 +631,450 @@
       const title = document.getElementById("taskTitle").value.trim();
       const desc = document.getElementById("taskDescription").value.trim();
       const type = document.getElementById("pollType").value;
-      
+
       if (!title) return;
 
-      const newTask = {
+      const newTaskRef = db.ref("tasks").push();
+      const initializedVotes = {};
+      POLL_OPTIONS_MAP[type].forEach(opt => { initializedVotes[opt] = 0; });
+
+      const payload = {
+        id: newTaskRef.key,
+        projectId: currentProject,
         title: title,
         description: desc,
         type: type,
-        status: "open",
-        projectId: currentProject,
+        state: "open",
         createdBy: currentUser,
         uid: window.globalUserUid,
-        createdAt: new Date().toISOString(),
-        closedAt: null,
-        votes: {}
+        createdDate: firebase.database.ServerValue.TIMESTAMP,
+        endDate: null,
+        votes: initializedVotes,
+        userVotes: {}
       };
 
-      db.ref("tasks").push(newTask)
+      const auditPayload = {
+        action: "CREATED",
+        taskTitle: title,
+        operator: currentUser,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+      };
+
+      newTaskRef.set(payload)
         .then(() => {
-          SoundEffects.playComplete();
-          appendAuditTrailLog("CREATION", `Deployed new execution tracking block context mapping title: "${title}"`);
+          db.ref("auditTrail").push(auditPayload);
           setModalVisibility(false);
         })
-        .catch(err => alert("Registry writing fault encountered: " + err.message));
+        .catch(err => alert("Creation Exception: " + err.message));
     });
 
-    function toggleCardExpansion(taskId) {
-      manualCardTrackingState[taskId] = !manualCardTrackingState[taskId];
-      localStorage.setItem("qt_manual_card_toggles", JSON.stringify(manualCardTrackingState));
-      renderFeedView();
-    }
+    window.toggleTaskStateTransition = function(taskId) {
+      const task = localDataStore[taskId];
+      if (!task) return;
 
-    function calculateTimeMetrics(createdAt, closedAt) {
-      const start = new Date(createdAt);
-      const end = closedAt ? new Date(closedAt) : new Date();
-      const diffMs = Math.max(0, end - start);
-      
-      const totalSecs = Math.floor(diffMs / 1000);
-      const totalMins = Math.floor(totalSecs / 60);
-      const totalHours = Math.floor(totalMins / 60);
-      const days = Math.floor(totalHours / 24);
-      
-      const remHours = totalHours % 24;
-      const remMins = totalMins % 60;
-      
-      let durationStr = "";
-      if (days > 0) {
-        durationStr = `${days}d ${remHours}h ${remMins}m`;
-      } else if (remHours > 0) {
-        durationStr = `${remHours}h ${remMins}m`;
-      } else {
-        durationStr = `${remMins}m`;
+      if (task.uid !== window.globalUserUid) {
+        alert("Action denied: You are not authorized to edit or delete records created by another user.");
+        return;
       }
-      
-      return {
-        days: days,
-        hours: remHours,
-        minutes: remMins,
-        durationStr: durationStr,
-        formattedStart: start.toLocaleDateString() + ' ' + start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-        formattedEnd: closedAt ? new Date(closedAt).toLocaleDateString() + ' ' + new Date(closedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "N/A"
+
+      const nextState = task.state === "open" ? "closed" : "open";
+      const timestampUpdate = nextState === "closed" ? firebase.database.ServerValue.TIMESTAMP : null;
+
+      const auditPayload = {
+        action: nextState === "closed" ? "CONCLUDED" : "REOPENED",
+        taskTitle: task.title,
+        operator: currentUser,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
       };
-    }
+
+      db.ref(`tasks/${taskId}`).update({
+        state: nextState,
+        endDate: timestampUpdate
+      }).then(() => {
+        db.ref("auditTrail").push(auditPayload);
+        if (nextState === "closed") SoundEffects.playComplete();
+        else SoundEffects.playReopen();
+      });
+    };
+
+    window.registerOptionVoteMetric = function(taskId, optionKey) {
+      const task = localDataStore[taskId];
+      if (!task) return;
+
+      if (task.state === "closed") {
+        alert("Transaction Aborted: Voting parameters are locked for concluded records.");
+        return;
+      }
+
+      const voterRegistry = task.userVotes || {};
+      const previousVote = voterRegistry[window.globalUserUid];
+
+      const updates = {};
+      
+      if (previousVote === optionKey) {
+        updates[`tasks/${taskId}/votes/${optionKey}`] = Math.max(0, (task.votes?.[optionKey] || 0) - 1);
+        updates[`tasks/${taskId}/userVotes/${window.globalUserUid}`] = null;
+      } else {
+        if (previousVote) {
+          updates[`tasks/${taskId}/votes/${previousVote}`] = Math.max(0, (task.votes?.[previousVote] || 0) - 1);
+        }
+        updates[`tasks/${taskId}/votes/${optionKey}`] = (task.votes?.[optionKey] || 0) + 1;
+        updates[`tasks/${taskId}/userVotes/${window.globalUserUid}`] = optionKey;
+      }
+
+      db.ref().update(updates).then(() => {
+        SoundEffects.playVote();
+      });
+    };
 
     function renderFeedView() {
       const searchVal = document.getElementById("feedSearch").value.toLowerCase();
       const filterState = document.getElementById("feedFilterState").value;
       const filterType = document.getElementById("feedFilterType").value;
 
+      const blueprint = document.getElementById("taskCardBlueprint");
+      const optionBlueprint = document.getElementById("optionWidgetBlueprint");
+
       feedScrollContainer.innerHTML = "";
-      const keys = Object.keys(localDataStore);
 
-      const filteredKeys = keys.filter(k => {
-        const t = localDataStore[k];
-        if (filterState !== "all" && t.status !== filterState) return false;
-        if (filterType !== "all" && t.type !== filterType) return false;
-        
-        const mTitle = (t.title || "").toLowerCase().includes(searchVal);
-        const mDesc = (t.description || "").toLowerCase().includes(searchVal);
-        const mOwner = (t.createdBy || "").toLowerCase().includes(searchVal);
-        return mTitle || mDesc || mOwner;
-      });
+      const dataArray = Object.values(localDataStore).sort((a, b) => (b.createdDate || 0) - (a.createdDate || 0));
+      let analyticalCount = 0;
 
-      if (filteredKeys.length === 0) {
-        feedScrollContainer.innerHTML = `
-          <div class="text-center py-16 bg-white border rounded-2xl p-6 shadow-sm">
-            <div class="w-12 h-12 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center text-xl mx-auto mb-2 border border-gray-100">
-              <i class="fa-solid fa-folder-open"></i>
-            </div>
-            <p class="text-xs font-semibold text-gray-500">No active parameter tracking records found matching parameters.</p>
-          </div>`;
-        return;
-      }
+      dataArray.forEach(task => {
+        const matchesSearch = task.title.toLowerCase().includes(searchVal) || (task.description && task.description.toLowerCase().includes(searchVal));
+        const matchesState = filterState === "all" || task.state === filterState;
+        const matchesType = filterType === "all" || task.type === filterType;
 
-      filteredKeys.sort((a,b) => new Date(localDataStore[b].createdAt) - new Date(localDataStore[a].createdAt));
+        if (!matchesSearch || !matchesState || !matchesType) return;
+        analyticalCount++;
 
-      filteredKeys.forEach(key => {
-        const task = localDataStore[key];
-        const isCollapsed = manualCardTrackingState[key] === undefined ? true : manualCardTrackingState[key];
-        
-        const metrics = calculateTimeMetrics(task.createdAt, task.closedAt);
-        const options = POLL_OPTIONS_MAP[task.type] || [];
-        const voteCounts = {};
-        options.forEach(opt => voteCounts[opt] = 0);
-        
-        let grandTotalVotes = 0;
-        if (task.votes) {
-          Object.values(task.votes).forEach(v => {
-            if (voteCounts[v] !== undefined) {
-              voteCounts[v]++;
-              grandTotalVotes++;
-            }
-          });
+        const clone = blueprint.content.cloneNode(true);
+        const cardRoot = clone.querySelector(".bg-white");
+        const ribbon = clone.querySelector(".card-ribbon");
+        const badgeType = clone.querySelector(".card-badge-type");
+        const badgeState = clone.querySelector(".card-badge-state");
+        const titleEl = clone.querySelector(".card-title");
+        const descEl = clone.querySelector(".card-desc");
+        const toggleBtn = clone.querySelector(".card-toggle-btn");
+        const deleteBtn = clone.querySelector(".card-delete-btn");
+        const contentZone = clone.querySelector(".card-expandable-content");
+        const optionsZone = clone.querySelector(".card-options-zone");
+        const winnerEl = clone.querySelector(".card-metrics-winner");
+        const countEl = clone.querySelector(".card-metrics-count");
+        const authorEl = clone.querySelector(".card-author-name");
+        const dateEl = clone.querySelector(".card-timestamp-date");
+
+        titleEl.textContent = task.title;
+        if (task.description) {
+          descEl.textContent = task.description;
+          descEl.classList.remove("hidden");
         }
 
-        let leadingChoice = "None";
-        let maxVal = -1;
-        options.forEach(opt => {
-          if (voteCounts[opt] > maxVal && voteCounts[opt] > 0) {
-            maxVal = voteCounts[opt];
-            leadingChoice = opt;
+        authorEl.textContent = task.createdBy || "System Host";
+        dateEl.textContent = task.createdDate ? new Date(task.createdDate).toLocaleDateString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '';
+
+        // Context Theming Switch Parameters
+        if (task.type === "status") {
+          badgeType.textContent = "Status";
+          badgeType.className = "card-badge-type text-[9px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700";
+          ribbon.className = "card-ribbon absolute left-0 inset-y-0 w-1 bg-indigo-500";
+        } else if (task.type === "decision") {
+          badgeType.textContent = "Decision";
+          badgeType.className = "card-badge-type text-[9px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-md bg-sky-50 text-sky-700";
+          ribbon.className = "card-ribbon absolute left-0 inset-y-0 w-1 bg-sky-500";
+        } else {
+          badgeType.textContent = "Checklist";
+          badgeType.className = "card-badge-type text-[9px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-md bg-purple-50 text-purple-700";
+          ribbon.className = "card-ribbon absolute left-0 inset-y-0 w-1 bg-purple-500";
+        }
+
+        if (task.state === "closed") {
+          badgeState.innerHTML = `<i class="fa-solid fa-lock text-[9px] mr-1"></i> Concluded`;
+          badgeState.className = "card-badge-state text-[9px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 line-through";
+          cardRoot.classList.add("opacity-75");
+        } else {
+          badgeState.innerHTML = `<i class="fa-solid fa-bolt text-[9px] mr-1 text-emerald-500 animate-pulse"></i> Active`;
+          badgeState.className = "card-badge-state text-[9px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700";
+        }
+
+        badgeState.classList.add("cursor-pointer");
+        badgeState.addEventListener("click", () => toggleTaskStateTransition(task.id));
+
+        const votesMap = task.votes || {};
+        const totalVotes = Object.values(votesMap).reduce((sum, v) => sum + v, 0);
+        countEl.textContent = `${totalVotes} vote${totalVotes !== 1 ? 's' : ''}`;
+
+        let highestCount = -1;
+        let leadingChoice = "No Responses";
+        Object.entries(votesMap).forEach(([opt, val]) => {
+          if (val > highestCount) { highestCount = val; leadingChoice = opt; }
+          else if (val === highestCount && val > 0) { leadingChoice = "Tie Matrix"; }
+        });
+        winnerEl.textContent = highestCount > 0 ? leadingChoice : "None";
+
+        const schemaOptions = POLL_OPTIONS_MAP[task.type] || [];
+        const currentUserSelection = task.userVotes?.[window.globalUserUid];
+
+        schemaOptions.forEach(opt => {
+          const optNode = optionBlueprint.content.cloneNode(true);
+          const btn = optNode.querySelector("button");
+          const lbl = optNode.querySelector(".option-label");
+          const stats = optNode.querySelector(".option-stats");
+          const bar = optNode.querySelector(".option-progress-bar");
+
+          lbl.textContent = opt;
+          const count = votesMap[opt] || 0;
+          const percentage = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+          stats.textContent = `${count} (${percentage}%)`;
+          bar.style.width = `${percentage}%`;
+
+          if (currentUserSelection === opt) {
+            btn.className = "w-full text-left p-3 rounded-xl border border-indigo-200 bg-indigo-50/20 hover:bg-indigo-50/40 transition relative overflow-hidden flex items-center justify-between group ring-2 ring-indigo-500/10";
+            bar.className = "option-progress-bar absolute inset-y-0 left-0 bg-indigo-500/15 transition-all duration-300 z-0";
+            lbl.innerHTML = `<i class="fa-solid fa-circle-check text-indigo-600 mr-1.5 text-xs animate-scale"></i> ${escapeHtml(opt)}`;
           }
+
+          btn.addEventListener("click", () => registerOptionVoteMetric(task.id, opt));
+          optionsZone.appendChild(optNode);
         });
 
-        const isOwner = task.uid === window.globalUserUid;
-        const stateIcon = task.status === 'open' 
-          ? '<i class="fa-solid fa-circle-dot text-emerald-500 text-sm animate-pulse"></i>' 
-          : '<i class="fa-solid fa-lock text-gray-400 text-sm"></i>';
-        
-        const typeBadgeColor = task.type === 'status' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
-                               task.type === 'decision' ? 'bg-blue-50 text-blue-700 border-blue-200' : 
-                               'bg-purple-50 text-purple-700 border-purple-200';
-
-        const card = document.createElement("div");
-        card.className = "bg-white border rounded-xl shadow-xs transition-all duration-200 overflow-hidden select-none hover:shadow-sm";
-        
+        const isCollapsed = manualCardTrackingState[task.id] === true;
         if (isCollapsed) {
-          card.innerHTML = `
-            <div onclick="toggleCardExpansion('${key}')" class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-gray-50/80 gap-3">
-              <div class="flex items-center gap-2.5 min-w-0">
-                <div class="shrink-0">${stateIcon}</div>
-                <h3 class="font-bold text-xs sm:text-sm text-gray-800 truncate leading-snug">${escapeHtml(task.title)}</h3>
-              </div>
-              <div class="flex items-center gap-2 shrink-0">
-                <span class="text-[10px] px-2 py-0.5 rounded-full font-medium border text-gray-400 bg-gray-50">
-                  ${grandTotalVotes} ${grandTotalVotes === 1 ? 'vote' : 'votes'}
-                </span>
-                <i class="fa-solid fa-chevron-down text-gray-400 text-[11px] transition-transform duration-150"></i>
-              </div>
-            </div>
-          `;
+          contentZone.classList.add("hidden");
+          toggleBtn.querySelector("i").className = "fa-solid fa-chevron-down text-[11px]";
         } else {
-          let actionButtonBlock = "";
-          if (task.status === "open") {
-            actionButtonBlock = `
-              <button onclick="changeTaskLifecycleState('${key}', 'closed')" class="bg-gray-800 hover:bg-black text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition shadow-xs flex items-center gap-1">
-                <i class="fa-solid fa-lock-open text-[10px]"></i> Conclude Poll
-              </button>
-            `;
-          } else {
-            actionButtonBlock = `
-              <button onclick="changeTaskLifecycleState('${key}', 'open')" class="bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition shadow-xs flex items-center gap-1">
-                <i class="fa-solid fa-arrow-rotate-left text-[10px]"></i> Reopen context
-              </button>
-            `;
-          }
-
-          let pollInteractionInterface = "";
-          if (task.status === "open") {
-            const userVote = task.votes ? task.votes[window.globalUserUid] : null;
-            pollInteractionInterface = `<div class="space-y-1.5 pt-1">`;
-            options.forEach(opt => {
-              const isSelected = userVote === opt;
-              pollInteractionInterface += `
-                <button onclick="castLiveDatabaseVote('${key}', '${escapeHtml(opt)}')" class="w-full text-left text-xs border rounded-xl p-2.5 transition flex justify-between items-center ${isSelected ? 'border-[#00a884] bg-teal-50/50 font-semibold text-teal-900 ring-1 ring-[#00a884]' : 'bg-white hover:bg-gray-50 text-gray-700'}">
-                  <span>${escapeHtml(opt)}</span>
-                  ${isSelected ? '<i class="fa-solid fa-circle-check text-[#00a884] text-sm"></i>' : '<i class="fa-regular fa-circle text-gray-300"></i>'}
-                </button>
-              `;
-            });
-            pollInteractionInterface += `</div>`;
-          } else {
-            pollInteractionInterface = `<div class="bg-gray-50/80 rounded-xl border p-2.5 space-y-2 mt-1">
-              <div class="flex items-center gap-1.5 text-gray-500 font-bold text-[10px] uppercase tracking-wider">
-                <i class="fa-solid fa-circle-info text-gray-400"></i> Poll Concluded Results
-              </div>`;
-            options.forEach(opt => {
-              const count = voteCounts[opt] || 0;
-              const pct = grandTotalVotes > 0 ? Math.round((count / grandTotalVotes) * 100) : 0;
-              const isWinner = opt === leadingChoice && grandTotalVotes > 0;
-              pollInteractionInterface += `
-                <div class="space-y-1 text-xs">
-                  <div class="flex justify-between items-center text-[11px]">
-                    <span class="${isWinner ? 'font-bold text-gray-900' : 'text-gray-600'}">${escapeHtml(opt)}</span>
-                    <span class="font-mono text-[11px] text-gray-500">${count} (${pct}%)</span>
-                  </div>
-                  <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                    <div class="h-full rounded-full ${isWinner ? 'bg-gradient-to-r from-teal-500 to-emerald-600' : 'bg-gray-400'}" style="width: ${pct}%"></div>
-                  </div>
-                </div>
-              `;
-            });
-            pollInteractionInterface += `</div>`;
-          }
-
-          let closureMetadataBlock = "";
-          if (task.status !== "open") {
-            closureMetadataBlock = `
-              <div class="bg-amber-50/80 border border-amber-200 text-amber-900 rounded-lg p-2.5 text-[11px] space-y-1 mt-1">
-                <div class="flex justify-between">
-                  <span class="opacity-70 font-medium"><i class="fa-solid fa-calendar-check mr-1"></i>Conclusion Time:</span>
-                  <span class="font-semibold">${metrics.formattedEnd}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="opacity-70 font-medium"><i class="fa-solid fa-stopwatch mr-1"></i>Tracked Lifespan:</span>
-                  <span class="font-semibold font-mono">${metrics.durationStr}</span>
-                </div>
-              </div>
-            `;
-          }
-
-          card.innerHTML = `
-            <div class="p-3.5 bg-gray-50/50 border-b flex items-center justify-between cursor-pointer hover:bg-gray-50 gap-3" onclick="toggleCardExpansion('${key}')">
-              <div class="flex items-center gap-2.5 min-w-0">
-                <div class="shrink-0">${stateIcon}</div>
-                <h3 class="font-bold text-xs sm:text-sm text-gray-900 truncate leading-snug">${escapeHtml(task.title)}</h3>
-              </div>
-              <div class="flex items-center gap-2 shrink-0">
-                <span class="text-[10px] border px-2 py-0.5 rounded-full font-bold uppercase tracking-wide ${typeBadgeColor}">
-                  ${task.type}
-                </span>
-                <i class="fa-solid fa-chevron-up text-gray-500 text-[11px] transition-transform duration-150"></i>
-              </div>
-            </div>
-
-            <div class="p-3.5 space-y-3.5 bg-white">
-              ${task.description ? `
-                <div>
-                  <h4 class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Context Blueprint</h4>
-                  <p class="text-xs text-gray-600 leading-relaxed bg-gray-50/80 p-2.5 rounded-lg border border-dashed whitespace-pre-wrap">${escapeHtml(task.description)}</p>
-                </div>
-              ` : ''}
-
-              <div>
-                <h4 class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1.5">Poll Matrix Configuration</h4>
-                ${pollInteractionInterface}
-              </div>
-
-              ${closureMetadataBlock}
-
-              <div class="bg-gray-50 p-2.5 rounded-xl text-[11px] text-gray-500 grid grid-cols-2 gap-2 border">
-                <div>
-                  <span class="block text-[9px] text-gray-400 uppercase tracking-wider font-bold">Created By</span>
-                  <span class="font-semibold text-gray-700 truncate block"><i class="fa-solid fa-user-tie text-gray-400 mr-0.5"></i>${escapeHtml(task.createdBy)}</span>
-                </div>
-                <div>
-                  <span class="block text-[9px] text-gray-400 uppercase tracking-wider font-bold">Initiated Timestamp</span>
-                  <span class="font-semibold text-gray-700 block"><i class="fa-regular fa-clock text-gray-400 mr-0.5"></i>${metrics.formattedStart}</span>
-                </div>
-                <div>
-                  <span class="block text-[9px] text-gray-400 uppercase tracking-wider font-bold">Live Data Yield</span>
-                  <span class="font-semibold text-gray-700 block font-mono text-xs text-purple-600"><i class="fa-solid fa-chart-bar text-purple-400 mr-0.5"></i>${grandTotalVotes} items</span>
-                </div>
-                <div>
-                  <span class="block text-[9px] text-gray-400 uppercase tracking-wider font-bold">Consensus Anchor</span>
-                  <span class="font-semibold text-teal-700 truncate block"><i class="fa-solid fa-trophy text-amber-500 mr-0.5"></i>${escapeHtml(leadingChoice)}</span>
-                </div>
-              </div>
-
-              <div class="flex items-center justify-between gap-2 pt-1 border-t">
-                <div class="flex items-center gap-1.5">
-                  ${isOwner ? actionButtonBlock : `
-                    <span class="text-[10px] text-gray-400 font-medium italic bg-gray-100 px-2 py-1 rounded-md border border-dashed">
-                      <i class="fa-solid fa-shield mr-0.5"></i> Read-only parameters
-                    </span>
-                  `}
-                </div>
-                ${isOwner ? `
-                  <button onclick="setDeleteModalVisibility(true, '${key}')" class="bg-red-50 hover:bg-red-100 text-red-600 font-bold text-[11px] px-2.5 py-1.5 rounded-lg border border-red-200 transition active:scale-95 flex items-center gap-1">
-                    <i class="fa-solid fa-trash-can text-[10px]"></i> Delete Task
-                  </button>
-                ` : ''}
-              </div>
-            </div>
-          `;
+          toggleBtn.querySelector("i").className = "fa-solid fa-chevron-up text-[11px]";
         }
 
-        feedScrollContainer.appendChild(card);
+        toggleBtn.addEventListener("click", () => {
+          const currentlyClosed = contentZone.classList.contains("hidden");
+          manualCardTrackingState[task.id] = !currentlyClosed;
+          localStorage.setItem("qt_manual_card_toggles", JSON.stringify(manualCardTrackingState));
+          renderFeedView();
+        });
+
+        deleteBtn.addEventListener("click", () => setDeleteModalVisibility(true, task.id));
+
+        feedScrollContainer.appendChild(clone);
       });
+
+      if (analyticalCount === 0) {
+        feedScrollContainer.innerHTML = `
+          <div class="text-center py-16 bg-white border border-slate-100 rounded-2xl p-6 shadow-xs">
+            <div class="w-12 h-12 bg-slate-50 border border-slate-100 text-slate-400 rounded-full flex items-center justify-center text-lg mx-auto mb-3">
+              <i class="fa-solid fa-folder-open"></i>
+            </div>
+            <p class="text-sm font-bold text-slate-800">No structured components detected</p>
+            <p class="text-xs text-slate-400 mt-1">Modify your search query variables or register a new card deployment matrix.</p>
+          </div>`;
+      }
     }
 
     function renderTabularLedgerGrid() {
       const searchVal = document.getElementById("tableSearch").value.toLowerCase();
       const filterState = document.getElementById("tableFilterState").value;
       const filterType = document.getElementById("tableFilterType").value;
-      const tbody = document.getElementById("tableBody");
-      
-      tbody.innerHTML = "";
-      const keys = Object.keys(localDataStore);
+      const tBody = document.getElementById("tableBody");
 
-      const filteredKeys = keys.filter(k => {
-        const t = localDataStore[k];
-        if (filterState !== "all" && t.status !== filterState) return false;
-        if (filterType !== "all" && t.type !== filterType) return false;
+      tBody.innerHTML = "";
+      const dataArray = Object.values(localDataStore).sort((a, b) => (b.createdDate || 0) - (a.createdDate || 0));
+
+      dataArray.forEach(task => {
+        const matchesSearch = task.title.toLowerCase().includes(searchVal) || (task.description && task.description.toLowerCase().includes(searchVal));
+        const matchesState = filterState === "all" || task.state === filterState;
+        const matchesType = filterType === "all" || task.type === filterType;
+
+        if (!matchesSearch || !matchesState || !matchesType) return;
+
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50/80 transition-colors align-middle";
+
+        const startStr = task.createdDate ? new Date(task.createdDate).toLocaleDateString() : "-";
+        const endStr = task.endDate ? new Date(task.endDate).toLocaleDateString() : "-";
         
-        return (t.title || "").toLowerCase().includes(searchVal) ||
-               (t.description || "").toLowerCase().includes(searchVal) ||
-               (t.createdBy || "").toLowerCase().includes(searchVal);
-      });
-
-      if (filteredKeys.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-gray-400 font-medium italic">No rows located inside tracking register array boundaries.</td></tr>`;
-        return;
-      }
-
-      filteredKeys.sort((a,b) => new Date(localDataStore[b].createdAt) - new Date(localDataStore[a].createdAt));
-
-      filteredKeys.forEach(key => {
-        const task = localDataStore[key];
-        const metrics = calculateTimeMetrics(task.createdAt, task.closedAt);
-        const options = POLL_OPTIONS_MAP[task.type] || [];
-        
-        let grandTotalVotes = 0;
-        const voteCounts = {};
-        options.forEach(o => voteCounts[o] = 0);
-        
-        if (task.votes) {
-          Object.values(task.votes).forEach(v => {
-            if (voteCounts[v] !== undefined) { voteCounts[v]++; grandTotalVotes++; }
-          });
+        let lifespan = "Active Run";
+        if (task.createdDate && task.endDate) {
+          const diff = task.endDate - task.createdDate;
+          const days = Math.round(diff / (1000 * 60 * 60 * 24));
+          lifespan = `${days} day${days !== 1 ? 's' : ''}`;
         }
 
-        let leadingChoice = "None";
-        let maxVal = -1;
-        options.forEach(opt => {
-          if (voteCounts[opt] > maxVal && voteCounts[opt] > 0) {
-            maxVal = voteCounts[opt];
-            leadingChoice = opt;
-          }
+        const votesMap = task.votes || {};
+        const totalVotes = Object.values(votesMap).reduce((sum, v) => sum + v, 0);
+
+        let highestCount = -1;
+        let leadingChoice = "-";
+        Object.entries(votesMap).forEach(([opt, val]) => {
+          if (val > highestCount) { highestCount = val; leadingChoice = opt; }
+          else if (val === highestCount && val > 0) { leadingChoice = "Tie"; }
         });
+        if (highestCount === 0) leadingChoice = "-";
 
-        const isOwner = task.uid === window.globalUserUid;
-        const row = document.createElement("tr");
-        row.className = "hover:bg-gray-50/80 transition duration-150 odd:bg-gray-50/30";
+        let typeBadge = `<span class="px-2 py-0.5 font-bold rounded-md bg-indigo-50 text-indigo-700 text-[10px] uppercase">Status</span>`;
+        if (task.type === "decision") typeBadge = `<span class="px-2 py-0.5 font-bold rounded-md bg-sky-50 text-sky-700 text-[10px] uppercase">Decision</span>`;
+        if (task.type === "checklist") typeBadge = `<span class="px-2 py-0.5 font-bold rounded-md bg-purple-50 text-purple-700 text-[10px] uppercase">Checklist</span>`;
 
-        row.innerHTML = `
-          <td class="p-3 font-bold text-gray-900 max-w-[180px] truncate">${escapeHtml(task.title)}</td>
-          <td class="p-3 text-gray-500 max-w-[220px] truncate">${escapeHtml(task.description) || '<span class="text-gray-300 italic">None</span>'}</td>
-          <td class="p-3 uppercase font-mono text-[10px] tracking-wider"><span class="px-2 py-0.5 rounded border ${task.type==='status'?'bg-emerald-50 text-emerald-700 border-emerald-200':task.type==='decision'?'bg-blue-50 text-blue-700 border-blue-200':'bg-purple-50 text-purple-700 border-purple-200'}">${task.type}</span></td>
-          <td class="p-3 font-semibold">${task.status === 'open' ? '<span class="text-emerald-600 flex items-center gap-1">🟢 Active</span>' : '<span class="text-gray-400 flex items-center gap-1">🔒 Closed</span>'}</td>
-          <td class="p-3 text-gray-600 font-medium">${escapeHtml(task.createdBy)}</td>
-          <td class="p-3 font-mono text-[11px] text-gray-500">${metrics.formattedStart}</td>
-          <td class="p-3 font-mono text-[11px] text-gray-500">${metrics.formattedEnd}</td>
-          <td class="p-3 text-gray-600 font-medium font-mono">${metrics.durationStr}</td>
-          <td class="p-3 font-bold font-mono text-center text-purple-600 bg-purple-50/20">${grandTotalVotes}</td>
-          <td class="p-3 font-semibold text-teal-700 truncate max-w-[120px]">${escapeHtml(leadingChoice)}</td>
-          <td class="p-3 text-right">
-            <div class="flex items-center justify-end gap-1.5">
-              ${isOwner ? `
-                <button onclick="changeTaskLifecycleState('${key}', '${task.status === 'open' ? 'closed' : 'open'}')" class="text-[11px] text-gray-700 hover:text-black bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded font-bold border shadow-3xs transition">
-                  ${task.status === 'open' ? 'Close' : 'Reopen'}
-                </button>
-                <button onclick="setDeleteModalVisibility(true, '${key}')" class="text-[11px] text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2 py-1 rounded font-bold border border-red-200 shadow-3xs transition">
-                  Drop
-                </button>
-              ` : '<span class="text-[10px] text-gray-400 italic">Read-only</span>'}
-            </div>
+        let stateBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 font-bold rounded-md bg-emerald-50 text-emerald-700 text-[10px] uppercase cursor-pointer" onclick="toggleTaskStateTransition('${task.id}')">🟢 Active</span>`;
+        if (task.state === "closed") stateBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 font-bold rounded-md bg-slate-100 text-slate-500 text-[10px] uppercase cursor-pointer line-through" onclick="toggleTaskStateTransition('${task.id}')">🔒 Concluded</span>`;
+
+        tr.innerHTML = `
+          <td class="p-4 font-bold text-slate-900 max-w-[200px] truncate">${escapeHtml(task.title)}</td>
+          <td class="p-4 text-slate-400 max-w-[220px] truncate">${escapeHtml(task.description || '')}</td>
+          <td class="p-4">${typeBadge}</td>
+          <td class="p-4">${stateBadge}</td>
+          <td class="p-4 font-medium text-slate-600">${escapeHtml(task.createdBy || 'System')}</td>
+          <td class="p-4 text-slate-500 font-mono">${startStr}</td>
+          <td class="p-4 text-slate-500 font-mono">${endStr}</td>
+          <td class="p-4 text-slate-600 font-medium">${lifespan}</td>
+          <td class="p-4 font-mono font-bold text-slate-700">${totalVotes}</td>
+          <td class="p-4 font-semibold text-slate-800">${escapeHtml(leadingChoice)}</td>
+          <td class="p-4 text-right">
+            <button onclick="setDeleteModalVisibility(true, '${task.id}')" class="text-slate-300 hover:text-rose-600 p-2 rounded-lg hover:bg-rose-50 transition"><i class="fa-solid fa-trash-can"></i></button>
           </td>
         `;
-        tbody.appendChild(row);
+        tBody.appendChild(tr);
       });
-    }
 
-    window.castLiveDatabaseVote = function(taskId, selectedOption) {
-      if (!window.globalUserUid) return;
-      SoundEffects.playVote();
-      db.ref(`tasks/${taskId}/votes/${window.globalUserUid}`).set(selectedOption)
-        .then(() => {
-          appendAuditTrailLog("RESPONSE", `Registered vote value matching choice selection: "${selectedOption}"`);
-        })
-        .catch(err => alert("Registry storage failure node trace dropped context: " + err.message));
-    };
-
-    window.changeTaskLifecycleState = function(taskId, targetState) {
-      const task = localDataStore[taskId];
-      if (task && task.uid !== window.globalUserUid) {
-        alert("Action denied: Unauthorized user identity contextual mutation vector.");
-        return;
+      if (tBody.innerHTML === "") {
+        tBody.innerHTML = `<tr><td colspan="11" class="text-center py-12 text-slate-400 font-medium bg-white">No synchronized grid records map to current filters.</td></tr>`;
       }
-      
-      const payload = {
-        status: targetState,
-        closedAt: targetState === "closed" ? new Date().toISOString() : null
-      };
-
-      db.ref(`tasks/${taskId}`).update(payload)
-        .then(() => {
-          if (targetState === "closed") {
-            SoundEffects.playComplete();
-            appendAuditTrailLog("CONCLUSION", `Concluded event loop pipeline validation metrics context trace.`);
-          } else {
-            SoundEffects.playReopen();
-            appendAuditTrailLog("REOPEN", `Re-instantiated state parameters for modification sequencing tracking.`);
-          }
-        })
-        .catch(err => alert("Registry update malfunction path trace error: " + err.message));
-    };
-
-    function appendAuditTrailLog(actionTag, logStringText) {
-      const loggerContainer = document.getElementById("dashboardAuditTrail");
-      if (!loggerContainer) return;
-      
-      const logRow = document.createElement("div");
-      logRow.className = "py-1.5 flex items-start gap-2 leading-normal";
-      
-      const timestampText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
-      const badgeColors = actionTag === "CREATION" ? "bg-emerald-100 text-emerald-800 border-emerald-200" :
-                          actionTag === "DELETION" ? "bg-red-100 text-red-800 border-red-200" :
-                          actionTag === "CONCLUSION" ? "bg-gray-800 text-white border-black" :
-                          actionTag === "RESPONSE" ? "bg-purple-100 text-purple-800 border-purple-200" :
-                          "bg-amber-100 text-amber-800 border-amber-200";
-
-      logRow.innerHTML = `
-        <span class="font-mono text-gray-400 shrink-0 text-[10px] mt-0.5">${timestampText}</span>
-        <span class="px-1 py-0.5 rounded text-[9px] font-mono font-bold tracking-wider uppercase border shrink-0 ${badgeColors}">${actionTag}</span>
-        <span class="text-gray-700 break-words flex-1">${escapeHtml(logStringText)}</span>
-      `;
-      
-      loggerContainer.insertBefore(logRow, loggerContainer.firstChild);
     }
 
     function reinitializeVisualAnalyticsCharts() {
       const tasks = Object.values(localDataStore);
-      let countOpen = 0, countClosed = 0, countStatus = 0, countDecision = 0, countChecklist = 0, grossVotes = 0;
-      let totalLifespanDays = 0, resolvedTasksCount = 0;
       
-      const userAllocationMetrics = {};
-      let rangeLess1d = 0, range1to3d = 0, range3to7d = 0, rangePlus7d = 0;
+      let openCount = 0, closedCount = 0, totalVotes = 0;
+      let statusMap = { open: 0, closed: 0 };
+      let typeMap = { status: 0, decision: 0, checklist: 0 };
+      let durationRanges = { "0-2 days": 0, "3-7 days": 0, "8+ days": 0 };
+      let userMetrics = {};
+      let totalDurationSum = 0;
+      let closedDurationCount = 0;
 
       tasks.forEach(t => {
-        if (t.status === 'open') countOpen++;
-        else countClosed++;
+        if (t.state === "open") openCount++;
+        if (t.state === "closed") closedCount++;
+        statusMap[t.state] = (statusMap[t.state] || 0) + 1;
+        typeMap[t.type] = (typeMap[t.type] || 0) + 1;
 
-        if (t.type === 'status') countStatus++;
-        else if (t.type === 'decision') countDecision++;
-        else if (t.type === 'checklist') countChecklist++;
+        const votesMap = t.votes || {};
+        const taskVotes = Object.values(votesMap).reduce((s, v) => s + v, 0);
+        totalVotes += taskVotes;
 
-        let localTaskVoteCount = 0;
-        if (t.votes) {
-          const votesArray = Object.values(t.votes);
-          localTaskVoteCount = votesArray.length;
-          grossVotes += localTaskVoteCount;
+        if (t.createdDate && t.endDate) {
+          const delta = t.endDate - t.createdDate;
+          const days = Math.round(delta / (1000 * 60 * 60 * 24));
+          totalDurationSum += days;
+          closedDurationCount++;
+
+          if (days <= 2) durationRanges["0-2 days"]++;
+          else if (days <= 7) durationRanges["3-7 days"]++;
+          else durationRanges["8+ days"]++;
         }
 
-        const metrics = calculateTimeMetrics(t.createdAt, t.closedAt);
-        if (t.status === 'closed') {
-          totalLifespanDays += metrics.days;
-          resolvedTasksCount++;
-        }
-
-        const calculatedDays = metrics.days;
-        if (calculatedDays < 1) rangeLess1d++;
-        else if (calculatedDays <= 3) range1to3d++;
-        else if (calculatedDays <= 7) range3to7d++;
-        else rangePlus7d++;
-
-        const user = t.createdBy || "Unknown Source";
-        if (!userAllocationMetrics[user]) {
-          userAllocationMetrics[user] = { created: 0, actions: 0 };
-        }
-        userAllocationMetrics[user].created++;
-        userAllocationMetrics[user].actions += localTaskVoteCount;
+        const user = t.createdBy || "System Host";
+        if (!userMetrics[user]) userMetrics[user] = { created: 0, votes: 0 };
+        userMetrics[user].created++;
+        userMetrics[user].votes += taskVotes;
       });
 
       document.getElementById("stat-total").innerText = tasks.length;
-      document.getElementById("stat-active").innerText = countOpen;
-      document.getElementById("stat-closed").innerText = countClosed;
-      document.getElementById("stat-votes").innerText = grossVotes;
-      document.getElementById("stat-avg-duration").innerText = resolvedTasksCount > 0 ? Math.round(totalLifespanDays / resolvedTasksCount) + " days" : "0 days";
+      document.getElementById("stat-active").innerText = openCount;
+      document.getElementById("stat-closed").innerText = closedCount;
+      document.getElementById("stat-votes").innerText = totalVotes;
+      document.getElementById("stat-avg-duration").innerText = closedDurationCount > 0 ? `${Math.round(totalDurationSum / closedDurationCount)} days` : "0 days";
 
       if (statusChartInstance) statusChartInstance.destroy();
       if (typeChartInstance) typeChartInstance.destroy();
       if (durationChartInstance) durationChartInstance.destroy();
       if (performanceChartInstance) performanceChartInstance.destroy();
 
-      const ctxStatus = document.getElementById("chartStatus")?.getContext("2d");
-      if (ctxStatus) {
-        statusChartInstance = new Chart(ctxStatus, {
-          type: 'doughnut',
-          data: {
-            labels: ['Active Run', 'Concluded'],
-            datasets: [{
-              data: [countOpen, countClosed],
-              backgroundColor: ['#00a884', '#9ca3af'],
-              borderWidth: 1
-            }]
-          },
-          options: { plugins: { legend: { display: false } }, responsive: true, maintainAspectRatio: true }
-        });
-      }
+      const baseOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
 
-      const ctxType = document.getElementById("chartType")?.getContext("2d");
-      if (ctxType) {
-        typeChartInstance = new Chart(ctxType, {
-          type: 'doughnut',
-          data: {
-            labels: ['Status', 'Decision', 'Checklist'],
-            datasets: [{
-              data: [countStatus, countDecision, countChecklist],
-              backgroundColor: ['#10b981', '#3b82f6', '#a855f7'],
-              borderWidth: 1
-            }]
-          },
-          options: { plugins: { legend: { display: false } }, responsive: true, maintainAspectRatio: true }
-        });
-      }
+      statusChartInstance = new Chart(document.getElementById('chartStatus'), {
+        type: 'doughnut',
+        data: { labels: ['Active', 'Concluded'], datasets: [{ data: [statusMap.open, statusMap.closed], backgroundColor: ['#10b981', '#cbd5e1'], borderOffset: 0, borderWidth: 2 }] },
+        options: baseOptions
+      });
 
-      const ctxDuration = document.getElementById("chartDurationRange")?.getContext("2d");
-      if (ctxDuration) {
-        durationChartInstance = new Chart(ctxDuration, {
-          type: 'polarArea',
-          data: {
-            labels: ['<1d', '1-3d', '3-7d', '>7d'],
-            datasets: [{
-              data: [rangeLess1d, range1to3d, range3to7d, rangePlus7d],
-              backgroundColor: ['rgba(245,158,11,0.7)', 'rgba(59,130,246,0.7)', 'rgba(168,85,247,0.7)', 'rgba(239,68,68,0.7)'],
-              borderWidth: 1
-            }]
-          },
-          options: { plugins: { legend: { display: false } }, responsive: true, maintainAspectRatio: true }
-        });
-      }
+      typeChartInstance = new Chart(document.getElementById('chartType'), {
+        type: 'polarArea',
+        data: { labels: ['Status', 'Decision', 'Checklist'], datasets: [{ data: [typeMap.status, typeMap.decision, typeMap.checklist], backgroundColor: ['rgba(79, 70, 229, 0.85)', 'rgba(14, 165, 233, 0.85)', 'rgba(147, 51, 234, 0.85)'] }] },
+        options: baseOptions
+      });
 
-      const ctxPerformance = document.getElementById("chartUserPerformance")?.getContext("2d");
-      if (ctxPerformance) {
-        const usersArray = Object.keys(userAllocationMetrics);
-        const tasksCreatedData = usersArray.map(u => userAllocationMetrics[u].created);
-        const dataActionsInteraction = usersArray.map(u => userAllocationMetrics[u].actions);
+      durationChartInstance = new Chart(document.getElementById('chartDurationRange'), {
+        type: 'bar',
+        data: { labels: ['0-2 Days', '3-7 Days', '8+ Days'], datasets: [{ data: [durationRanges["0-2 days"], durationRanges["3-7 days"], durationRanges["8+ days"]], backgroundColor: '#f59e0b', borderRadius: 6 }] },
+        options: baseOptions
+      });
 
-        performanceChartInstance = new Chart(ctxPerformance, {
-          type: 'bar',
-          data: {
-            labels: usersArray,
-            datasets: [
-              { label: 'Deployed Components', data: tasksCreatedData, backgroundColor: '#008069' },
-              { label: 'Aggregated Engagement Interactions', data: dataActionsInteraction, backgroundColor: '#c084fc' }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-            plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } } }
-          }
+      const userLabels = Object.keys(userMetrics);
+      const userCreatedData = userLabels.map(u => userMetrics[u].created);
+      const userVotesData = userLabels.map(u => userMetrics[u].votes);
+
+      performanceChartInstance = new Chart(document.getElementById('chartUserPerformance'), {
+        type: 'bar',
+        data: {
+          labels: userLabels,
+          datasets: [
+            { label: 'Deployed Polls', data: userCreatedData, backgroundColor: '#6366f1', borderRadius: 4 },
+            { label: 'Aggregated Engagement', data: userVotesData, backgroundColor: '#10b981', borderRadius: 4 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10, weight: 'bold' } } } },
+          scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+        }
+      });
+
+      db.ref("auditTrail").limitToLast(12).once("value", snapshot => {
+        const streamContainer = document.getElementById("dashboardAuditTrail");
+        streamContainer.innerHTML = "";
+        const items = [];
+        snapshot.forEach(child => { items.unshift(child.val()); });
+
+        if (items.length === 0) {
+          streamContainer.innerHTML = `<p class="py-3 text-slate-400 italic text-center">No structural workspace mutations logged.</p>`;
+          return;
+        }
+
+        items.forEach(log => {
+          const date = log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : '';
+          let actionLabel = `<span class="bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded text-[9px] tracking-wide">${log.action}</span>`;
+          if (log.action === "DELETED" || log.action === "CONCLUDED") actionLabel = `<span class="bg-rose-50 text-rose-700 font-extrabold px-1.5 py-0.5 rounded text-[9px] tracking-wide">${log.action}</span>`;
+          
+          const div = document.createElement("div");
+          div.className = "py-2 flex items-center justify-between gap-3 text-[11px] border-b border-slate-50";
+          div.innerHTML = `
+            <span class="truncate text-slate-600">User <strong class="text-slate-800 font-bold">${escapeHtml(log.operator)}</strong> ${actionLabel} task: <span class="text-slate-500 font-medium">"${escapeHtml(log.taskTitle)}"</span></span>
+            <span class="text-slate-400 font-mono text-[10px] shrink-0">${date}</span>
+          `;
+          streamContainer.appendChild(div);
         });
-      }
+      });
     }
 
     window.exportToCSV = function() {
-      const tasks = Object.values(localDataStore);
-      if (tasks.length === 0) {
-        alert("Export operation halted: Selected datastore parameters partition array target is dry.");
-        return;
-      }
+      const dataArray = Object.values(localDataStore);
+      if (dataArray.length === 0) { alert("Execution Halted: System row buffer registry is blank."); return; }
 
-      let csvContent = "data:text/csv;charset=utf-8,Task Title,Description,Type,State Status,Created By,Start Date,End Date,Lifespan,Total Votes\n";
-      
-      tasks.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-      
-      tasks.forEach(t => {
-        const metrics = calculateTimeMetrics(t.createdAt, t.closedAt);
-        let voteCount = 0;
-        if (t.votes) voteCount = Object.keys(t.votes).length;
+      let csv = "Task ID,Title,Description,Type,State,Created By,Start Date,End Date,Total Votes\n";
+      dataArray.forEach(t => {
+        const votesMap = t.votes || {};
+        const totalVotes = Object.values(votesMap).reduce((s, v) => s + v, 0);
+        const sd = t.createdDate ? new Date(t.createdDate).toISOString() : '';
+        const ed = t.endDate ? new Date(t.endDate).toISOString() : '';
         
-        const rTitle = `"${(t.title || "").replace(/"/g, '""')}"`;
-        const rDesc = `"${(t.description || "").replace(/"/g, '""')}"`;
-        const rType = `"${t.type}"`;
-        const rStatus = `"${t.status}"`;
-        const rUser = `"${(t.createdBy || "").replace(/"/g, '""')}"`;
-        const rStart = `"${metrics.formattedStart}"`;
-        const rEnd = `"${metrics.formattedEnd}"`;
-        const rDuration = `"${metrics.durationStr}"`;
-        
-        csvContent += `${rTitle},${rDesc},${rType},${rStatus},${rUser},${rStart},${rEnd},${rDuration},${voteCount}\n`;
+        csv += `"${t.id}","${t.title.replace(/"/g, '""')}","${(t.description || '').replace(/"/g, '""')}","${t.type}","${t.state}","${(t.createdBy || '').replace(/"/g, '""')}","${sd}","${ed}",${totalVotes}\n`;
       });
 
-      const encodedUri = encodeURI(csvContent);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `quicktask_ledger_${currentProject.toLowerCase()}_stream.csv`);
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute("download", `QuickTask_Ledger_Data_Stream_${currentProject}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -1170,199 +1082,52 @@
 
     window.exportToPDF = function() {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('p', 'mm', 'a4');
-      
-      const tasks = Object.values(localDataStore);
-      
-      let countOpen = 0, countClosed = 0, grossVotes = 0;
-      let countStatus = 0, countDecision = 0, countChecklist = 0;
-      
-      tasks.forEach(t => {
-        if (t.status === 'open') countOpen++; else countClosed++;
-        if (t.type === 'status') countStatus++;
-        else if (t.type === 'decision') countDecision++;
-        else if (t.type === 'checklist') countChecklist++;
-        if (t.votes) grossVotes += Object.keys(t.votes).length;
-      });
+      const doc = new jsPDF('l', 'mm', 'a4');
 
-      let pageNum = 1;
-      function injectReportHeader(titleLabel) {
-        doc.setFillColor(0, 128, 105);
-        doc.rect(0, 0, 210, 24, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
-        doc.text("QUICKTASK POLLS SYSTEM EXECUTIVE ANALYTICS REPORT", 14, 11);
-        
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        doc.text(`PROJECT CHANNEL: SPECIFIED WORKSPACE [${currentProject.toUpperCase()}]`, 14, 16);
-        doc.text(`GENERATION DATESTAMP: ${new Date().toLocaleString()}`, 14, 20);
-        
-        doc.setFont("helvetica", "bold");
-        doc.text(`SECTION ${pageNum}: ${titleLabel.toUpperCase()}`, 196, 14, { align: "right" });
-        
-        doc.setLineWidth(0.3);
-        doc.setDrawColor(0, 77, 62);
-        doc.line(0, 24, 210, 24);
-      }
-
-      function injectReportFooter() {
-        doc.setLineWidth(0.3);
-        doc.setDrawColor(200, 200, 200);
-        doc.line(14, 282, 196, 282);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        doc.setTextColor(120, 120, 120);
-        doc.text("QuickTask Analytics Matrix Registry Engine Architecture Log Trace Node Protocol (A4 Wrapped Report Specification Form).", 14, 286);
-        doc.text(`Page Counter System Identifier Node Reference: [ ${pageNum} ]`, 196, 286, { align: "right" });
-      }
-
-      // --- PAGE 1: HIGH LEVEL SUMMARY & METRICS SUMMARY INTERACTION OVERVIEW ---
-      injectReportHeader("Executive Data Metrics Overview Summary");
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(16);
+      doc.setTextColor(15, 23, 42);
+      doc.text(`QuickTask Workspace Master Audit Summary [Scope: ${currentProject}]`, 14, 18);
       
-      doc.setTextColor(40, 40, 40);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text("1. QUANTITATIVE ANALYSIS CORE METRICS SUMMARY BLOCK", 14, 34);
-      
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9.5);
-      doc.text("Below is the compiled high-level statistical summary across the operational pipeline. These indicators reflect total deployment metrics and overall interaction counts.", 14, 40);
-      
-      const statSummariesData = [
-        ["Core Tracking Cluster Metric Type", "Live Registry Value Allocation Graph Count Mapping Parameter"],
-        ["Target Filter Project Context Group", currentProject],
-        ["Aggregated Context Elements Count (Total Tasks)", `${tasks.length} Deployed Records`],
-        ["Active Execution Elements Counter (Active Polls)", `${countOpen} Open Run Nodes`],
-        ["Concluded State Context Points (Closed History)", `${countClosed} Finalized Invariants`],
-        ["Gross Workspace Response Points Captured (Total Votes)", `${grossVotes} Input Interventions`],
-        ["Status Context Distribution Pattern Ratio", `${countStatus} Status Polls`],
-        ["Decision Matrix Structure Ratio Counts", `${countDecision} Decision Polls`],
-        ["Checklist Verification Points Allocation Elements", `${countChecklist} Checklist Polls`]
-      ];
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(100, 116, 139);
+      doc.text(`Generated on: ${new Date().toLocaleString()} | Operator Handles Domain Instance Pool`, 14, 24);
 
-      doc.autoTable({
-        startY: 44,
-        head: [statSummariesData[0]],
-        body: statSummariesData.slice(1),
-        theme: 'striped',
-        headStyles: { fillColor: [0, 77, 62], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
-        bodyStyles: { fontStyle: 'normal', fontSize: 9.5, textColor: [50, 50, 50] },
-        columnStyles: { 0: { fontStyle: 'bold', width: 85 }, 1: { width: 97 } },
-        margin: { left: 14, right: 14 }
-      });
+      const rows = [];
+      Object.values(localDataStore).forEach(t => {
+        const votesMap = t.votes || {};
+        const totalVotes = Object.values(votesMap).reduce((s, v) => s + v, 0);
+        let choices = [];
+        Object.entries(votesMap).forEach(([k, v]) => choices.push(`${k}: ${v}`));
 
-      let nextY = doc.lastAutoTable.finalY + 10;
-      
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text("2. OPERATIONAL INSIGHTS & STRUCTURAL INTEGRITY ANALYSIS", 14, nextY);
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9.5);
-      nextY += 6;
-      
-      const analyticalNarrativeText = `The structural data yield mapping configuration for workspace [${currentProject}] demonstrates an interaction density balance sheet score of ${grossVotes} metrics points distributed over ${tasks.length} architectural parameters. Open active nodes represent ${Math.round((countOpen/(tasks.length||1))*100)}% of the tracking array matrix capacity, requiring monitoring vectors. Concluded records have successfully written back to the primary database ledger and are completely locked from external modification workflows, guaranteeing high corporate operational validation integrity standards.`;
-      
-      const splitNarrativeLines = doc.splitTextToSize(analyticalNarrativeText, 182);
-      doc.text(splitNarrativeLines, 14, nextY);
-      
-      injectReportFooter();
-
-      // --- PAGE 2+: COMPREHENSIVE DETAIL ROWS (THE LEDGER REGISTER DEEP LOG MATRIX) ---
-      pageNum++;
-      doc.addPage();
-      injectReportHeader("Comprehensive Ledger Grid Detail Matrix Register");
-      
-      doc.setTextColor(40, 40, 40);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text("3. DEEP TRANSACTION LOG TRACKING RECORD INDEX BLOCK", 14, 34);
-      
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9.5);
-      doc.text("The complete ledger log grid of the specified operational channel database structure is listed below, detailing lifespan, responses, and anchor points.", 14, 40);
-
-      const tableRowsData = [];
-      tasks.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-      tasks.forEach(t => {
-        const timeMetrics = calculateTimeMetrics(t.createdAt, t.closedAt);
-        let taskTotalVotes = 0;
-        const localVoteMap = {};
-        const opts = POLL_OPTIONS_MAP[t.type] || [];
-        opts.forEach(o => localVoteMap[o] = 0);
-        
-        if (t.votes) {
-          Object.values(t.votes).forEach(v => {
-            if (localVoteMap[v] !== undefined) { localVoteMap[v]++; taskTotalVotes++; }
-          });
-        }
-        
-        let leadChoiceText = "None";
-        let trackingMax = -1;
-        opts.forEach(o => {
-          if (localVoteMap[o] > trackingMax && localVoteMap[o] > 0) {
-            trackingMax = localVoteMap[o];
-            leadChoiceText = o;
-          }
-        });
-
-        const statusLabelText = t.status === 'open' ? "🟢 OPEN" : "🔒 CLOSED";
-        
-        let detailsStringText = "";
-        opts.forEach(o => {
-          const count = localVoteMap[o] || 0;
-          const percentage = taskTotalVotes > 0 ? Math.round((count / taskTotalVotes) * 100) : 0;
-          detailsStringText += `${o}: ${count} (${percentage}%)\n`;
-        });
-        
-        if (t.description) {
-          detailsStringText += `\nDesc: ${t.description}`;
-        }
-
-        tableRowsData.push([
-          t.title || "Untitled Task",
-          t.type.toUpperCase(),
-          statusLabelText,
-          t.createdBy || "System",
-          `${timeMetrics.formattedStart}\nTo:\n${timeMetrics.formattedEnd}`,
-          timeMetrics.durationStr,
-          `${taskTotalVotes} votes\n\nWinner:\n${leadChoiceText}`,
-          detailsStringText
+        rows.push([
+          t.title || '',
+          t.description || '',
+          t.type ? t.type.toUpperCase() : '',
+          t.state ? t.state.toUpperCase() : '',
+          t.createdBy || '',
+          t.createdDate ? new Date(t.createdDate).toLocaleDateString() : '',
+          totalVotes,
+          choices.join(" | ")
         ]);
       });
 
       doc.autoTable({
-        startY: 44,
-        head: [["Task Title", "Type", "State Status", "Created By", "Timeline Bounds", "Lifespan", "Metrics Anchor", "Deep Yield breakdown Breakdown & Options Analysis"]],
-        body: tableRowsData,
-        theme: 'grid',
-        headStyles: { fillColor: [0, 128, 105], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
-        bodyStyles: { fontSize: 8, textColor: [60, 60, 60], overflow: 'linebreak' },
+        startY: 28,
+        head: [['Task Title', 'Description', 'Context Pattern', 'State Loop', 'Operator Profile', 'Initialization', 'Aggregate', 'Option Choice Distribution']],
+        body: rows,
+        theme: 'striped',
+        headStyles: { fillColor: [15, 23, 42], fontSize: 8, fontStyle: 'bold' },
+        styles: { fontSize: 8, overflow: 'linebreak' },
         columnStyles: {
-          0: { fontStyle: 'bold', width: 26 },
-          1: { width: 14 },
-          2: { fontStyle: 'bold', width: 15 },
-          3: { width: 18 },
-          4: { fontSize: 7, fontStyle: 'italic', width: 24 },
-          5: { width: 16 },
-          6: { width: 22, fontStyle: 'bold' },
-          7: { fontSize: 7.5, width: 47 }
-        },
-        margin: { left: 14, right: 14 },
-        didDrawPage: function(data) {
-          injectReportFooter();
-          pageNum++;
-          data.settings.margin.top = 28;
-          
-          if(data.cursor.y > 20) {
-            injectReportHeader("Comprehensive Ledger Grid Detail Matrix Register Continuation");
-          }
+          0: { cellWidth: 35 },
+          1: { cellWidth: 40 },
+          7: { cellWidth: 65 }
         }
       });
 
-      doc.save(`quicktask_executive_wrapped_report_${currentProject.toLowerCase()}_a4.pdf`);
+      doc.save(`QuickTask_Wrapped_Operational_Report_${currentProject}.pdf`);
     };
   </script>
 </body>
