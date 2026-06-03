@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Data Tracker - Auth Test</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .box { padding: 15px; border: 1px solid #ddd; margin-bottom: 10px; }
+    button { padding: 10px; margin-top: 10px; cursor: pointer; }
+    .uid { word-break: break-all; color: green; }
+  </style>
+</head>
+<body>
+
+<h2>🔥 Data Tracker Auth Test</h2>
+
+<div class="box">
+  <div id="status">Starting...</div>
+  <div id="uid" class="uid"></div>
+</div>
+
+<div class="box">
+  <button onclick="writeTest()">Write Test Task</button>
+</div>
+
+<div class="box">
+  <pre id="output"></pre>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<script>
+  // 🔥 YOUR CONFIG
+  const firebaseConfig = {
+    apiKey: "AIzaSyCL6iJKRp-WjCgBTtRCuRny14lUOMP9KJg",
+    authDomain: "data-tracker-f11df.firebaseapp.com",
+    databaseURL: "https://data-tracker-f11df-default-rtdb.firebaseio.com",
+    projectId: "data-tracker-f11df",
+    storageBucket: "data-tracker-f11df.firebasestorage.app",
+    messagingSenderId: "462872028246",
+    appId: "1:462872028246:web:eb90490bd650a85d76c7f7"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+
+  const auth = firebase.auth();
+  const db = firebase.database();
+
+  let uid = null;
+
+  document.getElementById("status").innerText = "Signing in...";
+
+  // 🔐 Anonymous Auth
+  auth.signInAnonymously()
+    .then(user => {
+      uid = user.user.uid;
+
+      document.getElementById("status").innerText = "Authenticated ✔";
+      document.getElementById("uid").innerText = "UID: " + uid;
+
+      log("Auth success: " + uid);
+    })
+    .catch(err => {
+      document.getElementById("status").innerText = "Auth failed ❌";
+      log(err.message);
+    });
+
+  // ✍️ Write test data
+  function writeTest() {
+    if (!uid) return alert("Not authenticated yet");
+
+    const ref = db.ref("test_tasks");
+
+    const newTask = {
+      text: "Hello from Data Tracker",
+      uid: uid,
+      timestamp: new Date().toISOString()
+    };
+
+    ref.push(newTask)
+      .then(() => log("Write success ✔"))
+      .catch(err => log(err.message));
+  }
+
+  function log(msg) {
+    document.getElementById("output").innerText += msg + "\n";
+  }
+</script>
+
+</body>
+</html>
