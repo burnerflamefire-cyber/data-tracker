@@ -5,22 +5,70 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Project Data Tracker</title>
 
-  <!-- Firebase SDK -->
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <!-- CONFIG -->
-  <script src="./config/app.config.js"></script>
+  <script src="config/app.config.js"></script>
 
-  <!-- CORE ENGINE (ORDER MATTERS) -->
-  <script src="./core/firebase.js"></script>
-  <script src="./core/state.js"></script>
-  <script src="./core/bootstrap.js"></script>
+  <!-- SERVICES -->
+  <script src="services/firebase.service.js"></script>
 
+  <!-- CORE -->
+  <script src="core/state.js"></script>
+  <script src="core/router.js"></script>
+  <script src="core/app.js"></script>
+
+  <!-- UI -->
+  <script src="ui/theme.js"></script>
+  <script src="ui/layout.js"></script>
+  <script src="ui/navigation.js"></script>
+
+  <!-- FEATURES -->
+  <script src="features/projectView.js"></script>
+  <script src="features/programmeView.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui;
+      background: #efeae2;
+    }
+
+    .wcg-blue {
+      background: #003161;
+      color: white;
+    }
+
+    .nav-btn {
+      transition: 0.2s;
+      cursor: pointer;
+    }
+
+    .nav-btn:hover {
+      background: #004a7c;
+    }
+
+    .nav-active {
+      background: #002244 !important;
+      border-left: 3px solid #A6CDC6;
+    }
+
+    .panel {
+      transition: width 0.2s ease;
+    }
+  </style>
 </head>
 
 <body>
+
+  <!-- APP ROOT -->
   <div id="app"></div>
+
 </body>
 </html>
