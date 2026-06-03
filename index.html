@@ -193,68 +193,70 @@
                 <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Rollout FY</label>
                 <input type="text" id="inputRolloutFY" placeholder="e.g. 2026/27" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs font-mono">
               </div>
-              
-              <div class="border-t border-gray-200 pt-3 mt-1 flex flex-col gap-2.5">
-                <div>
-                  <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Main Category</label>
-                  <select id="inputMainCategory" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs bg-white">
-                    <option value="">Select Main Category...</option>
-                    <option value="Material Cycle Data">Material Cycle Data</option>
-                    <option value="Structural Engineering">Structural Engineering</option>
-                    <option value="Utility Automation">Utility Automation</option>
-                    <option value="Civil Works">Civil Works</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Sub Category</label>
-                  <select id="inputSubCategory" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs bg-white">
-                    <option value="">Select Sub Category...</option>
-                    <option value="Foundations">Foundations</option>
-                    <option value="Insulation">Insulation</option>
-                    <option value="Distribution Valves">Distribution Valves</option>
-                    <option value="Surfacing Layout">Surfacing Layout</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Free Text</label>
-                  <input type="text" id="inputFreeText" placeholder="Enter specifications or descriptive notes" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                  <div>
-                    <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Unit</label>
-                    <input type="text" id="inputUnit" placeholder="e.g. Tons, Sqm" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
-                  </div>
-                  <div>
-                    <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Qty</label>
-                    <input type="number" id="inputQty" placeholder="0" oninput="calculateAmountEngine()" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs font-mono">
-                  </div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                  <div>
-                    <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Rate (ZAR)</label>
-                    <div class="relative">
-                      <span class="absolute left-2 top-1.5 text-gray-400 text-xs font-mono">R</span>
-                      <input type="number" id="inputRate" placeholder="0.00" oninput="calculateAmountEngine()" class="w-full border border-gray-300 rounded pl-5 pr-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs font-mono">
-                    </div>
-                  </div>
-                  <div>
-                    <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Amount (ZAR)</label>
-                    <div class="relative">
-                      <span class="absolute left-2 top-1.5 text-gray-400 text-xs font-mono">R</span>
-                      <input type="text" id="inputAmount" placeholder="0.00" readonly class="w-full border border-gray-300 bg-gray-50 rounded pl-5 pr-2 py-1.5 focus:outline-none text-xs font-mono text-gray-600">
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Date</label>
-                  <input type="date" id="inputDate" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs font-mono">
-                </div>
-              </div>
-
             </div>
           </div>
 
-          <div class="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400">
+          <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-3 flex flex-col gap-2.5">
+            <span class="font-bold text-gray-700 uppercase tracking-wider text-[10px] flex items-center gap-1.5 mb-1">
+              <i class="fa-solid fa-tags text-[#003161]"></i> Core Entry Attributes
+            </span>
+            <div>
+              <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Main Category</label>
+              <select id="inputMainCategory" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs bg-white">
+                <option value="">Select Main Category...</option>
+                <option value="Material Cycle Data">Material Cycle Data</option>
+                <option value="Structural Engineering">Structural Engineering</option>
+                <option value="Utility Automation">Utility Automation</option>
+                <option value="Civil Works">Civil Works</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Sub Category</label>
+              <select id="inputSubCategory" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs bg-white">
+                <option value="">Select Sub Category...</option>
+                <option value="Foundations">Foundations</option>
+                <option value="Insulation">Insulation</option>
+                <option value="Distribution Valves">Distribution Valves</option>
+                <option value="Surfacing Layout">Surfacing Layout</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Free Text</label>
+              <input type="text" id="inputFreeText" placeholder="Enter specifications or descriptive notes" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Unit</label>
+                <input type="text" id="inputUnit" placeholder="e.g. Tons, Sqm" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Qty</label>
+                <input type="number" id="inputQty" placeholder="0" oninput="calculateAmountEngine()" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs font-mono">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Rate (ZAR)</label>
+                <div class="relative">
+                  <span class="absolute left-2 top-1.5 text-gray-400 text-xs font-mono">R</span>
+                  <input type="number" id="inputRate" placeholder="0.00" oninput="calculateAmountEngine()" class="w-full border border-gray-300 rounded pl-5 pr-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs font-mono">
+                </div>
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Amount (ZAR)</label>
+                <div class="relative">
+                  <span class="absolute left-2 top-1.5 text-gray-400 text-xs font-mono">R</span>
+                  <input type="text" id="inputAmount" placeholder="0.00" readonly class="w-full border border-gray-300 bg-gray-50 rounded pl-5 pr-2 py-1.5 focus:outline-none text-xs font-mono text-gray-600">
+                </div>
+              </div>
+            </div>
+            <div>
+              <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Date</label>
+              <input type="date" id="inputDate" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs font-mono">
+            </div>
+          </div>
+
+          <div class="border-2 border-dashed border-gray-200 rounded-lg p-4 text-center text-gray-400">
             Input Matrix Controls Placeholder
           </div>
         </div>
@@ -293,7 +295,7 @@
           </div>
           <button onclick="collapsePane('filtersPane')" class="text-gray-400 hover:text-gray-600 p-1" title="Collapse Panel"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
-        <div class="p-4 overflow-y-auto custom-scrollbar flex-1">
+        <div id="filtersPaneContent" class="p-4 overflow-y-auto custom-scrollbar flex-1">
           <div class="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400 mt-4">
             System Filters Configuration Panel
           </div>
@@ -420,12 +422,111 @@
       { guid: "PRJ-0711", name: "Paarl Sustainable Housing Phase 2", mainCategory: "Material Cycle Data", subCategory: "Foundations", freetext: "Pre-fabricated Eco-Lite Cellular Concrete Walling", unit: "Blocks", qty: 8500, rate: 48, amount: 408000, visible: true, date: "2026-03-15", audit: "System Auto-Ingest Base Schema" }
     ];
 
-    let currentTableFilters = {};
-
-    // --- STRUCTURAL SHELL INTERACTION CONTROLLER MECHANICS ---
+    let currentSelectedProjectFilterValue = "";
     let activeNavContext = null;
     let selectedPagesStore = { "Programme": 0, "Project": 0 }; 
 
+    function calculateAmountEngine() {
+      const qty = parseFloat(document.getElementById("inputQty").value) || 0;
+      const rate = parseFloat(document.getElementById("inputRate").value) || 0;
+      document.getElementById("inputAmount").value = (qty * rate).toFixed(2);
+    }
+
+    // --- GLOBAL FILTERS RENDERING BLOCK WITH DYNAMIC INLINE SEARCH ENGINE ---
+    function renderGlobalFiltersLayout() {
+      const filterZone = document.getElementById("filtersPaneContent");
+      if (activeNavContext === "Project") {
+        let uniqueProjectsMap = {};
+        rawTableRows.forEach(row => {
+          let comboKey = `${row.name} (${row.guid})`;
+          uniqueProjectsMap[comboKey] = { name: row.name, guid: row.guid };
+        });
+
+        let dropdownOptionsHtml = `<option value="">-- View All Projects --</option>`;
+        Object.keys(uniqueProjectsMap).forEach(key => {
+          let selectedAttribute = (currentSelectedProjectFilterValue === key) ? "selected" : "";
+          dropdownOptionsHtml += `<option value="${key}" ${selectedAttribute}>${key}</option>`;
+        });
+
+        filterZone.innerHTML = `
+          <div class="flex flex-col gap-3">
+            <div class="bg-blue-50/50 p-2.5 border border-blue-200/60 rounded-md">
+              <label class="block text-[10px] font-bold text-[#003161] uppercase tracking-wider mb-1.5">
+                <i class="fa-solid fa-magnifying-glass text-xs mr-1"></i> Search &amp; Single Target Selection
+              </label>
+              <input type="text" id="projectFilterSearchBox" placeholder="Type to filter list options..." 
+                class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs mb-2 shadow-inner"
+                oninput="executeProjectFilterSearchMatch()">
+              <select id="globalProjectSelectorFilter" size="6" class="w-full border border-gray-300 rounded p-1 focus:outline-none text-xs bg-white custom-scrollbar shadow-sm"
+                onchange="applySingleProjectSelectionFilter(this.value)">
+                ${dropdownOptionsHtml}
+              </select>
+            </div>
+            <div class="text-[10px] text-gray-400 bg-white p-2 rounded border border-gray-100 italic leading-relaxed">
+              * Choosing a concrete listing maps a singular scope constraints filter constraint logic instantly over data ledger visualizations.
+            </div>
+          </div>`;
+      } else {
+        filterZone.innerHTML = `
+          <div class="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400 mt-4">
+            System Filters Configuration Panel [Scope: Programme Level]
+          </div>`;
+      }
+    }
+
+    function executeProjectFilterSearchMatch() {
+      const keyword = document.getElementById("projectFilterSearchBox").value.toLowerCase();
+      const options = document.querySelectorAll("#globalProjectSelectorFilter option");
+      options.forEach(opt => {
+        if (opt.value === "") return;
+        const optionText = opt.text.toLowerCase();
+        opt.style.display = optionText.includes(keyword) ? "block" : "none";
+      });
+    }
+
+    function applySingleProjectSelectionFilter(val) {
+      currentSelectedProjectFilterValue = val;
+      if (document.getElementById("infoPaneTitle").innerText.includes("Structured Data Ledger")) {
+        renderRawDataTableEngine();
+      }
+    }
+
+    // --- COHESIVE ROW SELECTION TO INPUT CONTROLLER PIPELINE ---
+    function populateFormFromSelectedLedgerRow(rowIndex) {
+      const chosenDataRow = rawTableRows[rowIndex];
+      if (!chosenDataRow) return;
+
+      document.getElementById("inputProjectGUID").value = chosenDataRow.guid || "";
+      document.getElementById("inputProjectName").value = chosenDataRow.name || "";
+      document.getElementById("inputMainProgramme").value = "Infrastructure Support Programme"; 
+      document.getElementById("inputSubProgramme").value = "District Expansion Block";
+      document.getElementById("inputRolloutFY").value = "2026/27"; 
+
+      document.getElementById("inputMainCategory").value = chosenDataRow.mainCategory || "";
+      document.getElementById("inputSubCategory").value = chosenDataRow.subCategory || "";
+      document.getElementById("inputFreeText").value = chosenDataRow.freetext || "";
+      document.getElementById("inputUnit").value = chosenDataRow.unit || "";
+      document.getElementById("inputQty").value = chosenDataRow.qty || 0;
+      document.getElementById("inputRate").value = chosenDataRow.rate || 0;
+      document.getElementById("inputAmount").value = (chosenDataRow.qty * chosenDataRow.rate).toFixed(2);
+      document.getElementById("inputDate").value = chosenDataRow.date || "";
+
+      const contentPane = document.getElementById('projectDetailsContent');
+      const caret = document.getElementById('projectDetailsCaret');
+      if (contentPane.classList.contains('hidden')) {
+        contentPane.classList.remove('hidden');
+        caret.classList.remove('rotate-180');
+      }
+
+      const rowElements = document.querySelectorAll("#rawLedgerTableBodyZone tr");
+      rowElements.forEach(r => r.classList.remove("bg-blue-50/80", "border-blue-300"));
+      const selectedUiRow = document.getElementById(`ledger-row-id-${rowIndex}`);
+      if (selectedUiRow) {
+        selectedUiRow.classList.add("bg-blue-50/80", "border-blue-300");
+      }
+    }
+
+    // --- STRUCTURAL SHELL INTERACTION CONTROLLER MECHANICS ---
     function toggleSecondaryNav(context, forceOpen = false) {
       const pane = document.getElementById('secondaryNavPane');
       const heading = document.getElementById('secondaryNavHeading');
@@ -452,6 +553,7 @@
       activeBtn.classList.remove('text-blue-300/70', 'border-transparent');
       activeBtn.classList.add('bg-[#003161]', 'text-white', 'border-blue-400');
       
+      renderGlobalFiltersLayout();
       zone.innerHTML = '';
       const contextPages = ['Overview Matrix', 'Financial Engine Metrics', 'Performance Analytics', 'Audit Logging Ledger', 'Raw Data'];
       
@@ -504,7 +606,6 @@
       }
     }
 
-    /* PROJECT DETAILS EXPAND/COLLAPSE CONTROLLER */
     function toggleProjectDetailsPane() {
       const content = document.getElementById('projectDetailsContent');
       const caret = document.getElementById('projectDetailsCaret');
@@ -520,200 +621,75 @@
 
     function expandPane(paneId) {
       document.getElementById(paneId).classList.remove('collapsed-pane');
-      if (paneId === 'secondaryNavPane') {
-        toggleSecondaryNav(activeNavContext || 'Programme', true);
+      if (paneId === 'secondaryNavPane' && activeNavContext) {
+        toggleSecondaryNav(activeNavContext, true);
       }
     }
 
-    /* CALCULATION AUXILIARY ENGINE */
-    function calculateAmountEngine() {
-      const qty = parseFloat(document.getElementById('inputQty').value) || 0;
-      const rate = parseFloat(document.getElementById('inputRate').value) || 0;
-      const total = qty * rate;
-      document.getElementById('inputAmount').value = total.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-
-    // --- RAW DATA ENGINE GENERATOR ENGINE (GRID VIEWPORT DETACHED) ---
+    // --- STRUCTURED RAW DATA RENDERING LEDGER GRID ENGINE ---
     function renderRawDataTableEngine() {
-      const targetZone = document.getElementById("infoPaneContentZone");
-      if(!targetZone) return;
+      const contentZone = document.getElementById("infoPaneContentZone");
+      
+      let tableHeadersMarkup = "";
+      rawTableColumns.forEach(col => {
+        if (col.visible) {
+          tableHeadersMarkup += `<th class="px-3 py-2 text-left text-[10px] font-bold text-white uppercase tracking-wider whitespace-nowrap bg-[#003161] border-r border-blue-900">${col.label}</th>`;
+        }
+      });
 
-      let dynamicHTML = `
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-3 bg-gray-100 p-2 rounded border border-gray-200">
-          <div class="flex flex-wrap items-center gap-1.5">
-            <button onclick="toggleTableDropdown('colToggleDropdown')" class="bg-white border border-gray-300 px-2 py-1 rounded text-gray-700 hover:bg-gray-50 flex items-center gap-1 font-medium shadow-sm relative">
-              <i class="fa-solid fa-columns text-[#003161]"></i> Columns <i class="fa-solid fa-caret-down text-[9px] opacity-60"></i>
-              <div id="colToggleDropdown" class="hidden absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded shadow-xl py-1 w-44 z-30 text-left">
-                ${rawTableColumns.map((col, i) => `
-                  <label class="flex items-center gap-2 px-3 py-1 hover:bg-gray-50 cursor-pointer">
-                    <input type="checkbox" ${col.visible ? 'checked' : ''} onchange="toggleColumnVisibility(${i})" class="rounded text-[#003161] focus:ring-0">
-                    <span class="text-gray-700">${col.label}</span>
-                  </label>
-                `).join('')}
-              </div>
-            </button>
-
-            <button onclick="toggleTableDropdown('rowToggleDropdown')" class="bg-white border border-gray-300 px-2 py-1 rounded text-gray-700 hover:bg-gray-50 flex items-center gap-1 font-medium shadow-sm relative">
-              <i class="fa-solid fa-list text-emerald-700"></i> Rows <i class="fa-solid fa-caret-down text-[9px] opacity-60"></i>
-              <div id="rowToggleDropdown" class="hidden absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded shadow-xl py-1 w-52 z-30 text-left max-h-60 overflow-y-auto custom-scrollbar">
-                ${rawTableRows.map((row, i) => `
-                  <label class="flex items-center gap-2 px-3 py-1 hover:bg-gray-50 cursor-pointer">
-                    <input type="checkbox" ${row.visible ? 'checked' : ''} onchange="toggleRowVisibility(${i})" class="rounded text-[#003161] focus:ring-0">
-                    <span class="text-gray-700 truncate font-mono">${row.guid} - ${row.name.substring(0,12)}...</span>
-                  </label>
-                `).join('')}
-              </div>
-            </button>
-
-            <button onclick="clearAllTableFilters()" class="bg-gray-200 border border-gray-300 px-2 py-1 rounded text-gray-700 hover:bg-gray-300 flex items-center gap-1 font-medium transition shadow-sm">
-              <i class="fa-solid fa-filter-circle-xmark text-red-700"></i> Reset Filters
-            </button>
-          </div>
-
-          <button onclick="exportTableToExcelFormat()" class="bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-1 rounded flex items-center gap-1 font-semibold shadow transition ml-auto">
-            <i class="fa-solid fa-file-excel"></i> Export Excel
-          </button>
-        </div>
-
-        <div class="w-full border border-gray-200 rounded bg-white overflow-auto custom-scrollbar max-h-[calc(100vh-210px)] relative">
-          <table id="rawLedgerDataTableNode" class="w-full text-left border-collapse table-auto min-w-max">
-            <thead>
-              <tr class="bg-[#003161] text-white font-semibold sticky top-0 z-10 shadow-sm">
-      `;
-
-      let leftOffsetAccumulator = 0;
-      rawTableColumns.forEach((col, index) => {
-        if (!col.visible) return;
-        
-        let stickyClass = "";
-        let inlineStyle = "";
-        if (col.frozen) {
-          stickyClass = "sticky-column";
-          inlineStyle = `style="left: ${leftOffsetAccumulator}px;"`;
-          leftOffsetAccumulator += 120; 
+      let tableRowsMarkup = "";
+      rawTableRows.forEach((row, rowIndex) => {
+        if (activeNavContext === "Project" && currentSelectedProjectFilterValue !== "") {
+          let expectedCombinedKey = `${row.name} (${row.guid})`;
+          if (expectedCombinedKey !== currentSelectedProjectFilterValue) {
+            return;
+          }
         }
 
-        dynamicHTML += `
-          <th ${inlineStyle} class="p-2 border-b border-blue-900 font-bold uppercase text-[10px] tracking-wider transition-all relative ${stickyClass}">
-            <div class="flex flex-col gap-1">
-              <div class="flex items-center justify-between gap-2">
-                <span>${col.label}</span>
-                <button onclick="toggleColumnFreezeAnchor(${index})" class="${col.frozen ? 'text-amber-300' : 'text-blue-300/50 hover:text-white'} p-0.5" title="Pin / Freeze Column">
-                  <i class="fa-solid fa-thumbtack text-[9px]"></i>
-                </button>
-              </div>
-              <input type="text" placeholder="Filter..." value="${currentTableFilters[col.id] || ''}" 
-                oninput="applyColumnTextFilter('${col.id}', this.value)" 
-                class="w-full font-normal text-gray-800 px-1 py-0.5 rounded border border-blue-800 text-[9px] bg-white/95 focus:outline-none focus:ring-1 focus:ring-blue-400">
-            </div>
-          </th>
-        `;
-      });
-
-      dynamicHTML += `
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200 font-mono text-[10px]">
-      `;
-
-      let activeRowRenderingList = rawTableRows.filter(row => {
-        if (!row.visible) return false;
-        return Object.keys(currentTableFilters).every(key => {
-          if (!currentTableFilters[key]) return true;
-          const cellVal = String(row[key] || '').toLowerCase();
-          return cellVal.includes(currentTableFilters[key].toLowerCase());
-        });
-      });
-
-      if (activeRowRenderingList.length === 0) {
-        let spanCount = rawTableColumns.filter(c => c.visible).length;
-        dynamicHTML += `
-          <tr>
-            <td colspan="${spanCount}" class="p-8 text-center text-gray-400 font-sans">
-              <i class="fa-solid fa-folder-open text-xl block mb-2 opacity-50"></i> No historical rows match current filtration arrays.
-            </td>
-          </tr>`;
-      } else {
-        activeRowRenderingList.forEach(row => {
-          dynamicHTML += `<tr class="hover:bg-slate-50 transition-colors">`;
-          let rowLeftOffsetAccumulator = 0;
-          
-          rawTableColumns.forEach(col => {
-            if (!col.visible) return;
-            
-            let stickyClass = "";
-            let inlineStyle = "";
-            if (col.frozen) {
-              stickyClass = "sticky-column border-r border-gray-200";
-              inlineStyle = `style="left: ${rowLeftOffsetAccumulator}px;"`;
-              rowLeftOffsetAccumulator += 120;
-            }
-
-            let renderedValue = row[col.id] !== undefined ? row[col.id] : "";
-            
+        let innerColumnsCellsHtml = "";
+        rawTableColumns.forEach(col => {
+          if (col.visible) {
+            let coreDisplayVal = row[col.id] !== undefined ? row[col.id] : "";
             if (col.id === "rate" || col.id === "amount") {
-              renderedValue = "R " + parseFloat(renderedValue || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              coreDisplayVal = "R " + parseFloat(coreDisplayVal || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 });
             }
-
-            dynamicHTML += `<td ${inlineStyle} class="p-2 border-b border-gray-100 truncate max-w-[200px] ${stickyClass}">${renderedValue}</td>`;
-          });
-          dynamicHTML += `</tr>`;
+            innerColumnsCellsHtml += `<td class="px-3 py-1.5 border-r border-b border-gray-200 font-mono whitespace-nowrap">${coreDisplayVal}</td>`;
+          }
         });
+
+        tableRowsMarkup += `
+          <tr id="ledger-row-id-${rowIndex}" onclick="populateFormFromSelectedLedgerRow(${rowIndex})" 
+              class="hover:bg-amber-50/60 border-b border-gray-100 transition-colors cursor-pointer text-gray-700">
+            ${innerColumnsCellsHtml}
+          </tr>`;
+      });
+
+      if(tableRowsMarkup === "") {
+        tableRowsMarkup = `<tr><td colspan="${rawTableColumns.length}" class="p-8 text-center text-gray-400 italic">No matching project entries align with the chosen target filter option.</td></tr>`;
       }
 
-      dynamicHTML += `
-            </tbody>
-          </table>
-        </div>
-      `;
-
-      targetZone.innerHTML = dynamicHTML;
+      contentZone.innerHTML = `
+        <div class="flex flex-col h-full w-full bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mt-2">
+          <div class="bg-gray-50 px-3 py-2 border-b border-gray-200 flex justify-between items-center shrink-0">
+            <span class="text-gray-500 font-medium text-[10px] uppercase tracking-wider"><i class="fa-solid fa-list-check mr-1 text-blue-800"></i> Interactive Row Edit Mode Enabled (Click any row below)</span>
+          </div>
+          <div class="flex-1 overflow-auto custom-scrollbar">
+            <table class="w-full text-left table-auto border-collapse">
+              <thead>
+                <tr class="bg-[#003161] sticky top-0 z-10 shadow-sm">
+                  ${tableHeadersMarkup}
+                </tr>
+              </thead>
+              <tbody id="rawLedgerTableBodyZone" class="divide-y divide-gray-100">
+                ${tableRowsMarkup}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
     }
 
-    function toggleTableDropdown(dropdownId) {
-      const drop = document.getElementById(dropdownId);
-      if(drop) drop.classList.toggle('hidden');
-    }
-
-    function toggleColumnVisibility(idx) {
-      rawTableColumns[idx].visible = !rawTableColumns[idx].visible;
-      renderRawDataTableEngine();
-    }
-
-    function toggleRowVisibility(idx) {
-      rawTableRows[idx].visible = !rawTableRows[idx].visible;
-      renderRawDataTableEngine();
-    }
-
-    function toggleColumnFreezeAnchor(idx) {
-      rawTableColumns[idx].frozen = !rawTableColumns[idx].frozen;
-      renderRawDataTableEngine();
-    }
-
-    function applyColumnTextFilter(colId, textStr) {
-      currentTableFilters[colId] = textStr;
-      renderRawDataTableEngine();
-    }
-
-    function clearAllTableFilters() {
-      currentTableFilters = {};
-      rawTableRows.forEach(r => r.visible = true);
-      rawTableColumns.forEach(c => c.visible = true);
-      renderRawDataTableEngine();
-    }
-
-    function exportTableToExcelFormat() {
-      alert("System Action: Intercepting structural UI context metrics array to package tabular dataset schema into structured CSV / spreadsheet runtime.");
-    }
-
-    document.addEventListener('click', function(e) {
-      ['colToggleDropdown', 'rowToggleDropdown'].forEach(id => {
-        const drop = document.getElementById(id);
-        if (drop && !drop.classList.contains('hidden') && !drop.parentElement.contains(e.target)) {
-          drop.classList.add('hidden');
-        }
-      });
-    });
+    // Initialize application interface layout states seamlessly
+    toggleSecondaryNav('Programme');
   </script>
 </body>
 </html>
