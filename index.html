@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Project Data Tracker</title>
 
-  <!-- Firebase SDK (MUST LOAD FIRST) -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -13,84 +13,67 @@
   <!-- CONFIG -->
   <script src="config/app.config.js"></script>
 
-  <!-- AUTH -->
-  <script src="auth/auth.firebase.js"></script>
-
-  <!-- BOOTSTRAP (NEW SAFETY LAYER) -->
   <script>
-    /**
-     * BOOT STRAP MODULE (Step 1)
-     * Purpose:
-     * - Prevent blank screen
-     * - Wait for Firebase auth
-     * - Render safe loading UI first
-     */
+    // ---------------------------
+    // SAFE FIREBASE INIT CHECK
+    // ---------------------------
+    let app, auth;
+    let firebaseReady = false;
+    let authUser = null;
+    let authError = null;
 
-    window.appState = {
-      ready: false,
-      user: null
-    };
+    function initFirebase() {
+      try {
+        if (!window.firebase) throw new Error("Firebase SDK not loaded");
 
-    function renderLoadingScreen(message) {
-      document.body.innerHTML = `
-        <div style="
-          font-family: Arial;
-          height: 100vh;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          flex-direction:column;
-          background:#0f172a;
-          color:white;
-        ">
-          <h2>Project Data Tracker</h2>
-          <p style="opacity:0.7">${message}</p>
-        </div>
-      `;
+        app = firebase.initializeApp(window.firebaseConfig);
+        auth = firebase.auth(app);
+
+        firebaseReady = true;
+
+        auth.onAuthStateChanged((user) => {
+          if (user) {
+            authUser = user;
+            window.firebaseAuthUser = user;
+          } else {
+            // try anonymous login
+            auth.signInAnonymously()
+              .catch(err => {
+                authError = err.message;
+              });
+          }
+        });
+
+      } catch (e) {
+        authError = e.message;
+      }
     }
 
-    function renderAppShell(user) {
+    function render() {
       document.body.innerHTML = `
-        <div style="font-family: Arial; padding:20px;">
-          <h1>✅ App Loaded</h1>
-          <p>User UID: ${user?.uid || "No UID"}</p>
-          <p>Status: Firebase + Auth working</p>
+        <div style="font-family:Arial;padding:20px;">
+          <h2>Project Data Tracker — Debug Mode</h2>
+
+          <p><b>Firebase Loaded:</b> ${!!window.firebase}</p>
+          <p><b>Firebase Ready:</b> ${firebaseReady}</p>
+
+          <p><b>User:</b> ${authUser ? authUser.uid : "Waiting..."}</p>
+
+          <p style="color:red;"><b>Error:</b> ${authError || "None"}</p>
 
           <hr/>
-
-          <div id="appRoot"></div>
+          <p>Status updates every 1s...</p>
         </div>
       `;
     }
 
-    function waitForAuthReady() {
-      renderLoadingScreen("Connecting to Firebase Auth...");
-
-      let attempts = 0;
-
-      const interval = setInterval(() => {
-        attempts++;
-
-        if (window.firebaseAuthUser) {
-          clearInterval(interval);
-          window.appState.ready = true;
-          window.appState.user = window.firebaseAuthUser;
-
-          renderAppShell(window.firebaseAuthUser);
-        }
-
-        if (attempts > 50) {
-          clearInterval(interval);
-          renderLoadingScreen("Auth timeout — check Firebase config");
-        }
-      }, 100);
-    }
-
-    window.addEventListener("DOMContentLoaded", waitForAuthReady);
+    window.addEventListener("DOMContentLoaded", () => {
+      initFirebase();
+      render();
+      setInterval(render, 1000);
+    });
   </script>
 </head>
 
-<body>
-  <!-- Intentionally empty -->
-</body>
+<body></body>
 </html>
