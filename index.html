@@ -65,6 +65,20 @@
     .collapsed-pane + .pane-resizer + .restore-ribbon {
       display: flex;
     }
+    
+    /* Table Freeze Utilities */
+    .sticky-column {
+      position: sticky !important;
+      z-index: 2 !important;
+      background-color: #f8fafc !important;
+    }
+    th.sticky-column {
+      z-index: 3 !important;
+      background-color: #003161 !important;
+    }
+    tr:nth-child(even) .sticky-column {
+      background-color: #f1f5f9 !important;
+    }
   </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden text-gray-800 antialiased select-none text-xs">
@@ -133,7 +147,7 @@
           <button onclick="collapsePane('secondaryNavPane')" class="text-slate-400 hover:text-white p-1" title="Collapse Panel"><i class="fa-solid fa-chevron-left"></i></button>
         </div>
         <div id="secondaryNavButtonsZone" class="p-2 flex flex-col gap-1 overflow-y-auto custom-scrollbar flex-1">
-          </div>
+        </div>
       </div>
     </div>
     <div class="pane-resizer" id="resizer-secondaryNav"></div>
@@ -165,11 +179,11 @@
       <div class="pane-content flex flex-col h-full w-full overflow-hidden">
         <div class="p-3 border-b bg-gray-50 flex justify-between items-center">
           <div class="flex items-center gap-1.5 font-bold text-gray-700 uppercase tracking-wider text-[10px]">
-            <i class="fa-solid fa-circle-info text-blue-800"></i> Analytics &amp; Ledger Information
+            <i class="fa-solid fa-circle-info text-blue-800"></i> <span id="infoPaneTitle">Analytics &amp; Ledger Information</span>
           </div>
           <button onclick="collapsePane('informationPane')" class="text-gray-400 hover:text-gray-600 p-1" title="Collapse Panel"><i class="fa-solid fa-compress"></i></button>
         </div>
-        <div class="p-4 overflow-y-auto custom-scrollbar flex-1">
+        <div id="infoPaneContentZone" class="p-4 overflow-y-auto custom-scrollbar flex-1 relative">
           <div class="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400 mt-4">
             Primary Visualisation Matrix &amp; Ledger Grid Placement Area
           </div>
@@ -226,7 +240,6 @@
     const authUidDisplay = document.getElementById("authUidDisplay");
     const userBadge = document.getElementById("userBadge");
 
-    // Anonymous Handshake Connection Authentication Sequence Flow
     auth.signInAnonymously()
       .then(function(userCredential) {
         const user = userCredential.user;
@@ -252,18 +265,17 @@
       
       let fyStartYear, fyEndYear;
       
-      if (now.getMonth() >= 3) { // April onwards
+      if (now.getMonth() >= 3) { 
         fyStartYear = currentYear;
         fyEndYear = currentYear + 1;
-      } else { // Jan, Feb, March
+      } else { 
         fyStartYear = currentYear - 1;
         fyEndYear = currentYear;
       }
       
-      const fyStartDate = new Date(fyStartYear, 3, 1, 0, 0, 0); // April 1st
-      const fyEndDate = new Date(fyEndYear, 3, 31, 23, 59, 59); // March 31st
+      const fyStartDate = new Date(fyStartYear, 3, 1, 0, 0, 0); 
+      const fyEndDate = new Date(fyEndYear, 3, 31, 23, 59, 59); 
       
-      // Calculate active Quarter designation
       let quarter = "Q1";
       const monthIndex = now.getMonth();
       if (monthIndex >= 3 && monthIndex <= 5) quarter = "Q1";
@@ -271,24 +283,20 @@
       else if (monthIndex >= 9 && monthIndex <= 11) quarter = "Q3";
       else if (monthIndex >= 0 && monthIndex <= 2) quarter = "Q4";
       
-      // Percentage Elapsed calculations
       const totalDuration = fyEndDate - fyStartDate;
       const progressDuration = now - fyStartDate;
       let percentElapsed = ((progressDuration / totalDuration) * 100).toFixed(2);
       if (percentElapsed < 0) percentElapsed = 0;
       if (percentElapsed > 100) percentElapsed = 100;
       
-      // Remaining delta countdown variables
       const timeDelta = fyEndDate - now;
       const daysRemaining = Math.floor(timeDelta / (1000 * 60 * 60 * 24));
       const hoursRemaining = Math.floor((timeDelta % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       
-      // Label generation for Next Financial Year Target Identification
       const nextFyStart = fyEndYear;
       const nextFyEnd = fyEndYear + 1;
       const nextFyString = `FY${nextFyStart}/${nextFyEnd.toString().substring(2)}`;
       
-      // DOM Injection bindings
       document.getElementById("fyDisplay").innerText = `${fyStartYear}/${fyEndYear.toString().substring(2)}`;
       document.getElementById("fqDisplay").innerText = quarter;
       document.getElementById("fyPercentDisplay").innerText = `${percentElapsed}%`;
@@ -296,15 +304,38 @@
       document.getElementById("fyCountdownDisplay").innerText = `${daysRemaining}d ${hoursRemaining}h`;
     }
     
-    // Core Clock Initializer Initialization
     updateGovernmentFinancialMetrics();
     setInterval(updateGovernmentFinancialMetrics, 60000);
 
+    // --- RAW DATA STORES & MOCK VALUES GENERATION ---
+    const rawTableColumns = [
+      { id: "guid", label: "Project GUID", visible: true, frozen: false },
+      { id: "name", label: "Project Name", visible: true, frozen: false },
+      { id: "category", label: "Data Category", visible: true, frozen: false },
+      { id: "freetext", label: "Free Text", visible: true, frozen: false },
+      { id: "unit", label: "Unit", visible: true, frozen: false },
+      { id: "qty", label: "Qty", visible: true, frozen: false },
+      { id: "rate", label: "Rate", visible: true, frozen: false },
+      { id: "amount", label: "Amount", visible: true, frozen: false },
+      { id: "date", label: "Date", visible: true, frozen: false },
+      { id: "audit", label: "Audit Log", visible: true, frozen: false }
+    ];
+
+    // Populated with realistic infrastructure items tracking development updates
+    let rawTableRows = [
+      { guid: "PRJ-0824", name: "Klipfontein Hospital Upgrade", category: "Material Cycle Data", freetext: "Grade A Reinforced Steel Framework Foundations", unit: "Tons", qty: 45, rate: 14500, visible: true, date: "2026-05-12", audit: "System Auto-Ingest Base Schema" },
+      { guid: "PRJ-1192", name: "Mitchells Plain Education Hub", category: "Structural Engineering", freetext: "Double-Glazed Energy Efficient Insulation Units", unit: "Sqm", qty: 220, rate: 1850, visible: true, date: "2026-04-29", audit: "Operator Review Verification" },
+      { guid: "PRJ-0431", name: "George Bulk Water Infrastructure", category: "Utility Automation", freetext: "High-Pressure Hydraulic Submersible Distribution Valves", unit: "Units", qty: 12, rate: 42300, visible: true, date: "2026-05-20", audit: "API Payload Modification Execution" },
+      { guid: "PRJ-0954", name: "Khayelitsha Athletics Facility", category: "Civil Works", freetext: "Synthetic Premium Polyurethane Surfacing Layout", unit: "Sqm", qty: 1200, rate: 650, visible: true, date: "2026-06-01", audit: "Batch Script Verification Registry" },
+      { guid: "PRJ-0711", name: "Paarl Sustainable Housing Phase 2", category: "Material Cycle Data", freetext: "Pre-fabricated Eco-Lite Cellular Concrete Walling", unit: "Blocks", qty: 8500, rate: 48, visible: true, date: "2026-03-15", audit: "System Auto-Ingest Base Schema" }
+    ];
+
+    let currentTableFilters = {};
+
     // --- STRUCTURAL SHELL INTERACTION CONTROLLER MECHANICS ---
     let activeNavContext = null;
-    let selectedPagesStore = { "Programme": 0, "Project": 0 }; // Remembers separate selections per context
+    let selectedPagesStore = { "Programme": 0, "Project": 0 }; 
 
-    // Secondary Navigation Pane Content Generation & Display Controller
     function toggleSecondaryNav(context, forceOpen = false) {
       const pane = document.getElementById('secondaryNavPane');
       const heading = document.getElementById('secondaryNavHeading');
@@ -318,7 +349,6 @@
         return;
       }
       
-      // Clear visual buttons baseline
       btnProgramme.classList.remove('bg-[#003161]', 'text-white', 'border-blue-400');
       btnProject.classList.remove('bg-[#003161]', 'text-white', 'border-blue-400');
       btnProgramme.classList.add('text-blue-300/70', 'border-transparent');
@@ -333,28 +363,46 @@
       activeBtn.classList.add('bg-[#003161]', 'text-white', 'border-blue-400');
       
       zone.innerHTML = '';
-      const dummyPages = ['Overview Matrix', 'Financial Engine Metrics', 'Performance Analytics', 'Audit Logging Ledger'];
+      const contextPages = ['Overview Matrix', 'Financial Engine Metrics', 'Performance Analytics', 'Audit Logging Ledger', 'Raw Data'];
       
-      dummyPages.forEach((pageName, idx) => {
+      contextPages.forEach((pageName, idx) => {
         const btn = document.createElement('button');
         btn.className = "w-full text-left py-2 px-3 rounded text-[11px] text-slate-300 hover:bg-[#003161]/40 hover:text-white transition flex items-center gap-2 border border-transparent hover:border-slate-700/80";
-        btn.innerHTML = `<i class="fa-solid fa-file-invoice text-slate-500 text-[10px]"></i> <span>${pageName}</span>`;
         
-        // Read selected cache database memory logs to highlight correctly
+        const iconClass = pageName === 'Raw Data' ? 'fa-solid fa-database text-amber-400' : 'fa-solid fa-file-invoice text-slate-500';
+        btn.innerHTML = `<i class="${iconClass} text-[10px]"></i> <span>${pageName}</span>`;
+        
         if (selectedPagesStore[context] === idx) {
           btn.classList.add('bg-[#001F3F]', 'text-white', 'border-blue-800/80', 'font-semibold');
+          triggerPageContentRender(pageName, context);
         }
         
         btn.onclick = () => {
           selectedPagesStore[context] = idx;
           document.querySelectorAll('#secondaryNavButtonsZone button').forEach(b => b.classList.remove('bg-[#001F3F]', 'text-white', 'border-blue-800/80', 'font-semibold'));
           btn.classList.add('bg-[#001F3F]', 'text-white', 'border-blue-800/80', 'font-semibold');
+          triggerPageContentRender(pageName, context);
         };
         zone.appendChild(btn);
       });
     }
 
-    // Explicit Utility wrapper to enforce global component breakdown states
+    function triggerPageContentRender(pageName, context) {
+      const infoPaneTitle = document.getElementById("infoPaneTitle");
+      const contentZone = document.getElementById("infoPaneContentZone");
+      
+      if (pageName === "Raw Data") {
+        infoPaneTitle.innerText = `${context} Level — Structured Data Ledger (Raw Data)`;
+        renderRawDataTableEngine();
+      } else {
+        infoPaneTitle.innerText = "Analytics & Ledger Information";
+        contentZone.innerHTML = `
+          <div class="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400 mt-4">
+            Primary Visualisation Matrix &amp; Ledger Grid Placement Area [Scope: ${context} — Page: ${pageName}]
+          </div>`;
+      }
+    }
+
     function collapsePane(paneId) {
       document.getElementById(paneId).classList.add('collapsed-pane');
       if (paneId === 'secondaryNavPane') {
@@ -369,9 +417,263 @@
     function expandPane(paneId) {
       document.getElementById(paneId).classList.remove('collapsed-pane');
       if (paneId === 'secondaryNavPane') {
-        // Restore context state parameters if standard data targets exist
         toggleSecondaryNav(activeNavContext || 'Programme', true);
       }
+    }
+
+    // --- RAW DATA ENGINE GENERATOR ENGINE (GRID VIEWPORT DETACHED) ---
+    function renderRawDataTableEngine() {
+      const targetZone = document.getElementById("infoPaneContentZone");
+      if(!targetZone) return;
+
+      // Construct interactive operations toolbox layout panel
+      let dynamicHTML = `
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3 bg-gray-100 p-2 rounded border border-gray-200">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button onclick="toggleTableDropdown('colToggleDropdown')" class="bg-white border border-gray-300 px-2 py-1 rounded text-gray-700 hover:bg-gray-50 flex items-center gap-1 font-medium shadow-sm relative">
+              <i class="fa-solid fa-columns text-[#003161]"></i> Columns <i class="fa-solid fa-caret-down text-[9px] opacity-60"></i>
+              <div id="colToggleDropdown" class="hidden absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded shadow-xl py-1 w-44 z-30 text-left">
+                ${rawTableColumns.map((col, i) => `
+                  <label class="flex items-center gap-2 px-3 py-1 hover:bg-gray-50 cursor-pointer">
+                    <input type="checkbox" ${col.visible ? 'checked' : ''} onchange="toggleColumnVisibility(${i})" class="rounded text-[#003161] focus:ring-0">
+                    <span class="text-gray-700">${col.label}</span>
+                  </label>
+                `).join('')}
+              </div>
+            </button>
+
+            <button onclick="toggleTableDropdown('rowToggleDropdown')" class="bg-white border border-gray-300 px-2 py-1 rounded text-gray-700 hover:bg-gray-50 flex items-center gap-1 font-medium shadow-sm relative">
+              <i class="fa-solid fa-list text-emerald-700"></i> Rows <i class="fa-solid fa-caret-down text-[9px] opacity-60"></i>
+              <div id="rowToggleDropdown" class="hidden absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded shadow-xl py-1 w-52 z-30 text-left max-h-60 overflow-y-auto custom-scrollbar">
+                ${rawTableRows.map((row, i) => `
+                  <label class="flex items-center gap-2 px-3 py-1 hover:bg-gray-50 cursor-pointer">
+                    <input type="checkbox" ${row.visible ? 'checked' : ''} onchange="toggleRowVisibility(${i})" class="rounded text-[#003161] focus:ring-0">
+                    <span class="text-gray-700 truncate font-mono">${row.guid} - ${row.name.substring(0,12)}...</span>
+                  </label>
+                `).join('')}
+              </div>
+            </button>
+
+            <button onclick="clearAllTableFilters()" class="bg-gray-200 border border-gray-300 px-2 py-1 rounded text-gray-700 hover:bg-gray-300 flex items-center gap-1 font-medium transition shadow-sm">
+              <i class="fa-solid fa-filter-circle-xmark text-red-700"></i> Reset Filters
+            </button>
+          </div>
+
+          <button onclick="exportTableToExcelFormat()" class="bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-1 rounded flex items-center gap-1 font-semibold shadow transition ml-auto">
+            <i class="fa-solid fa-file-excel"></i> Export Excel
+          </button>
+        </div>
+
+        <div class="w-full border border-gray-200 rounded bg-white overflow-auto custom-scrollbar max-h-[calc(100vh-210px)] relative">
+          <table id="rawLedgerDataTableNode" class="w-full text-left border-collapse table-auto min-w-max">
+            <thead>
+              <tr class="bg-[#003161] text-white font-semibold sticky top-0 z-10 shadow-sm">
+      `;
+
+      // Render Table Headers with responsive freezing mechanics
+      let leftOffsetAccumulator = 0;
+      rawTableColumns.forEach((col, index) => {
+        if (!col.visible) return;
+        
+        let stickyClass = "";
+        let inlineStyle = "";
+        if (col.frozen) {
+          stickyClass = "sticky-column";
+          inlineStyle = `style="left: ${leftOffsetAccumulator}px;"`;
+          leftOffsetAccumulator += 120; 
+        }
+
+        dynamicHTML += `
+          <th ${inlineStyle} class="p-2 border-b border-blue-900 font-bold uppercase text-[10px] tracking-wider transition-all relative ${stickyClass}">
+            <div class="flex flex-col gap-1">
+              <div class="flex items-center justify-between gap-2">
+                <span>${col.label}</span>
+                <button onclick="toggleColumnFreezeAnchor(${index})" class="${col.frozen ? 'text-amber-300' : 'text-blue-300/50 hover:text-white'} p-0.5" title="Pin / Freeze Column">
+                  <i class="fa-solid fa-thumbtack text-[9px]"></i>
+                </button>
+              </div>
+              <input type="text" placeholder="Filter..." value="${currentTableFilters[col.id] || ''}" 
+                oninput="applyColumnTextFilter('${col.id}', this.value)" 
+                class="w-full font-normal text-gray-800 px-1 py-0.5 rounded border border-blue-800 text-[9px] bg-white/95 focus:outline-none focus:ring-1 focus:ring-blue-400">
+            </div>
+          </th>
+        `;
+      });
+
+      dynamicHTML += `
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 font-mono text-[10px]">
+      `;
+
+      // Filter logic evaluation parsing step
+      let visibleRowsCounter = 0;
+      rawTableRows.forEach((row) => {
+        if (!row.visible) return;
+
+        // Verify column filter rules criteria mapping sets
+        let passesFilter = true;
+        for (let key in currentTableFilters) {
+          if (currentTableFilters[key]) {
+            let filterValue = currentTableFilters[key].toLowerCase();
+            let targetValue = (row[key] !== undefined ? row[key] : '').toString().toLowerCase();
+            if (!targetValue.includes(filterValue)) {
+              passesFilter = false;
+              break;
+            }
+          }
+        }
+
+        if (!passesFilter) return;
+        visibleRowsCounter++;
+
+        // Compute direct inline calculations values live
+        const generatedAmt = row.qty * row.rate;
+
+        dynamicHTML += `<tr class="hover:bg-slate-50 transition-colors">`;
+
+        let rowLeftOffsetAccumulator = 0;
+        rawTableColumns.forEach((col) => {
+          if (!col.visible) return;
+
+          let stickyClass = "";
+          let inlineStyle = "";
+          if (col.frozen) {
+            stickyClass = "sticky-column border-r border-gray-300/50 shadow-sm";
+            inlineStyle = `style="left: ${rowLeftOffsetAccumulator}px;"`;
+            rowLeftOffsetAccumulator += 120;
+          }
+
+          let displayCellContent = "";
+          if (col.id === "amount") {
+            displayCellContent = "R " + generatedAmt.toLocaleString('en-ZA');
+          } else if (col.id === "rate") {
+            displayCellContent = "R " + row.rate.toLocaleString('en-ZA');
+          } else {
+            displayCellContent = row[col.id] !== undefined ? row[col.id] : "";
+          }
+
+          dynamicHTML += `
+            <td ${inlineStyle} class="p-2 border-b border-gray-200 bg-white truncate max-w-[180px] ${stickyClass}">
+              ${displayCellContent}
+            </td>
+          `;
+        });
+
+        dynamicHTML += `</tr>`;
+      });
+
+      if (visibleRowsCounter === 0) {
+        let totalActiveCols = rawTableColumns.filter(c => c.visible).length;
+        dynamicHTML += `
+          <tr>
+            <td colspan="${totalActiveCols}" class="p-8 text-center text-gray-400 bg-gray-50 italic">
+              No matching ledger entry chains identified matching criteria. Reset configurations to track data elements.
+            </td>
+          </tr>
+        `;
+      }
+
+      dynamicHTML += `
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      targetZone.innerHTML = dynamicHTML;
+    }
+
+    // --- INTERACTIVE SYSTEM CONTROLLERS FOR RAW LEDGER DATA ENGINE ---
+    function toggleTableDropdown(dropdownId) {
+      const el = document.getElementById(dropdownId);
+      if(!el) return;
+      const isHidden = el.classList.contains("hidden");
+      
+      // Close parallel alternative submenus gracefully
+      document.getElementById("colToggleDropdown")?.classList.add("hidden");
+      document.getElementById("rowToggleDropdown")?.classList.add("hidden");
+      
+      if(isHidden) el.classList.remove("hidden");
+    }
+
+    // Global document hook to catch unhandled layout container target clicks
+    document.addEventListener("mousedown", (e) => {
+      if (!e.target.closest('#colToggleDropdown') && !e.target.closest('#rowToggleDropdown') && !e.target.innerHTML.includes('Columns') && !e.target.innerHTML.includes('Rows')) {
+        document.getElementById("colToggleDropdown")?.classList.add("hidden");
+        document.getElementById("rowToggleDropdown")?.classList.add("hidden");
+      }
+    });
+
+    function toggleColumnVisibility(index) {
+      rawTableColumns[index].visible = !rawTableColumns[index].visible;
+      renderRawDataTableEngine();
+    }
+
+    function toggleRowVisibility(index) {
+      rawTableRows[index].visible = !rawTableRows[index].visible;
+      renderRawDataTableEngine();
+    }
+
+    function toggleColumnFreezeAnchor(index) {
+      rawTableColumns[index].frozen = !rawTableColumns[index].frozen;
+      renderRawDataTableEngine();
+    }
+
+    function applyColumnTextFilter(columnId, value) {
+      currentTableFilters[columnId] = value;
+      renderRawDataTableEngine();
+    }
+
+    function clearAllTableFilters() {
+      currentTableFilters = {};
+      rawTableColumns.forEach(c => { c.visible = true; c.frozen = false; });
+      rawTableRows.forEach(r => r.visible = true);
+      renderRawDataTableEngine();
+    }
+
+    function exportTableToExcelFormat() {
+      let csvContent = "";
+      
+      // Map out exact configured visible columns headers rows
+      const activeHeaders = rawTableColumns.filter(c => c.visible);
+      csvContent += activeHeaders.map(c => `"${c.label}"`).join(",") + "\n";
+      
+      // Loop structural content rows matches evaluating active state visibility parameters
+      rawTableRows.forEach(row => {
+        if (!row.visible) return;
+        
+        let passesFilter = true;
+        for (let key in currentTableFilters) {
+          if (currentTableFilters[key]) {
+            let filterValue = currentTableFilters[key].toLowerCase();
+            let targetValue = (row[key] !== undefined ? row[key] : '').toString().toLowerCase();
+            if (!targetValue.includes(filterValue)) { passesFilter = false; break; }
+          }
+        }
+        if (!passesFilter) return;
+
+        const amtValue = row.qty * row.rate;
+        let line = activeHeaders.map(col => {
+          let field = "";
+          if (col.id === "amount") field = amtValue;
+          else field = row[col.id] !== undefined ? row[col.id] : "";
+          
+          return `"${field.toString().replace(/"/g, '""')}"`;
+        }).join(",");
+        
+        csvContent += line + "\n";
+      });
+
+      // Construct immediate background download anchor elements
+      const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Project_Data_Tracker_Raw_Ledger_${new Date().toISOString().substring(0,10)}.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     // --- SEAMLESS ADVANCED MOUSE & POINTER DRAG RESIZING MECHANICS ---
@@ -397,7 +699,6 @@
           const minAllowed = parseInt(targetPane.style.minWidth || '100');
           const maxAllowed = parseInt(targetPane.style.maxWidth || '800');
           
-          // Collapse cleanly if dragged below minimum limit thresholds
           if (engineeredWidth < minAllowed - 30) {
             collapsePane(targetPaneId);
             globalMouseUpTerminationEngine();
@@ -421,14 +722,11 @@
       });
     }
 
-    // Instantiate resizing physics engines across UI Grid Segments
     initializeResizerMechanics('resizer-secondaryNav', 'secondaryNavPane', true);
     initializeResizerMechanics('resizer-dataInput', 'dataInputPane', true);
     initializeResizerMechanics('resizer-information', 'informationPane', true);
 
-    // Default System State Setup Framework
     document.addEventListener("DOMContentLoaded", () => {
-      // Auto-load Programme context map to show clear initial UI state
       toggleSecondaryNav('Programme', true);
     });
 
