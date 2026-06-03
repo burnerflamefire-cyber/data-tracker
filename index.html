@@ -1,9 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<!DOCTYPE html><html lang="en"><head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>QuickTask Polls PRO v3.8 - Optimized Responsive Feed & Matrix Ledger</title>
+  <title>QuickTask Polls PRO v4.0 - Engineered Enterprise Ledger & Feed Engine</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -83,9 +81,7 @@
       margin-bottom: 0 !important;
       border: none !important;
     }
-  </style>
-</head>
-<body class="h-screen flex flex-col overflow-hidden text-gray-800 antialiased select-none text-xs">
+  </style></head><body class="h-screen flex flex-col overflow-hidden text-gray-800 antialiased select-none text-xs">
 
   <div id="appPushNotificationWrapper" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-[280px] w-full"></div>
 
@@ -315,13 +311,32 @@
           <label class="block font-semibold text-gray-700 mb-0.5">Description (Optional)</label>
           <textarea id="taskDescription" rows="2" placeholder="Add metrics or validation configurations..." class="w-full border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#00a884] text-[11px]"></textarea>
         </div>
-        <div>
-          <label class="block font-semibold text-gray-700 mb-0.5">Poll Context Template</label>
-          <select id="pollType" class="w-full border rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#00a884] bg-gray-50 text-[11px] cursor-pointer h-8">
-            <option value="status">🟢 Status Poll (Not Started, In Progress, Blocked, Done)</option>
-            <option value="decision">🔵 Decision Poll (Yes, No, Unsure)</option>
-            <option value="checklist">🟣 Checklist Poll (Not Done, Done)</option>
-          </select>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold text-gray-700 mb-0.5">Poll Context Template</label>
+            <select id="pollType" class="w-full border rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#00a884] bg-gray-50 text-[11px] cursor-pointer h-8">
+              <option value="status">🟢 Status Poll</option>
+              <option value="decision">🔵 Decision Poll</option>
+              <option value="checklist">🟣 Checklist Poll</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-gray-700 mb-0.5">Time-To-Live duration</label>
+            <select id="taskDurationTtl" class="w-full border rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#00a884] bg-gray-50 text-[11px] cursor-pointer h-8">
+              <option value="infinite">♾️ Indefinite</option>
+              <option value="1">⏱️ 1 Minute</option>
+              <option value="5">⏱️ 5 Minutes</option>
+              <option value="60">⏱️ 1 Hour</option>
+              <option value="1440">⏱️ 24 Hours</option>
+              <option value="10080">⏱️ 7 Days</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 bg-gray-50 p-2 rounded border">
+          <input type="checkbox" id="keepFieldsToggle" class="w-3.5 h-3.5 text-[#008069] border-gray-300 rounded focus:ring-[#00a884] cursor-pointer">
+          <label for="keepFieldsToggle" class="font-semibold text-gray-700 cursor-pointer select-none">
+            🚀 Keep fields active (Smart Cloning Mode)
+          </label>
         </div>
         <div class="flex justify-end gap-2 pt-1.5">
           <button type="button" id="cancelModalBtn" class="px-2 py-1 font-medium text-gray-500 hover:text-gray-700 h-8">Cancel</button>
@@ -376,6 +391,7 @@
 
     window.globalUserUid = null;
     let localGlobalCollapseAllTrigger = false; 
+    let activeChatListeners = {};
 
     const SoundEffects = {
       ctx: null,
@@ -448,9 +464,7 @@
       db.ref("notifications").limitToLast(1).on("child_added", function(snapshot) {
         const data = snapshot.val();
         if(!data || data.senderUid === window.globalUserUid) return;
-        // Ignore nodes written over 15 seconds ago to avoid past alerts rendering on init boot
         if(Date.now() - data.timestamp > 15000) return;
-        
         renderFloatingPushBanner(data.senderAlias, data.message);
       });
     }
@@ -535,682 +549,806 @@
     const taskModal = document.getElementById("taskModal");
     const taskForm = document.getElementById("taskForm");
     const deleteModal = document.getElementById("deleteConfirmationModal");
-    const authStatusPanel = document.getElementById("authStatusPanel");
-    const authStatusText = document.getElementById("authStatusText");
-    const authUidDisplay = document.getElementById("authUidDisplay");
-    const openModalBtn = document.getElementById("openModalBtn");
 
-    let statusChartInstance = null;
-    let typeChartInstance = null;
-    let durationChartInstance = null;
-    let performanceChartInstance = null;
+    // Real-Time Live Clock Engine for TTL Calculations
+    setInterval(() => {
+      let stateChanged = false;
+      const now = Date.now();
+      Object.keys(localDataStore).forEach(taskId => {
+        const item = localDataStore[taskId];
+        if (item.project === currentProject && item.state === "open" && item.expiresAt && now >= item.expiresAt) {
+          stateChanged = true;
+          db.ref(`tasks/${taskId}`).update({ state: "closed", closedAt: item.expiresAt });
+          dispatchGlobalAppNotification(`Poll status automatically concluded via TTL expiration: "${item.title}"`);
+        }
+      });
+      if (stateChanged) {
+        renderApplicationPipeline();
+      } else {
+        // Dynamic countdown update cycle inside the DOM structure without complete reflows
+        document.querySelectorAll("[data-countdown-id]").forEach(node => {
+          const expiresAt = parseInt(node.getAttribute("data-countdown-id"));
+          const diff = expiresAt - Date.now();
+          if (diff <= 0) {
+            node.innerHTML = `<span class="text-red-600 font-bold"><i class="fa-solid fa-clock"></i> Terminated</span>`;
+          } else {
+            const secs = Math.floor((diff / 1000) % 60);
+            const mins = Math.floor((diff / (1000 * 60)) % 60);
+            const hrs = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            let str = "";
+            if (days > 0) str += `${days}d `;
+            if (hrs > 0 || days > 0) str += `${hrs}h `;
+            str += `${mins}m ${secs}s`;
+            node.innerHTML = `<span class="text-amber-600 font-bold"><i class="fa-solid fa-hourglass-start animate-pulse"></i> Expires in: ${str}</span>`;
+          }
+        });
+      }
+    }, 1000);
 
-    auth.signInAnonymously()
-      .then(function(userCredential) {
-        const user = userCredential.user;
+    // Dynamic Live Thread Handler
+    window.initializeLiveTaskChatStream = function(taskId) {
+      const chatContainer = document.getElementById(`chat-stream-${taskId}`);
+      if (!chatContainer || activeChatListeners[taskId]) return;
+
+      activeChatListeners[taskId] = true;
+      db.ref(`tasks/${taskId}/comments`).on("value", (snapshot) => {
+        chatContainer.innerHTML = "";
+        const data = snapshot.val();
+        if (!data) {
+          chatContainer.innerHTML = `<p class="text-[10px] text-gray-400 italic text-center py-1">No operational arguments posted yet.</p>`;
+          return;
+        }
+        Object.keys(data).forEach(commentId => {
+          const comment = data[commentId];
+          const timeStr = new Date(comment.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const row = document.createElement("div");
+          row.className = "text-[10px] bg-gray-50 p-1 rounded border border-gray-100 flex flex-col gap-0.5 max-w-full break-words";
+          row.innerHTML = `
+            <div class="flex justify-between items-center opacity-80 text-[9px]">
+              <span class="font-bold text-teal-700">${escapeHtml(comment.author)}</span>
+              <span>${timeStr}</span>
+            </div>
+            <p class="text-gray-700 font-medium leading-tight">${escapeHtml(comment.text)}</p>
+          `;
+          chatContainer.appendChild(row);
+        });
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      });
+    };
+
+    window.submitTaskCommentMessage = function(taskId) {
+      const input = document.getElementById(`chat-input-${taskId}`);
+      if (!input || !input.value.trim()) return;
+      const commentText = input.value.trim();
+      input.value = "";
+
+      db.ref(`tasks/${taskId}/comments`).push({
+        author: currentUser || "Anonymous",
+        text: commentText,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+      });
+    };
+
+    // View Routing Management
+    window.switchView = function(viewId) {
+      ['feed', 'dashboard', 'table'].forEach(v => {
+        document.getElementById(`view-${v}`).classList.add('hidden');
+        document.getElementById(`tab-${v}`).classList.remove('active-nav-tab');
+      });
+      document.getElementById(`view-${viewId}`).classList.remove('hidden');
+      document.getElementById(`tab-${viewId}`).classList.add('active-nav-tab');
+      if(viewId === 'dashboard') triggerDashboardChartsRender();
+    };
+
+    // Firebase Auth Lifecycle Hooks
+    auth.onAuthStateChanged((user) => {
+      const panel = document.getElementById("authStatusPanel");
+      const text = document.getElementById("authStatusText");
+      const uidDisp = document.getElementById("authUidDisplay");
+      const openBtn = document.getElementById("openModalBtn");
+
+      if (user) {
         window.globalUserUid = user.uid;
-
-        authStatusPanel.className = "bg-[#004d3e] border border-[#00a884] rounded px-1 py-0.5 text-[9px] font-mono inline-flex items-center gap-0.5 shadow-md";
-        authStatusText.innerHTML = "Connected ✔";
-        authUidDisplay.innerText = "UID: " + window.globalUserUid.substring(0,5);
-        authUidDisplay.classList.remove("hidden");
-
-        openModalBtn.disabled = false;
-        openModalBtn.className = "flex-1 sm:flex-initial bg-[#00a884] hover:bg-[#00cc99] text-white font-bold text-[11px] px-2.5 py-1.5 rounded-md shadow-sm transition flex items-center justify-center gap-1 active:scale-95 cursor-pointer opacity-100 h-8";
-        openModalBtn.querySelector("i").className = "fa-solid fa-plus text-[9px]";
+        panel.className = "auth-panel-success border rounded px-1 py-0.5 text-[9px] font-mono inline-flex items-center gap-0.5 shadow-inner max-w-full truncate text-white";
+        text.innerHTML = `<i class="fa-solid fa-shield-solid text-emerald-400"></i> Connected`;
+        uidDisp.textContent = `UID: ${user.uid.substring(0,6)}`;
+        uidDisp.classList.remove('hidden');
+        
+        openBtn.disabled = false;
+        openBtn.className = "flex-1 sm:flex-initial bg-white text-[#008069] font-bold text-[11px] px-2.5 py-1.5 rounded-md shadow-sm transition flex items-center justify-center gap-1 hover:bg-teal-50 h-8 cursor-pointer";
+        openBtn.querySelector('i').className = "fa-solid fa-plus";
 
         validateAndSetAlias(currentUser, true);
-        initDatabaseStreamingChannel();
         listenGlobalAppNotifications();
-      })
-      .catch(function(error) {
-        console.error("Handshake Exception: ", error);
-        authStatusPanel.className = "bg-red-900 border border-red-500 rounded px-1 py-0.5 text-[9px] font-mono inline-flex items-center gap-0.5 shadow-md";
-        authStatusText.innerHTML = "Auth Failed ❌";
-      });
-
-    document.getElementById("userBadge").innerHTML = `<i class="fa-solid fa-user-circle mr-0.5"></i> Alias: <strong>${escapeHtml(currentUser)}</strong>`;
-    document.getElementById("userBadge").addEventListener("click", () => {
-      const n = prompt("Modify current operational profile string name:", currentUser);
-      if (n && n.trim() !== "") {
-        validateAndSetAlias(n, false);
+        syncDataPipeline();
+      } else {
+        text.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Disconnected`;
+        auth.signInAnonymously().catch(err => {
+          panel.className = "auth-panel-failed border rounded px-1 py-0.5 text-[9px] font-mono inline-flex items-center gap-0.5 shadow-inner max-w-full truncate text-white";
+          text.innerHTML = `<i class="fa-solid fa-ban text-red-400"></i> Sync Broken`;
+          console.error(err);
+        });
       }
     });
 
-    function initDatabaseStreamingChannel() {
-      db.ref("tasks").orderByChild("projectId").equalTo(currentProject).on("value", function(snapshot) {
+    // Database Streaming Synchronization Architecture
+    function syncDataPipeline() {
+      db.ref('tasks').on('value', (snapshot) => {
         localDataStore = snapshot.val() || {};
         renderApplicationPipeline();
-      }, function(error) {
-        console.error("Pipeline Sync Interrupted:", error);
+        if(document.getElementById('view-dashboard').classList.contains('hidden') === false) {
+          triggerDashboardChartsRender();
+        }
       });
     }
 
-    function renderApplicationPipeline() {
-      const currentActiveTab = document.querySelector(".active-nav-tab")?.id || "tab-feed";
-      if (currentActiveTab === "tab-feed") renderFeedView();
-      if (currentActiveTab === "tab-dashboard") reinitializeVisualAnalyticsCharts();
-      if (currentActiveTab === "tab-table") renderTabularLedgerGrid();
-    }
-
-    window.switchView = function(viewId) {
-      ["feed", "dashboard", "table"].forEach(v => {
-        document.getElementById(`view-${v}`).classList.add("hidden");
-        document.getElementById(`tab-${v}`).classList.remove("active-nav-tab");
-      });
-      document.getElementById(`view-${viewId}`).classList.remove("hidden");
-      document.getElementById(`tab-${viewId}`).classList.add("active-nav-tab");
-      
-      if (viewId === 'feed') renderFeedView();
-      if (viewId === 'dashboard') reinitializeVisualAnalyticsCharts();
-      if (viewId === 'table') renderTabularLedgerGrid();
-    };
-
-    projectSelector.addEventListener("change", (e) => {
-      currentProject = e.target.value;
-      if (window.globalUserUid) initDatabaseStreamingChannel();
+    projectSelector.addEventListener("change", () => {
+      currentProject = projectSelector.value;
+      renderApplicationPipeline();
+      triggerDashboardChartsRender();
     });
 
-    document.getElementById("feedSearch").addEventListener("input", renderFeedView);
-    document.getElementById("feedFilterState").addEventListener("change", renderFeedView);
-    document.getElementById("feedFilterType").addEventListener("change", renderFeedView);
-    document.getElementById("feedClearAllFiltersBtn").addEventListener("click", () => {
-      document.getElementById("feedSearch").value = "";
-      document.getElementById("feedFilterState").value = "all";
-      document.getElementById("feedFilterType").value = "all";
-      renderFeedView();
-    });
-
-    document.getElementById("tableSearch").addEventListener("input", renderTabularLedgerGrid);
-    document.getElementById("tableFilterState").addEventListener("change", renderTabularLedgerGrid);
-    document.getElementById("tableFilterType").addEventListener("change", renderTabularLedgerGrid);
-    document.getElementById("tableClearAllFiltersBtn").addEventListener("click", () => {
-      document.getElementById("tableSearch").value = "";
-      document.getElementById("tableFilterState").value = "all";
-      document.getElementById("tableFilterType").value = "all";
-      renderTabularLedgerGrid();
-    });
-
-    document.getElementById("expandAllCardsBtn").addEventListener("click", () => {
-      localGlobalCollapseAllTrigger = false;
-      Object.keys(localDataStore).forEach(id => { manualCardTrackingState[id] = false; });
-      localStorage.setItem("qt_manual_card_toggles2", JSON.stringify(manualCardTrackingState));
-      renderFeedView();
-    });
-
-    document.getElementById("collapseAllCardsBtn").addEventListener("click", () => {
-      localGlobalCollapseAllTrigger = true;
-      Object.keys(localDataStore).forEach(id => { manualCardTrackingState[id] = true; });
-      localStorage.setItem("qt_manual_card_toggles2", JSON.stringify(manualCardTrackingState));
-      renderFeedView();
-    });
-
-    const setModalVisibility = (show) => {
-      if (show) {
-        taskModal.classList.remove("hidden");
-        setTimeout(() => { taskModal.classList.remove("opacity-0"); taskModal.querySelector("div").classList.remove("scale-95"); }, 10);
-      } else {
-        taskModal.classList.add("opacity-0"); taskModal.querySelector("div").classList.add("scale-95");
-        setTimeout(() => taskModal.classList.add("hidden"), 200);
-      }
-    };
-
+    // Modal Lifecycle Hooks
     document.getElementById("openModalBtn").addEventListener("click", () => {
-      taskForm.reset();
-      setModalVisibility(true);
+      taskModal.classList.remove("hidden");
+      setTimeout(() => taskModal.classList.remove("opacity-0", "scale-95"), 10);
     });
-    document.getElementById("closeModalBtn").addEventListener("click", () => setModalVisibility(false));
-    document.getElementById("cancelModalBtn").addEventListener("click", () => setModalVisibility(false));
 
+    function hideModalStructure() {
+      taskModal.classList.add("opacity-0", "scale-95");
+      setTimeout(() => {
+        taskModal.classList.add("hidden");
+        // Only wipe the input if Keep Fields mode is disabled
+        if (!document.getElementById("keepFieldsToggle").checked) {
+          taskForm.reset();
+        } else {
+          document.getElementById("taskTitle").value = "";
+        }
+      }, 200);
+    }
+    document.getElementById("closeModalBtn").addEventListener("click", hideModalStructure);
+    document.getElementById("cancelModalBtn").addEventListener("click", hideModalStructure);
+
+    // Form Deployment Logic
     taskForm.addEventListener("submit", (e) => {
       e.preventDefault();
+      if(!window.globalUserUid) return;
+
       const title = document.getElementById("taskTitle").value.trim();
       const desc = document.getElementById("taskDescription").value.trim();
       const type = document.getElementById("pollType").value;
-      
-      if(!title) return;
+      const ttlVal = document.getElementById("taskDurationTtl").value;
+      const keepFieldsChecked = document.getElementById("keepFieldsToggle").checked;
+
+      const now = Date.now();
+      let expiresAt = null;
+      if (ttlVal !== "infinite") {
+        expiresAt = now + parseInt(ttlVal) * 60 * 1000;
+      }
 
       const newTask = {
         title: title,
         description: desc,
         type: type,
-        status: "open",
-        projectId: currentProject,
+        state: "open",
+        project: currentProject,
         createdBy: currentUser || "Anonymous",
         uid: window.globalUserUid,
-        createdAt: firebase.database.ServerValue.TIMESTAMP,
-        closedAt: null,
-        votes: {}
+        createdAt: now,
+        expiresAt: expiresAt,
+        responses: {}
       };
 
-      db.ref("tasks").push(newTask, (err) => {
-        if(!err) {
-          setModalVisibility(false);
-          dispatchGlobalAppNotification(`deployed a new task poll card titled: "${title}"`);
-        }
+      db.ref('tasks').push(newTask).then(() => {
+        dispatchGlobalAppNotification(`deployed a tactical new poll matrix tracker: "${title}"`);
+        SoundEffects.playComplete();
+        hideModalStructure();
       });
     });
 
-    window.toggleCardCollapsibleInline = function(taskId) {
-      manualCardTrackingState[taskId] = !manualCardTrackingState[taskId];
-      localStorage.setItem("qt_manual_card_toggles2", JSON.stringify(manualCardTrackingState));
-      renderFeedView();
-    };
-
-    window.submitVoteSelection = function(taskId, optionIndex) {
-      if(!window.globalUserUid) return;
-      SoundEffects.playVote();
+    // Execution Core Logic for Rendering Pipeline
+    function renderApplicationPipeline() {
+      const feedContainer = document.getElementById("feedScrollContainer");
+      const tableBody = document.getElementById("tableBody");
       
-      const targetRef = db.ref(`tasks/${taskId}/votes/${window.globalUserUid}`);
-      targetRef.once('value').then(snap => {
-        const currentVote = snap.val();
-        let actionMsg = "";
-        if (currentVote !== null && currentVote === optionIndex) {
-          targetRef.remove();
-          actionMsg = `retracted their response vote from task card ID: ${taskId}`;
-        } else {
-          targetRef.set(optionIndex);
-          actionMsg = `submitted a selection response on task card ID: ${taskId}`;
-        }
-        dispatchGlobalAppNotification(actionMsg);
-      });
-    };
+      const feedSearch = document.getElementById("feedSearch").value.toLowerCase();
+      const feedFState = document.getElementById("feedFilterState").value;
+      const feedFType = document.getElementById("feedFilterType").value;
 
-    window.togglePollLifecycleState = function(taskId, currentStatus) {
-      const nextStatus = currentStatus === "open" ? "closed" : "open";
-      if(nextStatus === "closed") SoundEffects.playComplete();
-      else SoundEffects.playReopen();
+      const tableSearch = document.getElementById("tableSearch").value.toLowerCase();
+      const tableFState = document.getElementById("tableFilterState").value;
+      const tableFType = document.getElementById("tableFilterType").value;
 
-      db.ref(`tasks/${taskId}`).update({
-        status: nextStatus,
-        closedAt: nextStatus === "closed" ? firebase.database.ServerValue.TIMESTAMP : null
-      }, (err) => {
-        if(!err) {
-          dispatchGlobalAppNotification(`altered lifecycle operational phase state to [${nextStatus.toUpperCase()}] for card: ${taskId}`);
-        }
-      });
-    };
+      feedContainer.innerHTML = "";
+      tableBody.innerHTML = "";
 
-    const setDeleteModalVisibility = (show) => {
-      if (show) {
-        deleteModal.classList.remove("hidden");
-        setTimeout(() => { deleteModal.classList.remove("opacity-0"); deleteModal.querySelector("div").classList.remove("scale-95"); }, 10);
-      } else {
-        deleteModal.classList.add("opacity-0"); deleteModal.querySelector("div").classList.add("scale-95");
-        setTimeout(() => deleteModal.classList.add("hidden"), 200);
-      }
-    };
+      const keys = Object.keys(localDataStore).sort((a,b) => localDataStore[b].createdAt - localDataStore[a].createdAt);
+      let feedActiveItemsCount = 0;
 
-    window.triggerTaskDeletionPipeline = function(taskId, ownerUid) {
-      if (ownerUid !== window.globalUserUid) {
-        alert("🔒 Multi-Tenant Error Privilege: You do not possess structural ownership permissions to drop this record.");
-        return;
-      }
-      targetTaskIdForDeletion = taskId;
-      setDeleteModalVisibility(true);
-    };
+      keys.forEach(key => {
+        const item = localDataStore[key];
+        if (item.project !== currentProject) return;
 
-    document.getElementById("cancelDeleteBtn").addEventListener("click", () => {
-      targetTaskIdForDeletion = null;
-      setDeleteModalVisibility(false);
-    });
-
-    document.getElementById("confirmDeleteBtn").addEventListener("click", () => {
-      if (targetTaskIdForDeletion) {
-        SoundEffects.playDelete();
-        db.ref(`tasks/${targetTaskIdForDeletion}`).remove((err) => {
-          if(!err) {
-            dispatchGlobalAppNotification(`permanently erased task matrix log entity ID: ${targetTaskIdForDeletion}`);
-            setDeleteModalVisibility(false);
-            targetTaskIdForDeletion = null;
-          }
-        });
-      }
-    });
-
-    function renderFeedView() {
-      const searchVal = document.getElementById("feedSearch").value.toLowerCase();
-      const stateFilter = document.getElementById("feedFilterState").value;
-      const typeFilter = document.getElementById("feedFilterType").value;
-      
-      feedScrollContainer.innerHTML = "";
-      const keys = Object.keys(localDataStore);
-      
-      let matchedCount = 0;
-
-      // Reverse chronological order rendering Pipeline 
-      const sortedKeys = keys.sort((a,b) => {
-        return (localDataStore[b].createdAt || 0) - (localDataStore[a].createdAt || 0);
-      });
-
-      sortedKeys.forEach(id => {
-        const item = localDataStore[id];
-        if (!item) return;
-
-        const title = item.title || "Untitled Task";
-        const desc = item.description || "";
-        const status = item.status || "open";
-        const type = item.type || "status";
-        const createdBy = item.createdBy || "Anonymous";
-        const uidOwner = item.uid || "";
-
-        if (stateFilter !== "all" && status !== stateFilter) return;
-        if (typeFilter !== "all" && type !== typeFilter) return;
-        if (searchVal && !title.toLowerCase().includes(searchVal) && !desc.toLowerCase().includes(searchVal)) return;
-
-        matchedCount++;
-
-        // Determine precise component collapse state 
-        let isCollapsed = localGlobalCollapseAllTrigger;
-        if (manualCardTrackingState[id] !== undefined) {
-          isCollapsed = manualCardTrackingState[id];
-        }
-
-        const votesObj = item.votes || {};
-        const totalVotes = Object.keys(votesObj).length;
-        const optionsList = POLL_OPTIONS_MAP[type] || [];
+        // Process data responses block metric parameters
+        const options = POLL_OPTIONS_MAP[item.type] || [];
+        const voteDistribution = {};
+        options.forEach(opt => voteDistribution[opt] = 0);
         
-        const tallyArray = new Array(optionsList.length).fill(0);
-        let userSelectedOptionIndex = null;
-        
-        Object.keys(votesObj).forEach(userUid => {
-          const selectedIdx = votesObj[userUid];
-          if (selectedIdx !== undefined && selectedIdx < tallyArray.length) {
-            tallyArray[selectedIdx]++;
-          }
-          if (userUid === window.globalUserUid) {
-            userSelectedOptionIndex = selectedIdx;
-          }
-        });
-
-        const itemCardNode = document.createElement("div");
-        itemCardNode.className = `bg-white rounded-lg shadow-sm border border-gray-200 p-2 relative flex flex-col gap-1 transition-all duration-200`;
-
-        if (isCollapsed) {
-          // Minimal high-density card design when collapsed
-          let summaryTallyString = optionsList.map((opt, i) => `${opt.split(' ')[0]}:${tallyArray[i]}`).join(" | ");
-          itemCardNode.innerHTML = `
-            <div class="flex items-center justify-between gap-2">
-              <div class="min-w-0 flex-1 flex items-center gap-1.5 cursor-pointer" onclick="toggleCardCollapsibleInline('${id}')">
-                <i class="fa-solid fa-square-caret-right text-gray-400 text-[11px]"></i>
-                <h4 class="font-bold text-gray-800 text-[11px] truncate">${escapeHtml(title)}</h4>
-                <span class="px-1 text-[8px] font-extrabold rounded shrink-0 uppercase tracking-tight ${status === 'open' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-500'}">${type}</span>
-              </div>
-              <div class="flex items-center gap-2 shrink-0 text-[10px] text-gray-500 font-mono">
-                <span>(${totalVotes} votes)</span>
-                <button onclick="toggleCardCollapsibleInline('${id}')" class="text-teal-600 hover:text-teal-800 p-0.5"><i class="fa-solid fa-expand"></i></button>
-              </div>
-            </div>
-          `;
-        } else {
-          // Full card view design logic
-          let configurationMetricsHTML = "";
-          optionsList.forEach((optionLabel, index) => {
-            const count = tallyArray[index];
-            const percent = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
-            const isUserChoice = userSelectedOptionIndex === index;
-
-            configurationMetricsHTML += `
-              <button onclick="submitVoteSelection('${id}', ${index})" class="w-full text-left relative overflow-hidden rounded border transition duration-150 p-1.5 flex items-center justify-between text-[11px] h-7 ${isUserChoice ? 'border-teal-500 bg-teal-50/50 font-bold' : 'border-gray-200 bg-gray-50 hover:bg-gray-100'}" ${status === 'closed' ? 'disabled' : ''}>
-                <div class="absolute left-0 top-0 bottom-0 bg-teal-500/10 transition-all duration-300" style="width: ${percent}%"></div>
-                <span class="relative z-10 truncate flex items-center gap-1">
-                  ${isUserChoice ? '<i class="fa-solid fa-circle-check text-teal-600 text-[10px]"></i>' : ''}
-                  ${escapeHtml(optionLabel)}
-                </span>
-                <span class="relative z-10 font-mono text-[10px] text-gray-500">${count} (${percent}%)</span>
-              </button>
-            `;
+        let grossVotesCount = 0;
+        if (item.responses) {
+          Object.values(item.responses).forEach(resp => {
+            if (voteDistribution[resp.choice] !== undefined) {
+              voteDistribution[resp.choice]++;
+              grossVotesCount++;
+            }
           });
-
-          itemCardNode.innerHTML = `
-            <div class="flex items-start justify-between gap-1.5 border-b border-gray-100 pb-1">
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center flex-wrap gap-1">
-                  <span class="px-1 py-0.2 bg-teal-50 text-teal-800 text-[8px] font-extrabold rounded uppercase tracking-wider border border-teal-100">${type}</span>
-                  <span class="px-1 py-0.2 text-[8px] font-bold rounded ${status === 'open' ? 'bg-emerald-600 text-white' : 'bg-gray-400 text-white'} uppercase tracking-tight">
-                    ${status === 'open' ? '🟢 Active' : '🔒 Closed'}
-                  </span>
-                </div>
-                <h3 class="font-bold text-gray-900 text-xs mt-0.5 leading-tight break-words">${escapeHtml(title)}</h3>
-                ${desc ? `<p class="text-gray-500 text-[10px] mt-0.5 leading-relaxed break-words line-clamp-3">${escapeHtml(desc)}</p>` : ''}
-              </div>
-              <button onclick="toggleCardCollapsibleInline('${id}')" class="text-gray-400 hover:text-gray-600 p-0.5 shrink-0"><i class="fa-solid fa-compress text-[10px]"></i></button>
-            </div>
-
-            <div class="space-y-1 my-1">${configurationMetricsHTML}</div>
-
-            <div class="flex items-center justify-between text-[9px] text-gray-400 pt-1 border-t border-gray-50 shrink-0">
-              <span class="truncate">By: <strong class="text-gray-600 font-semibold">${escapeHtml(createdBy)}</strong></span>
-              <div class="flex items-center gap-1.5 shrink-0">
-                <button onclick="togglePollLifecycleState('${id}', '${status}')" class="font-bold uppercase tracking-tight px-1 py-0.5 rounded transition ${status==='open' ? 'text-amber-700 bg-amber-50 hover:bg-amber-100' : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100'}">
-                  ${status === 'open' ? '<i class="fa-solid fa-lock text-[8px]"></i> Close' : '<i class="fa-solid fa-lock-open text-[8px]"></i> Open'}
-                </button>
-                ${uidOwner === window.globalUserUid ? `
-                  <button onclick="triggerTaskDeletionPipeline('${id}', '${uidOwner}')" class="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-1 rounded transition">
-                    <i class="fa-solid fa-trash-can"></i>
-                  </button>
-                ` : ''}
-              </div>
-            </div>
-          `;
         }
 
-        feedScrollContainer.appendChild(itemCardNode);
+        let leadingChoice = "None";
+        let peakVotes = 0;
+        options.forEach(opt => {
+          if (voteDistribution[opt] > peakVotes) {
+            peakVotes = voteDistribution[opt];
+            leadingChoice = opt;
+          } else if (voteDistribution[opt] === peakVotes && peakVotes > 0) {
+            leadingChoice = "Tie / Inconclusive";
+          }
+        });
+
+        // Resolve Local Memory Expansions
+        if (manualCardTrackingState[key] === undefined) {
+          manualCardTrackingState[key] = !localGlobalCollapseAllTrigger;
+        }
+        const isExpanded = manualCardTrackingState[key];
+
+        // Pipeline A: DOM Assembly for Responsive Stream/Feed Cards
+        const matchFeedSearch = item.title.toLowerCase().includes(feedSearch) || item.description.toLowerCase().includes(feedSearch);
+        const matchFeedState = (feedFState === "all") || (feedFState === item.state);
+        const matchFeedType = (feedFType === "all") || (feedFType === item.type);
+
+        if (matchFeedSearch && matchFeedState && matchFeedType) {
+          feedActiveItemsCount++;
+          const card = document.createElement("div");
+          card.className = "bg-white rounded-xl border shadow-sm overflow-hidden transition-all duration-200";
+          
+          let headerBadges = "";
+          if (item.type === 'status') headerBadges = `<span class="bg-teal-50 text-[#008069] border border-teal-100 font-bold px-1.5 py-0.5 rounded-[4px] text-[9px] uppercase">Status Matrix</span>`;
+          if (item.type === 'decision') headerBadges = `<span class="bg-blue-50 text-blue-700 border border-blue-100 font-bold px-1.5 py-0.5 rounded-[4px] text-[9px] uppercase">Decision</span>`;
+          if (item.type === 'checklist') headerBadges = `<span class="bg-purple-50 text-purple-700 border border-purple-100 font-bold px-1.5 py-0.5 rounded-[4px] text-[9px] uppercase">Verification Checklist</span>`;
+
+          const stateIndicatorBadge = item.state === 'open' 
+            ? `<span class="bg-emerald-500 text-white font-extrabold px-1.5 py-0.5 rounded-full text-[9px] inline-flex items-center gap-0.5 shrink-0 shadow-sm animate-pulse">● Active</span>`
+            : `<span class="bg-gray-400 text-white font-extrabold px-1.5 py-0.5 rounded-full text-[9px] inline-flex items-center gap-0.5 shrink-0 shadow-sm">🔒 Closed</span>`;
+
+          // Handle client rendering countdown values for automated TTL boundaries
+          let ttlTimerMarkup = "";
+          if (item.state === "open" && item.expiresAt) {
+            ttlTimerMarkup = `<div class="text-[10px] font-mono shrink-0 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200" data-countdown-id="${item.expiresAt}"></div>`;
+          }
+
+          let cardInteractionViewBlock = "";
+          if (isExpanded) {
+            // Option Voter Matrix Loop Block Layout
+            let choicesListMarkup = `<div class="space-y-1.5 mt-2.5">`;
+            options.forEach(opt => {
+              const count = voteDistribution[opt];
+              const pct = grossVotesCount > 0 ? Math.round((count / grossVotesCount) * 100) : 0;
+              
+              let currentAliasChoiceMarker = "";
+              if (item.responses && item.responses[window.globalUserUid] && item.responses[window.globalUserUid].choice === opt) {
+                currentAliasChoiceMarker = `<i class="fa-solid fa-circle-check text-[#00a884] text-[11px] shadow-sm bg-white rounded-full"></i>`;
+              }
+
+              const disabledAttr = item.state === 'closed' ? "disabled" : "";
+              const activeInteractiveCursorClass = item.state === 'closed' ? "cursor-not-allowed opacity-90" : "cursor-pointer hover:bg-gray-50 active:scale-[0.99]";
+
+              choicesListMarkup += `
+                <button ${disabledAttr} onclick="registerVoteExecution('${key}', '${opt}')" class="w-full text-left bg-gray-50 border rounded-lg p-2 flex flex-col relative overflow-hidden transition-all duration-150 ${activeInteractiveCursorClass}">
+                  <div class="absolute left-0 top-0 bottom-0 bg-teal-500/10 transition-all duration-300" style="width: ${pct}%"></div>
+                  <div class="flex justify-between items-center w-full z-10 relative font-medium">
+                    <span class="flex items-center gap-1.5 truncate text-gray-700">${opt} ${currentAliasChoiceMarker}</span>
+                    <span class="font-bold text-gray-900 text-[11px] font-mono">${count} <span class="text-[9px] text-gray-400 font-normal">(${pct}%)</span></span>
+                  </div>
+                </button>
+              `;
+            });
+            choicesListMarkup += `</div>`;
+
+            // Operational Access Controls Validation
+            const clientAccessOverrideAllowed = (item.uid === window.globalUserUid);
+            let operationalStateActionButton = "";
+            
+            if (clientAccessOverrideAllowed) {
+              if (item.state === 'open') {
+                operationalStateActionButton = `
+                  <button onclick="toggleLifecycleStateValue('${key}', 'closed')" class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold px-2 py-1 rounded transition border text-[10px] flex items-center gap-1 h-6 shadow-sm">
+                    <i class="fa-solid fa-lock"></i> Close Poll
+                  </button>
+                `;
+              } else {
+                operationalStateActionButton = `
+                  <button onclick="toggleLifecycleStateValue('${key}', 'open')" class="bg-teal-50 hover:bg-teal-100 text-teal-700 font-bold px-2 py-1 rounded transition border border-teal-200 text-[10px] flex items-center gap-1 h-6 shadow-sm">
+                    <i class="fa-solid fa-lock-open"></i> Reopen
+                  </button>
+                `;
+              }
+            }
+
+            const deleteMarkupBlock = clientAccessOverrideAllowed ? `
+              <button onclick="triggerTargetedDeletionPrompt('${key}')" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 font-bold p-1 rounded transition flex items-center justify-center w-6 h-6 shadow-sm" title="Delete Permanent">
+                <i class="fa-solid fa-trash-can text-[10px]"></i>
+              </button>
+            ` : "";
+
+            cardInteractionViewBlock = `
+              <div class="border-t px-3 py-2.5 bg-white space-y-3">
+                ${item.description ? `<p class="text-[11px] text-gray-600 font-normal leading-relaxed break-words border-l-2 border-gray-300 pl-2 bg-gray-50/50 py-1 rounded-r">${escapeHtml(item.description)}</p>` : ""}
+                ${choicesListMarkup}
+                
+                <div class="flex items-center justify-between gap-2 border-t pt-2.5 text-[10px] text-gray-400 font-medium">
+                  <div class="flex flex-wrap items-center gap-1.5 min-w-0">
+                    <span class="truncate">Owner: <strong class="text-gray-600">${escapeHtml(item.createdBy)}</strong></span>
+                    <span>•</span>
+                    <span class="font-mono">${new Date(item.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    ${operationalStateActionButton}
+                    ${deleteMarkupBlock}
+                  </div>
+                </div>
+
+                <div class="border-t pt-2 mt-2 space-y-1.5">
+                  <div class="flex items-center justify-between text-[10px] font-bold text-gray-500 uppercase tracking-wide">
+                    <span><i class="fa-solid fa-comments text-teal-600"></i> Discussion thread</span>
+                  </div>
+                  <div id="chat-stream-${key}" class="space-y-1 max-h-[110px] overflow-y-auto custom-scrollbar border p-1.5 rounded bg-gray-50/50">
+                    <p class="text-[10px] text-gray-400 italic text-center py-1">Initializing context stream...</p>
+                  </div>
+                  <div class="flex gap-1.5 items-center">
+                    <input type="text" id="chat-input-${key}" placeholder="Type message argument..." class="flex-1 text-[10px] border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#00a884] h-6 bg-white" onkeydown="if(event.key==='Enter') submitTaskCommentMessage('${key}')">
+                    <button onclick="submitTaskCommentMessage('${key}')" class="bg-[#008069] text-white rounded px-2.5 py-1 text-[10px] font-bold shadow hover:bg-[#01604f] transition flex items-center justify-center h-6">
+                      <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+
+          card.innerHTML = `
+            <div class="p-3 flex items-start gap-2.5 cursor-pointer hover:bg-gray-50/70 select-none" onclick="toggleCardUIExpansionState('${key}', event)">
+              <div class="w-5 h-5 rounded-full bg-teal-50 flex items-center justify-center text-[#008069] border border-teal-100 shrink-0 text-[10px] mt-0.5">
+                <i class="fa-solid ${isExpanded ? 'fa-folder-open' : 'fa-folder'}"></i>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  ${headerBadges}
+                  ${stateIndicatorBadge}
+                  ${ttlTimerMarkup}
+                </div>
+                <h2 class="font-black text-gray-900 text-xs sm:text-[13px] leading-tight mt-1 tracking-tight break-words">${escapeHtml(item.title)}</h2>
+                <div class="flex items-center gap-2 mt-1 text-[10px] text-gray-400 font-bold">
+                  <span>Gross Responses: <strong class="text-[#008069]">${grossVotesCount}</strong></span>
+                  <span>•</span>
+                  <span class="truncate">Leading: <strong class="text-gray-700">${leadingChoice}</strong></span>
+                </div>
+              </div>
+              <div class="text-gray-400 text-xs px-1 shrink-0 self-center">
+                <i class="fa-solid ${isExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
+              </div>
+            </div>
+            ${cardInteractionViewBlock}
+          `;
+          feedContainer.appendChild(card);
+
+          if (isExpanded) {
+            setTimeout(() => initializeLiveTaskChatStream(key), 5);
+          }
+        }
+
+        // Pipeline B: DOM Assembly for Ledger Data Matrix Grid View
+        const matchTableSearch = item.title.toLowerCase().includes(tableSearch) || item.description.toLowerCase().includes(tableSearch);
+        const matchTableState = (tableFState === "all") || (tableFState === item.state);
+        const matchTableType = (tableFType === "all") || (tableFType === item.type);
+
+        if (matchTableSearch && matchTableState && matchTableType) {
+          const row = document.createElement("tr");
+          row.className = "hover:bg-gray-50 border-b last:border-b-0 font-medium transition-colors";
+          
+          const startStr = new Date(item.createdAt).toLocaleDateString();
+          const endStr = item.closedAt ? new Date(item.closedAt).toLocaleDateString() : "—";
+          
+          let lifespanStr = "Active";
+          if (item.closedAt) {
+            const diffDays = Math.round((item.closedAt - item.createdAt) / (1000 * 60 * 60 * 24));
+            lifespanStr = `${diffDays} days`;
+          } else {
+            const currentDiff = Math.round((Date.now() - item.createdAt) / (1000 * 60 * 60 * 24));
+            lifespanStr = `${currentDiff}d active`;
+          }
+
+          const stateCellMarkup = item.state === 'open' 
+            ? `<span class="text-emerald-600 font-extrabold bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded">🟢 Open</span>`
+            : `<span class="text-gray-500 font-extrabold bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded">🔒 Closed</span>`;
+
+          const clientAccessOverrideAllowed = (item.uid === window.globalUserUid);
+          const ledgerRowActionBtn = clientAccessOverrideAllowed 
+            ? `<button onclick="triggerTargetedDeletionPrompt('${key}')" class="text-red-600 hover:text-red-800 p-1 font-bold text-[10px] flex items-center justify-center gap-0.5 mx-auto transition"><i class="fa-solid fa-trash-can"></i> WIPE</button>`
+            : `<span class="text-gray-300 italic text-[9px]">Restricted</span>`;
+
+          row.innerHTML = `
+            <td class="p-2 font-bold text-gray-900 border-r max-w-[160px] truncate sticky-col">${escapeHtml(item.title)}</td>
+            <td class="p-2 text-gray-500 max-w-[200px] truncate border-r" title="${escapeHtml(item.description)}">${item.description ? escapeHtml(item.description) : "—"}</td>
+            <td class="p-2 capitalize border-r font-semibold text-gray-600">${item.type}</td>
+            <td class="p-2 border-r text-center">${stateCellMarkup}</td>
+            <td class="p-2 border-r font-semibold text-gray-700 max-w-[80px] truncate">${escapeHtml(item.createdBy)}</td>
+            <td class="p-2 border-r font-mono text-[10px] text-gray-500">${startStr}</td>
+            <td class="p-2 border-r font-mono text-[10px] text-gray-500">${endStr}</td>
+            <td class="p-2 border-r font-mono font-bold text-amber-700">${lifespanStr}</td>
+            <td class="p-2 border-r text-center font-bold text-purple-600 font-mono">${grossVotesCount}</td>
+            <td class="p-2 border-r font-bold text-teal-800 max-w-[110px] truncate">${leadingChoice}</td>
+            <td class="p-2 text-right">${ledgerRowActionBtn}</td>
+          `;
+          tableBody.appendChild(row);
+        }
       });
 
-      if (matchedCount === 0) {
-        feedScrollContainer.innerHTML = `
-          <div class="text-center py-16 text-gray-400">
-            <i class="fa-solid fa-folder-open text-xl mb-1.5 block"></i>
-            <p class="text-[11px]">No active tasks mapped to current project scopes.</p>
+      if (feedActiveItemsCount === 0) {
+        feedContainer.innerHTML = `
+          <div class="text-center py-12 text-gray-400 border border-dashed rounded-xl bg-white mt-4">
+            <i class="fa-solid fa-cubes text-xl mb-1.5 text-gray-300"></i>
+            <p class="text-[11px] font-bold">No active task metrics fall matching these criteria scope parameters.</p>
           </div>
         `;
       }
     }
 
-    function renderTabularLedgerGrid() {
-      const body = document.getElementById("tableBody");
-      const searchVal = document.getElementById("tableSearch").value.toLowerCase();
-      const stateFilter = document.getElementById("tableFilterState").value;
-      const typeFilter = document.getElementById("tableFilterType").value;
+    // Toggle Multi-State Card Trackers View Configuration
+    window.toggleCardUIExpansionState = function(taskId, event) {
+      if (event.target.closest('button') || event.target.closest('input') || event.target.closest('select') || event.target.closest('a') || window.getSelection().toString()) {
+        return; 
+      }
+      manualCardTrackingState[taskId] = !manualCardTrackingState[taskId];
+      localStorage.setItem("qt_manual_card_toggles2", JSON.stringify(manualCardTrackingState));
+      renderApplicationPipeline();
+    };
 
-      body.innerHTML = "";
-      let matchedCount = 0;
+    // Bulk Management Expansion Engines
+    document.getElementById("expandAllCardsBtn").addEventListener("click", () => {
+      localGlobalCollapseAllTrigger = false;
+      Object.keys(localDataStore).forEach(k => manualCardTrackingState[k] = true);
+      localStorage.setItem("qt_manual_card_toggles2", JSON.stringify(manualCardTrackingState));
+      renderApplicationPipeline();
+    });
 
-      Object.keys(localDataStore).forEach(id => {
-        const item = localDataStore[id];
-        if(!item) return;
+    document.getElementById("collapseAllCardsBtn").addEventListener("click", () => {
+      localGlobalCollapseAllTrigger = true;
+      Object.keys(localDataStore).forEach(k => manualCardTrackingState[k] = false);
+      localStorage.setItem("qt_manual_card_toggles2", JSON.stringify(manualCardTrackingState));
+      renderApplicationPipeline();
+    });
 
-        const title = item.title || "Untitled Task";
-        const desc = item.description || "";
-        const type = item.type || "status";
-        const status = item.status || "open";
-        const createdBy = item.createdBy || "Anonymous";
-        const startTimestamp = item.createdAt || null;
-        const closedTimestamp = item.closedAt || null;
-        const uidOwner = item.uid || "";
+    // Client Voting Registry State Mechanics
+    window.registerVoteExecution = function(taskId, optionValue) {
+      if (!window.globalUserUid) return;
+      const item = localDataStore[taskId];
+      if (item.state === 'closed') return;
 
-        if (stateFilter !== "all" && status !== stateFilter) return;
-        if (typeFilter !== "all" && type !== typeFilter) return;
-        if (searchVal && !title.toLowerCase().includes(searchVal) && !desc.toLowerCase().includes(searchVal)) return;
+      SoundEffects.playVote();
+      db.ref(`tasks/${taskId}/responses/${window.globalUserUid}`).set({
+        voterAlias: currentUser || "Anonymous",
+        choice: optionValue,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+      }).then(() => {
+        dispatchGlobalAppNotification(`registered transaction vote [${optionValue}] for matrix metric block: "${item.title}"`);
+      });
+    };
 
-        matchedCount++;
+    // Access Controlled Lifecycle Modifier Override Mutator
+    window.toggleLifecycleStateValue = function(taskId, newStateTarget) {
+      const item = localDataStore[taskId];
+      if (!item || item.uid !== window.globalUserUid) return;
 
-        const votesObj = item.votes || {};
-        const totalResponses = Object.keys(votesObj).length;
-        const optionsList = POLL_OPTIONS_MAP[type] || [];
+      if (newStateTarget === "open") SoundEffects.playReopen();
+      else SoundEffects.playComplete();
+
+      const patch = { state: newStateTarget };
+      if (newStateTarget === "closed") {
+        patch.closedAt = Date.now();
+      } else {
+        // Clear old dates if explicitly forced active again
+        db.ref(`tasks/${taskId}/closedAt`).remove();
+      }
+
+      db.ref(`tasks/${taskId}`).update(patch).then(() => {
+        dispatchGlobalAppNotification(`manually adjusted lifecycle constraint to [${newStateTarget.toUpperCase()}] for item: "${item.title}"`);
+      });
+    };
+
+    // Structural Deletion Pipeline Actions
+    window.triggerTargetedDeletionPrompt = function(taskId) {
+      const item = localDataStore[taskId];
+      if (!item || item.uid !== window.globalUserUid) return;
+
+      targetTaskIdForDeletion = taskId;
+      deleteModal.classList.remove("hidden");
+      setTimeout(() => deleteModal.classList.remove("opacity-0", "scale-95"), 10);
+    };
+
+    function dismissDeleteModalStructure() {
+      deleteModal.classList.add("opacity-0", "scale-95");
+      setTimeout(() => {
+        deleteModal.classList.add("hidden");
+        targetTaskIdForDeletion = null;
+      }, 200);
+    }
+    document.getElementById("cancelDeleteBtn").addEventListener("click", dismissDeleteModalStructure);
+
+    document.getElementById("confirmDeleteBtn").addEventListener("click", () => {
+      if (targetTaskIdForDeletion && localDataStore[targetTaskIdForDeletion]) {
+        const titleStr = localDataStore[targetTaskIdForDeletion].title;
+        SoundEffects.playDelete();
         
-        const tallyArray = new Array(optionsList.length).fill(0);
-        Object.keys(votesObj).forEach(u => {
-          const idx = votesObj[u];
-          if(idx !== undefined && idx < tallyArray.length) tallyArray[idx]++;
+        // Wipe active listeners before memory allocation loss
+        if (activeChatListeners[targetTaskIdForDeletion]) {
+          db.ref(`tasks/${targetTaskIdForDeletion}/comments`).off();
+          delete activeChatListeners[targetTaskIdForDeletion];
+        }
+
+        db.ref(`tasks/${targetTaskIdForDeletion}`).remove().then(() => {
+          dispatchGlobalAppNotification(`purged/wiped metric ledger object permanently: "${titleStr}"`);
+          dismissDeleteModalStructure();
         });
+      }
+    });
 
-        let leadingChoiceStr = "None";
-        let maxVal = -1;
-        tallyArray.forEach((val, i) => {
-          if (val > maxVal && val > 0) {
-            maxVal = val;
-            leadingChoiceStr = optionsList[i];
-          } else if (val === maxVal && val > 0) {
-            leadingChoiceStr += " (Tie)";
-          }
+    // Real-time Filtering Pipeline Setup Hooks
+    ['feedSearch', 'feedFilterState', 'feedFilterType'].forEach(id => {
+      document.getElementById(id).addEventListener("input", renderApplicationPipeline);
+    });
+    ['tableSearch', 'tableFilterState', 'tableFilterType'].forEach(id => {
+      document.getElementById(id).addEventListener("input", renderApplicationPipeline);
+    });
+
+    document.getElementById("feedClearAllFiltersBtn").addEventListener("click", () => {
+      document.getElementById("feedSearch").value = "";
+      document.getElementById("feedFilterState").value = "all";
+      document.getElementById("feedFilterType").value = "all";
+      renderApplicationPipeline();
+    });
+    document.getElementById("tableClearAllFiltersBtn").addEventListener("click", () => {
+      document.getElementById("tableSearch").value = "";
+      document.getElementById("tableFilterState").value = "all";
+      document.getElementById("tableFilterType").value = "all";
+      renderApplicationPipeline();
+    });
+
+    // Global Registry Analytics Aggregators & Chart Engine Mechanics
+    let instanceStatusChart = null;
+    let instanceTypeChart = null;
+    let instanceDurationChart = null;
+    let instancePerformanceChart = null;
+
+    function triggerDashboardChartsRender() {
+      const keys = Object.keys(localDataStore);
+      
+      let countOpen = 0, countClosed = 0, grossVotes = 0;
+      let distributionType = { status: 0, decision: 0, checklist: 0 };
+      let durationRanges = { "Under 1 Day": 0, "1-3 Days": 0, "3-7 Days": 0, "7+ Days": 0 };
+      let teamPerformanceMetrics = {};
+
+      let consolidatedClosedDurationsSum = 0;
+
+      keys.forEach(k => {
+        const item = localDataStore[k];
+        if (item.project !== currentProject) return;
+
+        if (item.state === 'open') countOpen++;
+        else countClosed++;
+
+        if (distributionType[item.type] !== undefined) distributionType[item.type]++;
+
+        let localItemVotesCount = 0;
+        if (item.responses) {
+          Object.values(item.responses).forEach(resp => {
+            grossVotes++;
+            localItemVotesCount++;
+            
+            const voter = resp.voterAlias || "Anonymous";
+            if (!teamPerformanceMetrics[voter]) teamPerformanceMetrics[voter] = 0;
+            teamPerformanceMetrics[voter]++;
+          });
+        }
+
+        const terminalTime = item.closedAt || Date.now();
+        const diffDays = (terminalTime - item.createdAt) / (1000 * 60 * 60 * 24);
+        
+        if (item.state === 'closed') {
+          consolidatedClosedDurationsSum += diffDays;
+        }
+
+        if (diffDays < 1) durationRanges["Under 1 Day"]++;
+        else if (diffDays <= 3) durationRanges["1-3 Days"]++;
+        else if (diffDays <= 7) durationRanges["3-7 Days"]++;
+        else durationRanges["7+ Days"]++;
+      });
+
+      document.getElementById("stat-total").textContent = countOpen + countClosed;
+      document.getElementById("stat-active").textContent = countOpen;
+      document.getElementById("stat-closed").textContent = countClosed;
+      document.getElementById("stat-votes").textContent = grossVotes;
+      
+      const avgDurationVal = countClosed > 0 ? (consolidatedClosedDurationsSum / countClosed).toFixed(1) : "0.0";
+      document.getElementById("stat-avg-duration").textContent = `${avgDurationVal} days`;
+
+      // Live Historical Audit Stream Logger
+      const streamAuditBox = document.getElementById("dashboardAuditTrail");
+      streamAuditBox.innerHTML = "";
+      const loggedArray = keys.map(k => localDataStore[k]).filter(i => i.project === currentProject).sort((a,b) => b.createdAt - a.createdAt).slice(0,12);
+      
+      if(loggedArray.length === 0) {
+        streamAuditBox.innerHTML = `<p class="italic text-gray-400 text-center py-2">No trace arrays recorded.</p>`;
+      } else {
+        loggedArray.forEach(item => {
+          const block = document.createElement("div");
+          block.className = "py-1 flex justify-between items-center font-mono text-[9px]";
+          block.innerHTML = `
+            <span class="text-gray-700 font-sans truncate max-w-[200px]">Initialized <strong>"${escapeHtml(item.title)}"</strong></span>
+            <span class="text-gray-400 shrink-0">${new Date(item.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+          `;
+          streamAuditBox.appendChild(block);
         });
-
-        let lifespanStr = "Active Run";
-        if (startTimestamp) {
-          const end = closedTimestamp ? closedTimestamp : Date.now();
-          const deltaDays = ((end - startTimestamp) / (1000 * 60 * 60 * 24)).toFixed(1);
-          lifespanStr = `${deltaDays} days`;
-        }
-
-        const dateStartStr = startTimestamp ? new Date(startTimestamp).toLocaleDateString() : "-";
-        const dateEndStr = closedTimestamp ? new Date(closedTimestamp).toLocaleDateString() : "-";
-
-        const row = document.createElement("tr");
-        row.className = "hover:bg-gray-50/80 transition-colors border-b border-gray-100";
-        row.innerHTML = `
-          <td class="p-2 font-bold text-gray-900 sticky-col truncate max-w-[140px]">${escapeHtml(title)}</td>
-          <td class="p-2 text-gray-500 truncate max-w-[160px]" title="${escapeHtml(desc)}">${desc ? escapeHtml(desc) : '-'}</td>
-          <td class="p-2 uppercase font-mono text-[10px] text-teal-700">${type}</td>
-          <td class="p-2">
-            <span class="px-1 rounded text-[10px] font-semibold ${status === 'open' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}">
-              ${status === 'open' ? '🟢 Open' : '🔒 Closed'}
-            </span>
-          </td>
-          <td class="p-2 truncate max-w-[100px]">${escapeHtml(createdBy)}</td>
-          <td class="p-2 text-gray-500 font-mono text-[10px]">${dateStartStr}</td>
-          <td class="p-2 text-gray-500 font-mono text-[10px]">${dateEndStr}</td>
-          <td class="p-2 font-mono text-[10px] text-amber-700">${lifespanStr}</td>
-          <td class="p-2 font-bold text-center text-purple-600">${totalResponses}</td>
-          <td class="p-2 text-gray-600 truncate max-w-[120px]">${escapeHtml(leadingChoiceStr)}</td>
-          <td class="p-2 text-right">
-            <div class="flex items-center justify-end gap-1">
-              <button onclick="togglePollLifecycleState('${id}', '${status}')" class="text-[10px] font-bold text-gray-500 hover:text-gray-800 px-1 py-0.5 border rounded bg-white shadow-sm transition">
-                ${status === 'open' ? 'Close' : 'Reopen'}
-              </button>
-              ${uidOwner === window.globalUserUid ? `
-                <button onclick="triggerTaskDeletionPipeline('${id}', '${uidOwner}')" class="text-red-600 hover:text-red-800 p-1 transition">
-                  <i class="fa-solid fa-trash-can"></i>
-                </button>
-              ` : ''}
-            </div>
-          </td>
-        `;
-        body.appendChild(row);
-      });
-
-      if (matchedCount === 0) {
-        body.innerHTML = `
-          <tr>
-            <td colspan="11" class="text-center py-12 text-gray-400">
-              No index records pass filter operational conditions.
-            </td>
-          </tr>
-        `;
       }
-    }
 
-    function reinitializeVisualAnalyticsCharts() {
-      const trailContainer = document.getElementById("dashboardAuditTrail");
-      trailContainer.innerHTML = "";
+      // Chart Assembly Realization Canvas
+      const optionsConfig = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
 
-      let totalTasks = 0, activeTasks = 0, closedTasks = 0, grossVotes = 0;
-      let totalDurationSumMs = 0, countForDurationSum = 0;
-
-      let typeCounts = { status: 0, decision: 0, checklist: 0 };
-      let durationRanges = { "0-2 Days": 0, "2-5 Days": 0, "5+ Days": 0 };
-      let userPerformanceMap = {};
-
-      const items = Object.values(localDataStore);
-      totalTasks = items.length;
-
-      // Temporary local stack parsing architecture 
-      const sortedAuditItems = items.filter(i => i.createdAt).sort((a,b) => b.createdAt - a.createdAt);
-      sortedAuditItems.forEach(item => {
-        const title = item.title || "Task";
-        const dateStr = new Date(item.createdAt).toLocaleTimeString();
-        const node = document.createElement("div");
-        node.className = "py-1 flex items-center justify-between gap-2 text-[10px]";
-        node.innerHTML = `<span class="truncate">🚀 deployed poll card: <strong>${escapeHtml(title)}</strong></span><span class="text-gray-400 shrink-0 font-mono">${dateStr}</span>`;
-        trailContainer.appendChild(node);
-      });
-
-      items.forEach(item => {
-        const status = item.status || "open";
-        const type = item.type || "status";
-        const createdBy = item.createdBy || "Anonymous";
-        const votes = item.votes || {};
-        const vCount = Object.keys(votes).length;
-
-        grossVotes += vCount;
-
-        if (status === "open") activeTasks++;
-        else closedTasks++;
-
-        if (typeCounts[type] !== undefined) typeCounts[type]++;
-
-        const start = item.createdAt;
-        const end = item.closedAt ? item.closedAt : Date.now();
-        if (start) {
-          const deltaMs = end - start;
-          totalDurationSumMs += deltaMs;
-          countForDurationSum++;
-
-          const deltaDays = deltaMs / (1000 * 60 * 60 * 24);
-          if (deltaDays <= 2) durationRanges["0-2 Days"]++;
-          else if (deltaDays <= 5) durationRanges["2-5 Days"]++;
-          else durationRanges["5+ Days"]++;
-        }
-
-        if (!userPerformanceMap[createdBy]) {
-          userPerformanceMap[createdBy] = { totalCreated: 0, totalVotesReceived: 0 };
-        }
-        userPerformanceMap[createdBy].totalCreated++;
-        userPerformanceMap[createdBy].totalVotesReceived += vCount;
-      });
-
-      document.getElementById("stat-total").innerText = totalTasks;
-      document.getElementById("stat-active").innerText = activeTasks;
-      document.getElementById("stat-closed").innerText = closedTasks;
-      document.getElementById("stat-votes").innerText = grossVotes;
-
-      let avgDaysStr = "0.0 days";
-      if (countForDurationSum > 0) {
-        avgDaysStr = `${(totalDurationSumMs / (countForDurationSum * 1000 * 60 * 60 * 24)).toFixed(1)} days`;
-      }
-      document.getElementById("stat-avg-duration").innerText = avgDaysStr;
-
-      if(statusChartInstance) statusChartInstance.destroy();
-      if(typeChartInstance) typeChartInstance.destroy();
-      if(durationChartInstance) durationChartInstance.destroy();
-      if(performanceChartInstance) performanceChartInstance.destroy();
-
-      const ctxStatus = document.getElementById("chartStatus").getContext("2d");
-      statusChartInstance = new Chart(ctxStatus, {
+      if(instanceStatusChart) instanceStatusChart.destroy();
+      instanceStatusChart = new Chart(document.getElementById('chartStatus'), {
         type: 'doughnut',
-        data: {
-          labels: ['Active', 'Closed'],
-          datasets: [{ data: [activeTasks, closedTasks], backgroundColor: ['#008069', '#cbd5e1'], borderWhiteness: 1 }]
-        },
-        options: { plugins: { legend: { display: false } }, responsive: true, maintainAspectRatio: false }
+        data: { labels: ['Active', 'Closed'], datasets: [{ data: [countOpen, countClosed], backgroundColor: ['#008069', '#9ca3af'] }] },
+        options: optionsConfig
       });
 
-      const ctxType = document.getElementById("chartType").getContext("2d");
-      typeChartInstance = new Chart(ctxType, {
-        type: 'doughnut',
-        data: {
-          labels: ['Status', 'Decision', 'Checklist'],
-          datasets: [{ data: [typeCounts.status, typeCounts.decision, typeCounts.checklist], backgroundColor: ['#0284c7', '#3b82f6', '#a855f7'] }]
-        },
-        options: { plugins: { legend: { display: false } }, responsive: true, maintainAspectRatio: false }
+      if(instanceTypeChart) instanceTypeChart.destroy();
+      instanceTypeChart = new Chart(document.getElementById('chartType'), {
+        type: 'pie',
+        data: { labels: ['Status', 'Decision', 'Checklist'], datasets: [{ data: [distributionType.status, distributionType.decision, distributionType.checklist], backgroundColor: ['#0d9488', '#2563eb', '#7c3aed'] }] },
+        options: optionsConfig
       });
 
-      const ctxDur = document.getElementById("chartDurationRange").getContext("2d");
-      durationChartInstance = new Chart(ctxDur, {
+      if(instanceDurationChart) instanceDurationChart.destroy();
+      instanceDurationChart = new Chart(document.getElementById('chartDurationRange'), {
+        type: 'polarArea',
+        data: { labels: Object.keys(durationRanges), datasets: [{ data: Object.values(durationRanges), backgroundColor: ['#f59e0b', '#3b82f6', '#8b5cf6', '#ef4444'] }] },
+        options: optionsConfig
+      });
+
+      const userLabels = Object.keys(teamPerformanceMetrics);
+      const userValues = Object.values(teamPerformanceMetrics);
+
+      if(instancePerformanceChart) instancePerformanceChart.destroy();
+      instancePerformanceChart = new Chart(document.getElementById('chartUserPerformance'), {
         type: 'bar',
-        data: {
-          labels: ['0-2d', '2-5d', '5d+'],
-          datasets: [{ data: [durationRanges["0-2 Days"], durationRanges["2-5 Days"], durationRanges["5+ Days"]], backgroundColor: '#f59e0b' }]
-        },
-        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, responsive: true, maintainAspectRatio: false }
-      });
-
-      const userLabels = Object.keys(userPerformanceMap);
-      const datasetsCreated = userLabels.map(u => userPerformanceMap[u].totalCreated);
-      const datasetsVotes = userLabels.map(u => userPerformanceMap[u].totalVotesReceived);
-
-      const ctxPerf = document.getElementById("chartUserPerformance").getContext("2d");
-      performanceChartInstance = new Chart(ctxPerf, {
-        type: 'bar',
-        data: {
-          labels: userLabels,
-          datasets: [
-            { label: 'Polls Created', data: datasetsCreated, backgroundColor: '#0ea5e9' },
-            { label: 'Votes Tracked', data: datasetsVotes, backgroundColor: '#8b5cf6' }
-          ]
-        },
-        options: { 
-          plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 9 } } } }, 
-          scales: { y: { beginAtZero: true } },
+        data: { labels: userLabels, datasets: [{ label: 'Transactions Logs Executed', data: userValues, backgroundColor: '#7c3aed', borderRadius: 4 }] },
+        options: {
           responsive: true,
-          maintainAspectRatio: false
+          maintainAspectRatio: false,
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 9 } } }, x: { ticks: { font: { size: 9 } } } },
+          plugins: { legend: { display: false } }
         }
       });
     }
 
+    // Ledger Engine Export Mechanics: Comma Separated Values Data Stream
     window.exportToCSV = function() {
-      const items = Object.values(localDataStore);
-      if(items.length === 0) { alert("Registry empty."); return; }
+      const keys = Object.keys(localDataStore);
+      let csvContent = "data:text/csv;charset=utf-8,Task Title,Description,Type,State,Created By,Start Date,End Date,Gross Responses,Leading Choice\n";
       
-      let csvContent = "data:text/csv;charset=utf-8,Task Title,Description,Type,Status,Created By,Start Date,End Date,Total Responses\n";
-      
-      items.forEach(item => {
-        const title = (item.title || "Untitled").replace(/"/g, '""');
-        const desc = (item.description || "").replace(/"/g, '""');
-        const type = item.type || "status";
-        const status = item.status || "open";
-        const creator = item.createdBy || "Anonymous";
-        const start = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "-";
-        const end = item.closedAt ? new Date(item.closedAt).toLocaleDateString() : "-";
-        const votesCount = Object.keys(item.votes || {}).length;
+      keys.forEach(k => {
+        const item = localDataStore[k];
+        if (item.project !== currentProject) return;
 
-        csvContent += `"${title}","${desc}","${type}","${status}","${creator}","${start}","${end}",${votesCount}\n`;
+        const options = POLL_OPTIONS_MAP[item.type] || [];
+        let grossVotesCount = 0;
+        const voteDistribution = {};
+        options.forEach(o => voteDistribution[o] = 0);
+        
+        if(item.responses) {
+          Object.values(item.responses).forEach(r => {
+            if (voteDistribution[r.choice] !== undefined) {
+              voteDistribution[r.choice]++; grossVotesCount++;
+            }
+          });
+        }
+
+        let leadingChoice = "None"; let peak = 0;
+        options.forEach(o => {
+          if(voteDistribution[o] > peak) { peak = voteDistribution[o]; leadingChoice = o; }
+          else if(voteDistribution[o] === peak && peak > 0) { leadingChoice = "Tie"; }
+        });
+
+        const titleEsc = `"${item.title.replace(/"/g, '""')}"`;
+        const descEsc = `"${(item.description || "").replace(/"/g, '""')}"`;
+        const startStr = new Date(item.createdAt).toLocaleDateString();
+        const endStr = item.closedAt ? new Date(item.closedAt).toLocaleDateString() : "—";
+
+        csvContent += `${titleEsc},${descEsc},${item.type},${item.state},"${item.createdBy}",${startStr},${endStr},${grossVotesCount},"${leadingChoice}"\n`;
       });
 
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement("a");
       link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `QuickTask_Ledger_${currentProject}.csv`);
+      link.setAttribute("download", `QuickTask_Ledger_${currentProject}_2026.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     };
 
+    // Ledger Engine Export Mechanics: Formatted A4 Vector PDF Generation Layout
     window.exportToPDF = function() {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('p', 'pt', 'a4');
-      
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(14);
-      doc.setTextColor(0, 128, 105);
-      doc.text(`QuickTask Polls PRO - Operational Ledger Report`, 40, 40);
-      
-      doc.setFontSize(9);
-      doc.setFont("Helvetica", "normal");
-      doc.setTextColor(100, 100, 100);
-      doc.text(`Scope Project Domain: ${currentProject} | Export Time: ${new Date().toLocaleString()}`, 40, 55);
-      
-      const tableHeaders = [["Task Title", "Type", "Status", "Created By", "Lifespan", "Votes"]];
-      const tableRows = [];
-      
-      Object.values(localDataStore).forEach(item => {
-        const title = item.title || "Untitled Task";
-        const type = item.type || "status";
-        const status = item.status || "open";
-        const creator = item.createdBy || "Anonymous";
-        
-        const start = item.createdAt;
-        const end = item.closedAt ? item.closedAt : Date.now();
-        let span = "-";
-        if(start) span = `${((end - start)/(1000*60*60*24)).toFixed(1)}d`;
+      const pdf = new jsPDF('l', 'mm', 'a4');
 
-        const votesCount = Object.keys(item.votes || {}).length;
-        tableRows.push([title, type.toUpperCase(), status.toUpperCase(), creator, span, votesCount]);
+      pdf.setFont("Helvetica", "bold");
+      pdf.setFontSize(16);
+      pdf.textColor = [0, 128, 105];
+      pdf.text(`QuickTask Polls operational Matrix Ledger`, 10, 15);
+
+      pdf.setFont("Helvetica", "normal");
+      pdf.setFontSize(9);
+      pdf.textColor = [100, 100, 100];
+      pdf.text(`Project Scope Domain Environment: ${currentProject}  |  Generated Real-time Sync: ${new Date().toLocaleString()}`, 10, 21);
+
+      const tableRowsData = [];
+      const keys = Object.keys(localDataStore).sort((a,b) => localDataStore[b].createdAt - localDataStore[a].createdAt);
+
+      keys.forEach(k => {
+        const item = localDataStore[k];
+        if (item.project !== currentProject) return;
+
+        const options = POLL_OPTIONS_MAP[item.type] || [];
+        let grossVotesCount = 0;
+        const voteDistribution = {};
+        options.forEach(o => voteDistribution[o] = 0);
+        if(item.responses) {
+          Object.values(item.responses).forEach(r => {
+            if (voteDistribution[r.choice] !== undefined) { voteDistribution[r.choice]++; grossVotesCount++; }
+          });
+        }
+        let leadingChoice = "None"; let peak = 0;
+        options.forEach(o => {
+          if(voteDistribution[o] > peak) { peak = voteDistribution[o]; leadingChoice = o; }
+          else if(voteDistribution[o] === peak && peak > 0) { leadingChoice = "Tie"; }
+        });
+
+        tableRowsData.push([
+          item.title,
+          item.type.toUpperCase(),
+          item.state.toUpperCase(),
+          item.createdBy,
+          new Date(item.createdAt).toLocaleDateString(),
+          item.closedAt ? new Date(item.closedAt).toLocaleDateString() : "—",
+          grossVotesCount.toString(),
+          leadingChoice
+        ]);
       });
 
-      doc.autoTable({
-        head: tableHeaders,
-        body: tableRows,
-        startY: 75,
+      pdf.autoTable({
+        startY: 26,
+        head: [['Task Title Metric Parameter', 'Type context', 'State Status', 'Owner Alias', 'Start Date', 'Concluded Date', 'Gross Votes', 'Leading Consensus Option']],
+        body: tableRowsData,
         theme: 'striped',
-        headStyles: { fillColor: [0, 128, 105], fontSize: 9 },
-        bodyStyles: { fontSize: 8 },
-        margin: { left: 40, right: 40 }
+        headStyles: { fillColor: [0, 128, 105], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+        bodyStyles: { fontSize: 8, textColor: [40, 40, 40] },
+        columnStyles: { 0: { cellWidth: 55 }, 1: { cellWidth: 25 }, 2: { cellWidth: 20 }, 3: { cellWidth: 25 }, 4: { cellWidth: 25 }, 5: { cellWidth: 25 }, 6: { cellWidth: 20 }, 7: { cellWidth: 45 } },
+        styles: { overflow: 'bleed' }
       });
-      
-      doc.save(`QuickTask_Report_${currentProject}.pdf`);
+
+      pdf.save(`QuickTask_Standard_Report_${currentProject}_2026.pdf`);
     };
+
+    switchView('feed');
   </script>
-</body>
-</html>
+</body></html>
