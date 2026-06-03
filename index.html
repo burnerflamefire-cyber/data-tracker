@@ -84,6 +84,12 @@
     th.sticky-header.sticky-column {
       z-index: 40 !important;
     }
+    /* Force Audit Log to hold layout without wrapping string blocks */
+    .audit-log-cell {
+      white-space: nowrap !important;
+      max-width: 450px;
+      overflow-x: auto;
+    }
   </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden text-gray-800 antialiased select-none text-xs">
@@ -136,11 +142,11 @@
   <div class="flex-1 flex overflow-hidden relative w-full">
     
     <div id="primaryNavPane" class="w-12 bg-[#001F3F] flex flex-col items-center py-4 gap-6 shrink-0 z-10 border-r border-blue-950 shadow-xl">
-      <button onclick="changeNavContext('Programme')" id="btnNavProgramme" class="text-blue-300/70 hover:text-white transition-all py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-[#003161]/50 w-full border-l-2 border-transparent">
+      <button onclick="toggleSecondaryNav('Programme')" id="btnNavProgramme" class="text-blue-300/70 hover:text-white transition-all py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-[#003161]/50 w-full border-l-2 border-transparent">
         <span class="vertical-text font-bold tracking-widest text-[11px] uppercase"><i class="fa-solid fa-grip-vertical mr-1.5 rotate-90"></i> Programme Level</span>
       </button>
       <div class="w-8 border-b border-blue-950"></div>
-      <button onclick="changeNavContext('Project')" id="btnNavProject" class="text-blue-300/70 hover:text-white transition-all py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-[#003161]/50 w-full border-l-2 border-transparent">
+      <button onclick="toggleSecondaryNav('Project')" id="btnNavProject" class="text-blue-300/70 hover:text-white transition-all py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-[#003161]/50 w-full border-l-2 border-transparent">
         <span class="vertical-text font-bold tracking-widest text-[11px] uppercase"><i class="fa-solid fa-diagram-project mr-1.5 rotate-90"></i> Project Level</span>
       </button>
     </div>
@@ -216,7 +222,7 @@
             </span>
             <div>
               <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Main Category</label>
-              <select id="inputMainCategory" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs bg-white">
+              <select id="inputMainCategory" onchange="handleMainCategoryDropdownCascade()" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs bg-white">
                 <option value="">Select Main Category...</option>
                 <option value="Material Cycle Data">Material Cycle Data</option>
                 <option value="Structural Engineering">Structural Engineering</option>
@@ -228,10 +234,6 @@
               <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Sub Category</label>
               <select id="inputSubCategory" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs bg-white">
                 <option value="">Select Sub Category...</option>
-                <option value="Foundations">Foundations</option>
-                <option value="Insulation">Insulation</option>
-                <option value="Distribution Valves">Distribution Valves</option>
-                <option value="Surfacing Layout">Surfacing Layout</option>
               </select>
             </div>
             <div>
@@ -287,10 +289,6 @@
                   <i class="fa-solid fa-copy"></i> Copy &amp; Edit
                 </button>
               </div>
-
-              <button id="btnDeleteSelectedRows" disabled onclick="deleteSelectedRows()" class="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-3 rounded shadow transition-all flex items-center justify-center gap-1.5 tracking-wide disabled:opacity-40 disabled:cursor-not-allowed mt-1">
-                <i class="fa-solid fa-trash-can"></i> Delete Selected Row(s)
-              </button>
             </div>
           </div>
         </div>
@@ -337,7 +335,7 @@
   </div>
 
   <script>
-    // --- LEGACY RETAINED FIREBASE CONFIGURATION & REGISTRY HOOKS ---
+    // --- LEGACY FIREBASE CONFIGURATION & REGISTRY HOOKS ---
     const firebaseConfig = {
       apiKey: "AIzaSyCL6iJKRp-WjCgBTtRCuRny14lUOMP9KJg",
       authDomain: "data-tracker-f11df.firebaseapp.com",
@@ -427,7 +425,7 @@
     updateGovernmentFinancialMetrics();
     setInterval(updateGovernmentFinancialMetrics, 60000);
 
-    // --- RAW DATA STORES WITH DYNAMIC ADDED COLUMNS & FREEZE SCHEMATICS ---
+    // --- RAW DATA STORES WITH DIAGNOSTIC SYSTEM CONTROLS ---
     const rawTableColumns = [
       { id: "guid", label: "Project GUID", visible: true, frozen: false },
       { id: "name", label: "Project Name", visible: true, frozen: false },
@@ -446,28 +444,32 @@
     ];
 
     let rawTableRows = [
-      { id: "row_1", guid: "PRJ-0824", name: "Klipfontein Hospital Upgrade", mainProgramme: "Health Infrastructure", subProgramme: "Metro Hospitals", rolloutFY: "2026/27", mainCategory: "Material Cycle Data", subCategory: "Foundations", freetext: "Grade A Reinforced Steel Framework Foundations", unit: "Tons", qty: 45, rate: 14500, amount: 652500, visible: true, date: "2026-05-12", audit: "[2026-05-12 08:30] System Auto-Ingest Base Schema" },
-      { id: "row_2", guid: "PRJ-1192", name: "Mitchells Plain Education Hub", mainProgramme: "Public Education", subProgramme: "Secondary Schools Hubs", rolloutFY: "2026/27", mainCategory: "Structural Engineering", subCategory: "Insulation", freetext: "Double-Glazed Energy Efficient Insulation Units", unit: "Sqm", qty: 220, rate: 1850, amount: 407000, visible: true, date: "2026-04-29", audit: "[2026-04-29 11:15] Operator Review Verification" },
-      { id: "row_3", guid: "PRJ-0431", name: "George Bulk Water Infrastructure", mainProgramme: "Water & Sanitation", subProgramme: "Regional Reservoirs", rolloutFY: "2027/28", mainCategory: "Utility Automation", subCategory: "Distribution Valves", freetext: "High-Pressure Hydraulic Submersible Distribution Valves", unit: "Units", qty: 12, rate: 42300, amount: 507600, visible: true, date: "2026-05-20", audit: "[2026-05-20 14:02] API Payload Modification Execution" },
-      { id: "row_4", guid: "PRJ-0954", name: "Khayelitsha Athletics Facility", mainProgramme: "Sports & Recreation", subProgramme: "Community Stadiums", rolloutFY: "2025/26", mainCategory: "Civil Works", subCategory: "Surfacing Layout", freetext: "Synthetic Premium Polyurethane Surfacing Layout", unit: "Sqm", qty: 1200, rate: 650, amount: 780000, visible: true, date: "2026-06-01", audit: "[2026-06-01 09:44] Batch Script Verification Registry" },
-      { id: "row_5", guid: "PRJ-0711", name: "Paarl Sustainable Housing Phase 2", mainProgramme: "Human Settlements", subProgramme: "Social Housing", rolloutFY: "2026/27", mainCategory: "Material Cycle Data", subCategory: "Foundations", freetext: "Pre-fabricated Eco-Lite Cellular Concrete Walling", unit: "Blocks", qty: 8500, rate: 48, amount: 408000, visible: true, date: "2026-03-15", audit: "[2026-03-15 16:50] System Auto-Ingest Base Schema" }
+      { guid: "PRJ-0824", name: "Klipfontein Hospital Upgrade", mainProgramme: "Health Infrastructure", subProgramme: "Metro Hospitals", rolloutFY: "2026/27", mainCategory: "Material Cycle Data", subCategory: "Foundations", freetext: "Grade A Reinforced Steel Framework Foundations", unit: "Tons", qty: 45, rate: 14500, amount: 652500, visible: true, date: "2026-05-12", audit: "System Auto-Ingest Base Schema" },
+      { guid: "PRJ-1192", name: "Mitchells Plain Education Hub", mainProgramme: "Public Education", subProgramme: "Secondary Schools Hubs", rolloutFY: "2026/27", mainCategory: "Structural Engineering", subCategory: "Insulation", freetext: "Double-Glazed Energy Efficient Insulation Units", unit: "Sqm", qty: 220, rate: 1850, amount: 407000, visible: true, date: "2026-04-29", audit: "Operator Review Verification" },
+      { guid: "PRJ-0431", name: "George Bulk Water Infrastructure", mainProgramme: "Water & Sanitation", subProgramme: "Regional Reservoirs", rolloutFY: "2027/28", mainCategory: "Utility Automation", subCategory: "Distribution Valves", freetext: "High-Pressure Hydraulic Submersible Distribution Valves", unit: "Units", qty: 12, rate: 42300, amount: 507600, visible: true, date: "2026-05-20", audit: "API Payload Modification Execution" },
+      { guid: "PRJ-0954", name: "Khayelitsha Athletics Facility", mainProgramme: "Sports & Recreation", subProgramme: "Community Stadiums", rolloutFY: "2025/26", mainCategory: "Civil Works", subCategory: "Surfacing Layout", freetext: "Synthetic Premium Polyurethane Surfacing Layout", unit: "Sqm", qty: 1200, rate: 650, amount: 780000, visible: true, date: "2026-06-01", audit: "Batch Script Verification Registry" },
+      { guid: "PRJ-0711", name: "Paarl Sustainable Housing Phase 2", mainProgramme: "Human Settlements", subProgramme: "Social Housing", rolloutFY: "2026/27", mainCategory: "Material Cycle Data", subCategory: "Foundations", freetext: "Pre-fabricated Eco-Lite Cellular Concrete Walling", unit: "Blocks", qty: 8500, rate: 48, amount: 408000, visible: true, date: "2026-03-15", audit: "System Auto-Ingest Base Schema" }
     ];
 
-    // Navigation and Filtering State Memory
-    let selectedProjectsFilterList = ["PRJ-0824"]; // Set default selected project ID
+    // Cascade Maps for Categories
+    const categoryCascadeMap = {
+      "Material Cycle Data": ["Foundations", "Insulation"],
+      "Structural Engineering": ["Foundations", "Insulation"],
+      "Utility Automation": ["Distribution Valves"],
+      "Civil Works": ["Surfacing Layout"]
+    };
+
+    // Array of indices chosen by the operator in multi-select ledger mode
+    let chosenLedgerIndices = []; 
+
+    let selectedProjectsFilterList = []; 
     let selectedProgrammesFilterList = []; 
     let activeNavContext = "Project"; 
     let selectedPagesStore = { "Programme": 0, "Project": 0 }; 
     
-    // Ledger Row Multi-Select Store (stores uniquely generated row IDs)
-    let selectedRowIds = [];
-    
-    // In-Ledger Search Term Filter Map
     let inlineTableFilters = {};
-    
-    // Form and Editing State Anchors
     let currentEditingRowIndex = null;
-    let isSearchFilterCollapsed = false;
+    let isProjectDetailsExpanded = true;
 
     function calculateAmountEngine() {
       const qty = parseFloat(document.getElementById("inputQty").value) || 0;
@@ -475,15 +477,30 @@
       document.getElementById("inputAmount").value = (qty * rate).toFixed(2);
     }
 
-    // Generate accurate high precision log timestamps
-    function getFormattedTimestamp() {
-      const d = new Date();
-      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+    function handleMainCategoryDropdownCascade() {
+      const mainVal = document.getElementById("inputMainCategory").value;
+      const subSelect = document.getElementById("inputSubCategory");
+      subSelect.innerHTML = '<option value="">Select Sub Category...</option>';
+      
+      if (mainVal && categoryCascadeMap[mainVal]) {
+        categoryCascadeMap[mainVal].forEach(sub => {
+          subSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
+        });
+      }
     }
 
-    // --- GLOBAL FILTERS RENDERING BLOCK WITH DYNAMIC SELECTION STRICTNESS ---
+    // --- INITIALIZATION AND SELECTION ENFORCEMENT ON BOOT ---
+    function initializeDefaultProjectFilter() {
+      if (rawTableRows.length > 0) {
+        selectedProjectsFilterList = [rawTableRows[0].guid];
+      }
+    }
+    initializeDefaultProjectFilter();
+
+    // --- GLOBAL FILTERS RENDERING BLOCK WITH SINGLE SELECT FOR PROJECT ---
     function renderGlobalFiltersLayout() {
       const filterZone = document.getElementById("filtersPaneContent");
+      filterZone.innerHTML = "";
       
       if (activeNavContext === "Project") {
         let uniqueProjectsMap = {};
@@ -492,162 +509,333 @@
           uniqueProjectsMap[comboKey] = { name: row.name, guid: row.guid };
         });
 
-        // Enforce fallback default selection if list became empty
-        if (selectedProjectsFilterList.length === 0 && Object.keys(uniqueProjectsMap).length > 0) {
-          const firstKey = Object.keys(uniqueProjectsMap)[0];
-          selectedProjectsFilterList = [uniqueProjectsMap[firstKey].guid];
-        }
+        let heading = document.createElement("h3");
+        heading.className = "text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2";
+        heading.innerText = "Select Project Focus";
+        filterZone.appendChild(heading);
 
-        let projectsHtml = Object.keys(uniqueProjectsMap).map(key => {
+        let flexWrapper = document.createElement("div");
+        flexWrapper.className = "flex flex-col gap-1.5 bg-white p-2 rounded-lg border border-gray-200 shadow-sm";
+
+        Object.keys(uniqueProjectsMap).forEach(key => {
           let p = uniqueProjectsMap[key];
           let isChecked = selectedProjectsFilterList.includes(p.guid);
-          return `
-            <label class="flex items-start gap-2 p-1.5 hover:bg-gray-200/60 rounded cursor-pointer transition-colors text-xs">
-              <input type="radio" name="globalProjectRadioFilter" value="${p.guid}" ${isChecked ? 'checked' : ''} 
-                onchange="handleProjectRadioSelectionChange('${p.guid}')" class="mt-0.5 h-3.5 w-3.5 text-blue-600 focus:ring-blue-500 border-gray-300">
-              <span class="text-gray-700 font-medium leading-tight">${key}</span>
-            </label>
+          
+          let lbl = document.createElement("label");
+          lbl.className = "flex items-start gap-2 p-1.5 hover:bg-gray-100/80 rounded cursor-pointer transition-colors text-xs";
+          
+          lbl.innerHTML = `
+            <input type="radio" name="globalProjectRadioFilter" value="${p.guid}" ${isChecked ? 'checked' : ''} 
+              class="mt-0.5 h-3.5 w-3.5 text-blue-600 focus:ring-blue-500 border-gray-300">
+            <span class="text-gray-700 font-medium leading-tight">${key}</span>
           `;
-        }).join('');
+          
+          lbl.querySelector("input").addEventListener("change", function() {
+            handleProjectRadioSelectionChange(p.guid);
+          });
+          
+          flexWrapper.appendChild(lbl);
+        });
 
-        filterZone.innerHTML = `
-          <div class="flex flex-col gap-4">
-            <div>
-              <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Target Isolation Filter</h3>
-              <div class="bg-amber-50 text-amber-900 border border-amber-200 p-2 rounded text-[10px] leading-relaxed mb-3">
-                <i class="fa-solid fa-triangle-exclamation text-amber-700 mr-1"></i>
-                <strong>Strict Context Active:</strong> Under no circumstances may multiple projects be selected simultaneously.
-              </div>
-              <div class="flex flex-col gap-1 bg-white p-2 rounded border border-gray-200 shadow-sm max-h-[300px] overflow-y-auto custom-scrollbar">
-                ${projectsHtml || '<span class="text-gray-400 italic p-2 block">No project records found.</span>'}
-              </div>
-            </div>
-          </div>
-        `;
+        filterZone.appendChild(flexWrapper);
       } else {
-        // Programme Level Context - Multi Select Permitted
-        let uniqueProgrammes = [...new Set(rawTableRows.map(r => r.mainProgramme))];
+        // Programme Level Multi Select Configuration
+        let uniqueProgs = [...new Set(rawTableRows.map(r => r.mainProgramme))];
         
-        let programmesHtml = uniqueProgrammes.map(prog => {
+        let heading = document.createElement("h3");
+        heading.className = "text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2";
+        heading.innerText = "Filter Key Programmes";
+        filterZone.appendChild(heading);
+
+        let flexWrapper = document.createElement("div");
+        flexWrapper.className = "flex flex-col gap-1.5 bg-white p-2 rounded-lg border border-gray-200 shadow-sm";
+
+        uniqueProgs.forEach(prog => {
           let isChecked = selectedProgrammesFilterList.includes(prog);
-          return `
-            <label class="flex items-center gap-2 p-1.5 hover:bg-gray-200/60 rounded cursor-pointer transition-colors text-xs">
-              <input type="checkbox" value="${prog}" ${isChecked ? 'checked' : ''} 
-                onchange="handleProgrammeCheckboxSelectionChange(this)" class="h-3.5 w-3.5 rounded text-blue-600 focus:ring-blue-500 border-gray-300">
-              <span class="text-gray-700 font-medium">${prog}</span>
-            </label>
+          let lbl = document.createElement("label");
+          lbl.className = "flex items-start gap-2 p-1.5 hover:bg-gray-100/80 rounded cursor-pointer transition-colors text-xs";
+          
+          lbl.innerHTML = `
+            <input type="checkbox" value="${prog}" ${isChecked ? 'checked' : ''} 
+              class="mt-0.5 h-3.5 w-3.5 rounded text-blue-600 focus:ring-blue-500 border-gray-300">
+            <span class="text-gray-700 font-medium leading-tight">${prog}</span>
           `;
-        }).join('');
+          
+          lbl.querySelector("input").addEventListener("change", function(e) {
+            if (e.target.checked) {
+              if (!selectedProgrammesFilterList.includes(prog)) selectedProgrammesFilterList.push(prog);
+            } else {
+              selectedProgrammesFilterList = selectedProgrammesFilterList.filter(x => x !== prog);
+            }
+            routeAndExecuteWorkspaceRefresh();
+          });
 
-        filterZone.innerHTML = `
-          <div class="flex flex-col gap-4">
-            <div>
-              <div class="flex justify-between items-center mb-2">
-                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Scope Isolation Filters</h3>
-                <button onclick="resetGlobalProgrammeScope()" class="text-blue-700 hover:underline font-bold text-[10px] uppercase">Reset Global Scope</button>
-              </div>
-              <div class="flex flex-col gap-1 bg-white p-2 rounded border border-gray-200 shadow-sm max-h-[300px] overflow-y-auto custom-scrollbar">
-                ${programmesHtml || '<span class="text-gray-400 italic p-2 block">No programme keys found.</span>'}
-              </div>
-            </div>
-          </div>
-        `;
+          flexWrapper.appendChild(lbl);
+        });
+
+        filterZone.appendChild(flexWrapper);
+        
+        let resetBtn = document.createElement("button");
+        resetBtn.className = "mt-4 w-full bg-slate-600 hover:bg-slate-700 text-white font-bold py-1.5 px-3 rounded shadow text-[10px] uppercase tracking-wider transition-colors";
+        resetBtn.innerText = "Reset Global Scope";
+        resetBtn.onclick = function() {
+          selectedProgrammesFilterList = [];
+          routeAndExecuteWorkspaceRefresh();
+          renderGlobalFiltersLayout();
+        };
+        filterZone.appendChild(resetBtn);
       }
     }
 
-    function handleProjectRadioSelectionChange(projectGuid) {
-      // Strictly isolate selection tracking array to the sole selected token
-      selectedProjectsFilterList = [projectGuid];
-      clearSelectedFormState();
-      renderContentInformationPane();
+    function handleProjectRadioSelectionChange(chosenGuid) {
+      selectedProjectsFilterList = [chosenGuid];
+      routeAndExecuteWorkspaceRefresh();
     }
 
-    function handleProgrammeCheckboxSelectionChange(checkboxNode) {
-      const val = checkboxNode.value;
-      if (checkboxNode.checked) {
-        if (!selectedProgrammesFilterList.includes(val)) selectedProgrammesFilterList.push(val);
-      } else {
-        selectedProgrammesFilterList = selectedProgrammesFilterList.filter(item => item !== val);
-      }
-      clearSelectedFormState();
-      renderContentInformationPane();
-    }
+    // --- NAVIGATION AND SECONDARY TABS STRUCTURING PANEL ---
+    const pageSubNavDefinitions = {
+      "Programme": ["Strategic Summary Matrix", "Financial Outlay Analytics"],
+      "Project": ["Operational Data Ledger", "Audit Matrix View"]
+    };
 
-    function resetGlobalProgrammeScope() {
-      selectedProgrammesFilterList = [];
-      renderGlobalFiltersLayout();
-      clearSelectedFormState();
-      renderContentInformationPane();
-    }
-
-    // --- NAVIGATION MANAGEMENT CONTROLLERS ---
-    function changeNavContext(contextKey) {
-      activeNavContext = contextKey;
+    function toggleSecondaryNav(contextType) {
+      activeNavContext = contextType;
       
       document.getElementById("btnNavProgramme").className = "text-blue-300/70 hover:text-white transition-all py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-[#003161]/50 w-full border-l-2 border-transparent";
       document.getElementById("btnNavProject").className = "text-blue-300/70 hover:text-white transition-all py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-[#003161]/50 w-full border-l-2 border-transparent";
       
-      if (contextKey === "Programme") {
-        document.getElementById("btnNavProgramme").classList.add("bg-[#003161]", "text-white", "border-blue-400");
-        document.getElementById("secondaryNavHeading").innerText = "Programme Matrices";
+      if (contextType === "Programme") {
+        document.getElementById("btnNavProgramme").classList.add("text-white", "bg-[#003161]/60", "border-blue-400");
+        document.getElementById("secondaryNavHeading").innerText = "Programme Sub-Suites";
       } else {
-        document.getElementById("btnNavProject").classList.add("bg-[#003161]", "text-white", "border-blue-400");
-        document.getElementById("secondaryNavHeading").innerText = "Project Ledgers";
+        document.getElementById("btnNavProject").classList.add("text-white", "bg-[#003161]/60", "border-blue-400");
+        document.getElementById("secondaryNavHeading").innerText = "Project Sub-Suites";
       }
 
-      renderSecondaryNavOptions();
+      const buttonsZone = document.getElementById("secondaryNavButtonsZone");
+      buttonsZone.innerHTML = "";
+
+      pageSubNavDefinitions[contextType].forEach((pageTitle, idx) => {
+        let isSelected = selectedPagesStore[contextType] === idx;
+        let btn = document.createElement("button");
+        btn.className = `w-full text-left px-3 py-2 rounded text-xs font-medium transition-all flex items-center justify-between group ${
+          isSelected ? 'bg-blue-600 text-white shadow-md font-semibold' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+        }`;
+        
+        btn.innerHTML = `
+          <span>${pageTitle}</span>
+          <i class="fa-solid fa-chevron-right text-[9px] opacity-0 group-hover:opacity-100 transition-opacity ${isSelected ? 'opacity-100 text-white' : ''}"></i>
+        `;
+        
+        btn.onclick = function() {
+          selectedPagesStore[contextType] = idx;
+          toggleSecondaryNav(contextType);
+          routeAndExecuteWorkspaceRefresh();
+        };
+        
+        buttonsZone.appendChild(btn);
+      });
+
       renderGlobalFiltersLayout();
-      clearSelectedFormState();
-      renderContentInformationPane();
+      routeAndExecuteWorkspaceRefresh();
     }
 
-    function renderSecondaryNavOptions() {
-      const secondaryZone = document.getElementById("secondaryNavButtonsZone");
-      secondaryZone.innerHTML = "";
+    // --- FORM COMPONENT CONTROLS & SELECTION BINDINGS ---
+    function toggleProjectDetailsPane() {
+      const content = document.getElementById("projectDetailsContent");
+      const caret = document.getElementById("projectDetailsCaret");
+      isProjectDetailsExpanded = !isProjectDetailsExpanded;
       
-      let pages = [];
-      if (activeNavContext === "Programme") {
-        pages = ["Consolidated Summary Dashboard", "Cross-Cutting Capital Matrix", "Treasury Strategic Allocations"];
+      if (isProjectDetailsExpanded) {
+        content.classList.remove("hidden");
+        caret.style.transform = "rotate(0deg)";
       } else {
-        pages = ["Operational Master Ledger", "Material Cycle Audits", "Structural Assets Inventory"];
+        content.classList.add("hidden");
+        caret.style.transform = "rotate(180deg)";
       }
+    }
 
-      pages.forEach((pageName, index) => {
-        let isActive = selectedPagesStore[activeNavContext] === index;
-        let btn = document.createElement("button");
-        btn.className = `w-full text-left p-2 rounded transition-all flex items-center gap-2 text-xs ${isActive ? 'bg-blue-600 font-bold text-white shadow-md' : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'}`;
-        btn.innerHTML = `<i class="fa-solid ${isActive ? 'fa-folder-open text-blue-200' : 'fa-folder text-slate-500'} shrink-0"></i> <span class="truncate">${pageName}</span>`;
-        btn.onclick = () => {
-          selectedPagesStore[activeNavContext] = index;
-          renderSecondaryNavOptions();
-          clearSelectedFormState();
-          renderContentInformationPane();
-        };
-        secondaryZone.appendChild(btn);
+    function syncLedgerRowSelectionStateToControls() {
+      const editBanner = document.getElementById("engineModeAlertBanner");
+      const btnEdit = document.getElementById("btnSubmitExistingEdit");
+      const btnCopy = document.getElementById("btnCopySelectedRow");
+
+      if (chosenLedgerIndices.length === 1) {
+        // Exactly one row selected allows modification states
+        btnEdit.removeAttribute("disabled");
+        btnCopy.removeAttribute("disabled");
+        
+        if (currentEditingRowIndex !== null && chosenLedgerIndices[0] === currentEditingRowIndex) {
+          editBanner.classList.remove("hidden");
+        } else {
+          editBanner.classList.add("hidden");
+        }
+      } else {
+        // Disable individual row mutations if multiple rows or zero rows are selected
+        btnEdit.setAttribute("disabled", "true");
+        btnCopy.setAttribute("disabled", "true");
+        editBanner.classList.add("hidden");
+      }
+    }
+
+    function triggerRowSelectionChange(rowIndex, isChecked) {
+      if (isChecked) {
+        if (!chosenLedgerIndices.includes(rowIndex)) {
+          chosenLedgerIndices.push(rowIndex);
+        }
+      } else {
+        chosenLedgerIndices = chosenLedgerIndices.filter(i => i !== rowIndex);
+      }
+      
+      // Selectively re-evaluate UI controls and color states without general redraw bugs
+      syncLedgerRowSelectionStateToControls();
+      
+      // Update individual row visualization explicitly
+      const rowDOMElement = document.getElementById(`ledger-row-tr-${rowIndex}`);
+      if (rowDOMElement) {
+        const checkboxInput = document.getElementById(`row-checkbox-input-${rowIndex}`);
+        if (checkboxInput) checkboxInput.checked = isChecked;
+        
+        if (isChecked) {
+          rowDOMElement.classList.remove("hover:bg-gray-50/80");
+          rowDOMElement.classList.add("bg-blue-50/90", "font-medium");
+        } else {
+          rowDOMElement.classList.remove("bg-blue-50/90", "font-medium");
+          rowDOMElement.classList.add("hover:bg-gray-50/80");
+        }
+      }
+      
+      // Re-evaluate core programmatic buttons matching active grid selection rules
+      const collectiveCheckbox = document.getElementById("masterToggleLedgerCheckbox");
+      if (collectiveCheckbox) {
+        const structuralRows = obtainActiveFilteredDataSet();
+        collectiveCheckbox.checked = structuralRows.length > 0 && structuralRows.every(r => chosenLedgerIndices.includes(r.originalIndex));
+      }
+    }
+
+    function masterToggleLedgerRowsSelection(isChecked) {
+      const activeRows = obtainActiveFilteredDataSet();
+      activeRows.forEach(row => {
+        triggerRowSelectionChange(row.originalIndex, isChecked);
       });
     }
 
-    // --- FORM DATA PROCESSING HANDLING ENGINE ---
-    function fillFormFieldsFromObject(rowObj) {
-      document.getElementById("inputProjectGUID").value = rowObj.guid || "";
-      document.getElementById("inputProjectName").value = rowObj.name || "";
-      document.getElementById("inputMainProgramme").value = rowObj.mainProgramme || "";
-      document.getElementById("inputSubProgramme").value = rowObj.subProgramme || "";
-      document.getElementById("inputRolloutFY").value = rowObj.rolloutFY || "";
-      document.getElementById("inputMainCategory").value = rowObj.mainCategory || "";
-      document.getElementById("inputSubCategory").value = rowObj.subCategory || "";
-      document.getElementById("inputFreeText").value = rowObj.freetext || "";
-      document.getElementById("inputUnit").value = rowObj.unit || "";
-      document.getElementById("inputQty").value = rowObj.qty || "";
-      document.getElementById("inputRate").value = rowObj.rate || "";
-      document.getElementById("inputAmount").value = (rowObj.amount || 0).toFixed(2);
-      document.getElementById("inputDate").value = rowObj.date || "";
+    function populateFormForEditing(rowIndex) {
+      const targetRow = rawTableRows[rowIndex];
+      if (!targetRow) return;
+
+      currentEditingRowIndex = rowIndex;
+      
+      // Lock into form layout structures
+      document.getElementById("inputProjectGUID").value = targetRow.guid;
+      document.getElementById("inputProjectName").value = targetRow.name;
+      document.getElementById("inputMainProgramme").value = targetRow.mainProgramme;
+      document.getElementById("inputSubProgramme").value = targetRow.subProgramme;
+      document.getElementById("inputRolloutFY").value = targetRow.rolloutFY;
+      
+      document.getElementById("inputMainCategory").value = targetRow.mainCategory;
+      handleMainCategoryDropdownCascade();
+      document.getElementById("inputSubCategory").value = targetRow.subCategory;
+      
+      document.getElementById("inputFreeText").value = targetRow.freetext;
+      document.getElementById("inputUnit").value = targetRow.unit;
+      document.getElementById("inputQty").value = targetRow.qty;
+      document.getElementById("inputRate").value = targetRow.rate;
+      document.getElementById("inputAmount").value = targetRow.amount.toFixed(2);
+      document.getElementById("inputDate").value = targetRow.date;
+
+      // Force view synchronization
+      if (!chosenLedgerIndices.includes(rowIndex)) {
+        chosenLedgerIndices = [rowIndex];
+        routeAndExecuteWorkspaceRefresh();
+      } else {
+        syncLedgerRowSelectionStateToControls();
+      }
     }
 
-    function gatherFormValuesAsRowObject() {
+    function clearSelectedFormState() {
+      currentEditingRowIndex = null;
+      document.getElementById("inputFreeText").value = "";
+      document.getElementById("inputUnit").value = "";
+      document.getElementById("inputQty").value = "";
+      document.getElementById("inputRate").value = "";
+      document.getElementById("inputAmount").value = "";
+      document.getElementById("inputDate").value = "";
+      
+      syncLedgerRowSelectionStateToControls();
+    }
+
+    function constructActionTimestamp() {
+      const d = new Date();
+      return `[${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}]`;
+    }
+
+    function generateComprehensiveAuditString(previousData, updatedFields) {
+      let parts = [];
+      for (let key in updatedFields) {
+        if (previousData[key] !== updatedFields[key]) {
+          parts.push(`Field '${key}' altered from "${previousData[key]}" to "${updatedFields[key]}"`);
+        }
+      }
+      const stamp = constructActionTimestamp();
+      const summaryText = parts.length > 0 ? parts.join("; ") : "No spatial configuration value changed";
+      return `${stamp} Operator ${currentUser}: ${summaryText}`;
+    }
+
+    // --- WRITE ACTION CONTROLLERS AND MUTATION OPERATIONS ---
+    function submitFormAsNewRow() {
+      const guid = document.getElementById("inputProjectGUID").value.trim() || "PRJ-NEW";
+      const name = document.getElementById("inputProjectName").value.trim() || "Unspecified New Venture Project";
+      const mainProg = document.getElementById("inputMainProgramme").value.trim() || "General Pool Allocation";
+      const subProg = document.getElementById("inputSubProgramme").value.trim() || "Core Operational Subsidy";
+      const rollout = document.getElementById("inputRolloutFY").value.trim() || "2026/27";
+      
+      const mainCat = document.getElementById("inputMainCategory").value;
+      const subCat = document.getElementById("inputSubCategory").value;
+      const freeTxt = document.getElementById("inputFreeText").value.trim();
+      const unit = document.getElementById("inputUnit").value.trim() || "Units";
       const qty = parseFloat(document.getElementById("inputQty").value) || 0;
       const rate = parseFloat(document.getElementById("inputRate").value) || 0;
-      return {
+      const amt = qty * rate;
+      const dt = document.getElementById("inputDate").value || new Date().toISOString().split('T')[0];
+
+      const initialAuditLog = `${constructActionTimestamp()} Created by ${currentUser} via Scratch Submission Data Deck Input Engine.`;
+
+      const newRowObject = {
+        guid: guid,
+        name: name,
+        mainProgramme: mainProg,
+        subProgramme: subProg,
+        rolloutFY: rollout,
+        mainCategory: mainCat,
+        subCategory: subCat,
+        freetext: freeTxt,
+        unit: unit,
+        qty: qty,
+        rate: rate,
+        amount: amt,
+        visible: true,
+        date: dt,
+        audit: initialAuditLog
+      };
+
+      rawTableRows.push(newRowObject);
+      clearSelectedFormState();
+      
+      // Auto-lock project filter explicitly to this newly created scope if not already bounded
+      if (!selectedProjectsFilterList.includes(guid) && activeNavContext === "Project") {
+        selectedProjectsFilterList = [guid];
+        renderGlobalFiltersLayout();
+      }
+      
+      routeAndExecuteWorkspaceRefresh();
+    }
+
+    function submitEditToExistingRow() {
+      if (currentEditingRowIndex === null) return;
+      
+      const target = rawTableRows[currentEditingRowIndex];
+      const updatedFields = {
         guid: document.getElementById("inputProjectGUID").value.trim(),
         name: document.getElementById("inputProjectName").value.trim(),
         mainProgramme: document.getElementById("inputMainProgramme").value.trim(),
@@ -657,570 +845,243 @@
         subCategory: document.getElementById("inputSubCategory").value,
         freetext: document.getElementById("inputFreeText").value.trim(),
         unit: document.getElementById("inputUnit").value.trim(),
-        qty: qty,
-        rate: rate,
-        amount: qty * rate,
-        date: document.getElementById("inputDate").value,
-        visible: true
+        qty: parseFloat(document.getElementById("inputQty").value) || 0,
+        rate: parseFloat(document.getElementById("inputRate").value) || 0,
+        date: document.getElementById("inputDate").value
       };
-    }
+      updatedFields.amount = updatedFields.qty * updatedFields.rate;
 
-    function generateLogDiffString(oldObj, newObj) {
-      let diffParts = [];
-      const keysToTrack = [
-        {k: "guid", label: "GUID"}, {k: "name", label: "Name"}, 
-        {k: "mainProgramme", label: "Main Prog"}, {k: "subProgramme", label: "Sub Prog"}, 
-        {k: "rolloutFY", label: "FY"}, {k: "mainCategory", label: "Main Cat"}, 
-        {k: "subCategory", label: "Sub Cat"}, {k: "freetext", label: "Text"}, 
-        {k: "unit", label: "Unit"}, {k: "qty", label: "Qty"}, 
-        {k: "rate", label: "Rate"}, {k: "date", label: "Date"}
-      ];
+      const deltaAuditString = generateComprehensiveAuditString(target, updatedFields);
       
-      keysToTrack.forEach(item => {
-        let oldVal = oldObj[item.k] !== undefined ? oldObj[item.k] : "";
-        let newVal = newObj[item.k] !== undefined ? newObj[item.k] : "";
-        if (String(oldVal) !== String(newVal)) {
-          diffParts.push(`${item.label}: '${oldVal}' ➔ '${newVal}'`);
-        }
-      });
-      
-      return diffParts.length > 0 ? diffParts.join(", ") : "No structural data modifications detected.";
-    }
+      // Concatenate the new operational change log separating entries with a pipeline character structural break
+      const comprehensiveCombinedLog = target.audit ? `${target.audit} | ${deltaAuditString}` : deltaAuditString;
 
-    function submitFormAsNewRow() {
-      const newRow = gatherFormValuesAsRowObject();
-      if (!newRow.guid || !newRow.name) {
-        alert("Execution halted: Project GUID and Project Name are required validation headers.");
-        return;
-      }
-      
-      // Assign persistent identifier
-      newRow.id = "row_" + Date.now() + "_" + Math.floor(Math.random()*1000);
-      newRow.audit = `[${getFormattedTimestamp()}] Row initialized from scratch by ${currentUser}.`;
-      
-      rawTableRows.push(newRow);
-      alert("Success: New record registry appended successfully.");
-      
-      // Auto isolate to newly added project if on Project View
-      if (activeNavContext === "Project") {
-        selectedProjectsFilterList = [newRow.guid];
-      }
+      Object.assign(target, updatedFields, { audit: comprehensiveCombinedLog });
       
       clearSelectedFormState();
-      renderGlobalFiltersLayout();
-      renderContentInformationPane();
-    }
-
-    function submitEditToExistingRow() {
-      if (currentEditingRowIndex === null) return;
-      
-      const targetedId = selectedRowIds[0];
-      const realIndex = rawTableRows.findIndex(r => r.id === targetedId);
-      if (realIndex === -1) return;
-
-      const oldRecord = rawTableRows[realIndex];
-      const updatedData = gatherFormValuesAsRowObject();
-      
-      if (!updatedData.guid || !updatedData.name) {
-        alert("Execution halted: Project GUID and Project Name cannot be blanked.");
-        return;
-      }
-
-      // Compute modification tracking trail
-      const changeLog = generateLogDiffString(oldRecord, updatedData);
-      const newAuditTrail = oldRecord.audit + ` || [${getFormattedTimestamp()}] Modified by ${currentUser}: { ${changeLog} }`;
-      
-      // Preserve tracking metrics
-      updatedData.id = oldRecord.id;
-      updatedData.audit = newAuditTrail;
-      
-      rawTableRows[realIndex] = updatedData;
-      alert("Success: Master database index entry synchronized successfully.");
-      
-      clearSelectedFormState();
-      renderGlobalFiltersLayout();
-      renderContentInformationPane();
+      routeAndExecuteWorkspaceRefresh();
     }
 
     function makeCopyAndEditSelectedRow() {
-      if (selectedRowIds.length !== 1) return;
-      
-      const targetedId = selectedRowIds[0];
-      const sourceRow = rawTableRows.find(r => r.id === targetedId);
-      if (!sourceRow) return;
+      if (chosenLedgerIndices.length !== 1) return;
+      const targetToDuplicate = rawTableRows[chosenLedgerIndices[0]];
+      if (!targetToDuplicate) return;
 
-      const copyRow = Object.assign({}, sourceRow);
-      copyRow.id = "row_" + Date.now() + "_" + Math.floor(Math.random()*1000);
-      copyRow.guid = sourceRow.guid + "-COPY";
-      copyRow.name = "Copy of " + sourceRow.name;
-      copyRow.audit = `[${getFormattedTimestamp()}] Copied from baseline row ${sourceRow.guid} by ${currentUser}.`;
+      const duplicateObject = JSON.parse(JSON.stringify(targetToDuplicate));
+      duplicateObject.audit = `${constructActionTimestamp()} Duplicated from project entity baseline row parameters by operator ${currentUser}.`;
       
-      rawTableRows.push(copyRow);
-      alert("Success: Baseline duplicate created. Form focus initialized onto copy references.");
+      rawTableRows.push(duplicateObject);
+      const newlyCreatedIndex = rawTableRows.length - 1;
       
-      // Direct form focus to the newly injected copy object for immediate mutation
-      selectedRowIds = [copyRow.id];
-      currentEditingRowIndex = rawTableRows.length - 1;
-      
-      fillFormFieldsFromObject(copyRow);
-      
-      document.getElementById("engineModeAlertBanner").classList.remove("hidden");
-      document.getElementById("engineTitleHeader").innerHTML = `<i class="fa-solid fa-user-pen text-amber-600 animate-pulse"></i> Modifying Copy Record`;
-      
-      if (activeNavContext === "Project") {
-        selectedProjectsFilterList = [copyRow.guid];
-      }
-      
-      renderGlobalFiltersLayout();
-      renderContentInformationPane();
-      evaluateProcessingControlButtonsState();
+      chosenLedgerIndices = [newlyCreatedIndex];
+      populateFormForEditing(newlyCreatedIndex);
+      routeAndExecuteWorkspaceRefresh();
     }
 
-    function deleteSelectedRows() {
-      if (selectedRowIds.length === 0) return;
+    function purgeSelectedLedgerRows() {
+      if (chosenLedgerIndices.length === 0) return;
       
-      if (!confirm(`Are you sure you want to permanently delete the ${selectedRowIds.length} selected row(s)?`)) {
-        return;
-      }
-      
-      // Filter out records matching targeted selection IDs
-      rawTableRows = rawTableRows.filter(row => !selectedRowIds.includes(row.id));
-      
-      alert("Success: Target records removed from active state.");
-      clearSelectedFormState();
-      renderGlobalFiltersLayout();
-      renderContentInformationPane();
-    }
-
-    function clearSelectedFormState() {
-      selectedRowIds = [];
-      currentEditingRowIndex = null;
-      
-      // Flush form bindings
-      document.getElementById("inputProjectGUID").value = "";
-      document.getElementById("inputProjectName").value = "";
-      document.getElementById("inputMainProgramme").value = "";
-      document.getElementById("inputSubProgramme").value = "";
-      document.getElementById("inputRolloutFY").value = "";
-      document.getElementById("inputMainCategory").value = "";
-      document.getElementById("inputSubCategory").value = "";
-      document.getElementById("inputFreeText").value = "";
-      document.getElementById("inputUnit").value = "";
-      document.getElementById("inputQty").value = "";
-      document.getElementById("inputRate").value = "";
-      document.getElementById("inputAmount").value = "0.00";
-      document.getElementById("inputDate").value = "";
-
-      document.getElementById("engineModeAlertBanner").add("hidden");
-      document.getElementById("engineTitleHeader").innerHTML = `<i class="fa-solid fa-pen-to-square text-[#003161]"></i> Data Input Engine`;
-      
-      evaluateProcessingControlButtonsState();
-      
-      // Synchronize presentation layouts to clear focus highlights
-      const checkboxes = document.querySelectorAll('.ledger-row-checkbox');
-      checkboxes.forEach(cb => cb.checked = false);
-      const rows = document.querySelectorAll('.ledger-data-row');
-      rows.forEach(r => r.classList.remove('bg-amber-100', 'hover:bg-amber-200/80'));
-    }
-
-    function evaluateProcessingControlButtonsState() {
-      const editBtn = document.getElementById("btnSubmitExistingEdit");
-      const copyBtn = document.getElementById("btnCopySelectedRow");
-      const deleteBtn = document.getElementById("btnDeleteSelectedRows");
-      
-      // Delete controls require at least one target record to be selected
-      if (selectedRowIds.length > 0) {
-        deleteBtn.removeAttribute("disabled");
-      } else {
-        deleteBtn.setAttribute("disabled", "true");
-      }
-
-      // Modification controls require exactly one single row item selected
-      if (selectedRowIds.length === 1) {
-        editBtn.removeAttribute("disabled");
-        copyBtn.removeAttribute("disabled");
-      } else {
-        editBtn.setAttribute("disabled", "true");
-        copyBtn.setAttribute("disabled", "true");
-      }
-    }
-
-    // --- SELECTION HIGHLIGHTING MATRIX CONTROL MECHANISM ---
-    function handleLedgerRowSelectionToggle(event, targetRowId) {
-      event.stopPropagation();
-      
-      const checkNode = document.querySelector(`input[data-row-id="${targetRowId}"]`);
-      if (!checkNode) return;
-      
-      const rowNode = document.getElementById(targetRowId);
-      
-      if (checkNode.checked) {
-        if (!selectedRowIds.includes(targetRowId)) {
-          selectedRowIds.push(targetRowId);
-        }
-        if (rowNode) {
-          rowNode.classList.add('bg-amber-100');
-          rowNode.classList.remove('bg-white', 'bg-gray-50/50');
-        }
-      } else {
-        selectedRowIds = selectedRowIds.filter(id => id !== targetRowId);
-        if (rowNode) {
-          rowNode.classList.remove('bg-amber-100');
-          // Re-apply alternating striping fallback safely
-          const allRendered = Array.from(document.querySelectorAll('.ledger-data-row'));
-          const itemIndex = allRendered.indexOf(rowNode);
-          if (itemIndex % 2 === 0) {
-            rowNode.classList.add('bg-white');
-          } else {
-            rowNode.classList.add('bg-gray-50/50');
-          }
-        }
-      }
-
-      // If exactly one row is checked, synchronize its fields into the form mask
-      if (selectedRowIds.length === 1) {
-        const selectedId = selectedRowIds[0];
-        const activeRowObj = rawTableRows.find(r => r.id === selectedId);
-        if (activeRowObj) {
-          currentEditingRowIndex = rawTableRows.indexOf(activeRowObj);
-          fillFormFieldsFromObject(activeRowObj);
-          
-          document.getElementById("engineModeAlertBanner").classList.remove("hidden");
-          document.getElementById("engineTitleHeader").innerHTML = `<i class="fa-solid fa-user-pen text-amber-600 animate-pulse"></i> Editing Selected Entry`;
-        }
-      } else {
-        // Break editing focus state lock if multi-row or zero items checked
-        currentEditingRowIndex = null;
-        document.getElementById("engineModeAlertBanner").classList.add("hidden");
-        document.getElementById("engineTitleHeader").innerHTML = `<i class="fa-solid fa-pen-to-square text-[#003161]"></i> Data Input Engine`;
-      }
-
-      evaluateProcessingControlButtonsState();
-    }
-
-    function toggleSelectAllVisibleLedgerRows(headerCheckboxNode) {
-      const visibleCheckboxes = document.querySelectorAll('.ledger-row-checkbox');
-      const shouldCheck = headerCheckboxNode.checked;
-      
-      selectedRowIds = [];
-      
-      visibleCheckboxes.forEach(cb => {
-        cb.checked = shouldCheck;
-        const targetId = cb.getAttribute('data-row-id');
-        const rowNode = document.getElementById(targetId);
+      if (confirm(`Are you absolutely sure you want to permanently delete the ${chosenLedgerIndices.length} selected record structural entry lines?`)) {
+        // Sort indices downwards to slice items without skewing remaining position maps
+        chosenLedgerIndices.sort((a, b) => b - a);
         
-        if (shouldCheck) {
-          selectedRowIds.push(targetId);
-          if (rowNode) {
-            rowNode.classList.add('bg-amber-100');
-            rowNode.classList.remove('bg-white', 'bg-gray-50/50');
-          }
-        } else {
-          if (rowNode) {
-            rowNode.classList.remove('bg-amber-100');
-            const allRendered = Array.from(document.querySelectorAll('.ledger-data-row'));
-            const itemIndex = allRendered.indexOf(rowNode);
-            if (itemIndex % 2 === 0) {
-              rowNode.classList.add('bg-white');
-            } else {
-              rowNode.classList.add('bg-gray-50/50');
-            }
-          }
-        }
-      });
-
-      if (selectedRowIds.length === 1) {
-        const selectedId = selectedRowIds[0];
-        const activeRowObj = rawTableRows.find(r => r.id === selectedId);
-        if (activeRowObj) {
-          currentEditingRowIndex = rawTableRows.indexOf(activeRowObj);
-          fillFormFieldsFromObject(activeRowObj);
-          document.getElementById("engineModeAlertBanner").classList.remove("hidden");
-        }
-      } else {
+        chosenLedgerIndices.forEach(idx => {
+          rawTableRows.splice(idx, 1);
+        });
+        
+        chosenLedgerIndices = [];
         currentEditingRowIndex = null;
-        document.getElementById("engineModeAlertBanner").classList.add("hidden");
+        
+        // Safety lock: if active checked project guideline doesn't exist anywhere else, fall back securely
+        let existingGuids = rawTableRows.map(r => r.guid);
+        if (selectedProjectsFilterList.length > 0 && !existingGuids.includes(selectedProjectsFilterList[0])) {
+          initializeDefaultProjectFilter();
+          renderGlobalFiltersLayout();
+        }
+        
+        clearSelectedFormState();
+        routeAndExecuteWorkspaceRefresh();
       }
-
-      evaluateProcessingControlButtonsState();
     }
 
-    function updateInlineTableSearchFilter(columnId, value) {
-      const cleanVal = value.trim().toLowerCase();
-      if (!cleanVal) {
-        delete inlineTableFilters[columnId];
+    // --- ACTIVE DATASET COMPILATION RULES ---
+    function obtainActiveFilteredDataSet() {
+      let structuralSubset = rawTableRows.map((row, idx) => ({ ...row, originalIndex: idx }));
+
+      // Layer 1: Apply System Navigation Global Filter Scopes
+      if (activeNavContext === "Project") {
+        if (selectedProjectsFilterList.length > 0) {
+          structuralSubset = structuralSubset.filter(r => selectedProjectsFilterList.includes(r.guid));
+        }
       } else {
-        inlineTableFilters[columnId] = cleanVal;
+        if (selectedProgrammesFilterList.length > 0) {
+          structuralSubset = structuralSubset.filter(r => selectedProgrammesFilterList.includes(r.mainProgramme));
+        }
       }
-      renderContentInformationPane();
+
+      // Layer 2: Apply Inline Field Search Parameter Overlays
+      Object.keys(inlineTableFilters).forEach(colId => {
+        let filterVal = inlineTableFilters[colId].trim().toLowerCase();
+        if (filterVal) {
+          structuralSubset = structuralSubset.filter(r => {
+            let fieldStringVal = String(r[colId] || "").toLowerCase();
+            return fieldStringVal.includes(filterVal);
+          });
+        }
+      });
+
+      return structuralSubset;
     }
 
-    // --- ANALYTICS AND LEDGER PRESENTATION RUNTIME GENERATION ---
-    function renderContentInformationPane() {
-      const paneZone = document.getElementById("infoPaneContentZone");
-      const titleZone = document.getElementById("infoPaneTitle");
-      
-      // Isolate current records against active global scope boundaries
-      let computedRows = rawTableRows.filter(row => {
-        if (activeNavContext === "Project") {
-          return selectedProjectsFilterList.includes(row.guid);
-        } else {
-          if (selectedProgrammesFilterList.length === 0) return true; // Empty treats all as active
-          return selectedProgrammesFilterList.includes(row.mainProgramme);
-        }
-      });
-
-      // Filter against inline column search query matrices
-      computedRows = computedRows.filter(row => {
-        for (let colId in inlineTableFilters) {
-          const targetQuery = inlineTableFilters[colId];
-          let cellStr = String(row[colId] || "").toLowerCase();
-          if (!cellStr.includes(targetQuery)) return false;
-        }
-        return true;
-      });
-
-      const activePageIndex = selectedPagesStore[activeNavContext];
+    // --- WORKSPACE VIEW RENDERING SWITCH CONTROLLER ---
+    function routeAndExecuteWorkspaceRefresh() {
+      const activeIdx = selectedPagesStore[activeNavContext];
+      const viewZone = document.getElementById("infoPaneContentZone");
+      const primaryTitle = document.getElementById("infoPaneTitle");
 
       if (activeNavContext === "Programme") {
-        titleZone.innerText = `Programme Analytics — Sheet ${activePageIndex + 1}`;
-        
-        // Compute allocations summaries
-        let programSummaryMap = {};
-        computedRows.forEach(r => {
-          if (!programSummaryMap[r.mainProgramme]) {
-            programSummaryMap[r.mainProgramme] = { count: 0, totalAmount: 0, categories: new Set() };
-          }
-          programSummaryMap[r.mainProgramme].count++;
-          programSummaryMap[r.mainProgramme].totalAmount += r.amount;
-          programSummaryMap[r.mainProgramme].categories.add(r.mainCategory);
-        });
-
-        let summaryRowsHtml = Object.keys(programSummaryMap).map(pKey => {
-          const item = programSummaryMap[pKey];
-          return `
-            <tr class="border-b border-gray-200 hover:bg-gray-50">
-              <td class="px-3 py-2.5 font-bold text-[#003161]">${pKey}</td>
-              <td class="px-3 py-2.5 text-center font-mono">${item.count}</td>
-              <td class="px-3 py-2.5 text-center text-gray-600">${item.categories.size} Categories</td>
-              <td class="px-3 py-2.5 text-right font-mono font-bold text-emerald-800">R ${item.totalAmount.toLocaleString('en-ZA', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-            </tr>
-          `;
-        }).join('');
-
-        paneZone.innerHTML = `
-          <div class="flex flex-col gap-4 h-full overflow-hidden">
-            <div class="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-3 rounded-lg shadow-sm flex justify-between items-center shrink-0">
-              <div>
-                <h3 class="font-bold text-sm tracking-wide">Consolidated Programme Summary Rollup</h3>
-                <p class="text-[10px] text-slate-300 font-mono mt-0.5">Aggregations compiled across currently isolated scopes</p>
-              </div>
-              <div class="bg-blue-600 text-white font-mono px-3 py-1.5 rounded text-right shadow-inner">
-                <span class="block text-[9px] uppercase tracking-tighter opacity-75">Global Active Sum</span>
-                <strong class="text-xs font-bold">R ${computedRows.reduce((a,b) => a+b.amount, 0).toLocaleString('en-ZA', {minimumFractionDigits:2})}</strong>
-              </div>
-            </div>
-
-            <div class="flex-1 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden flex flex-col">
-              <div class="overflow-x-auto custom-scrollbar flex-1">
-                <table class="w-full text-left border-collapse">
-                  <thead>
-                    <tr class="bg-gray-100 border-b border-gray-200 text-gray-600 font-bold uppercase text-[9px] tracking-wider sticky top-0 z-10">
-                      <th class="px-3 py-2">Programme Focus Designation</th>
-                      <th class="px-3 py-2 text-center">Active Actions Count</th>
-                      <th class="px-3 py-2 text-center">Involved Subsections</th>
-                      <th class="px-3 py-2 text-right">Aggregated Allocations (ZAR)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${summaryRowsHtml || '<tr><td colspan="4" class="p-8 text-center text-gray-400 italic">No visible datasets map to criteria rules.</td></tr>'}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        `;
+        if (activeIdx === 0) {
+          primaryTitle.innerText = "Programme Level: Strategic Summary Matrix";
+          renderProgrammeStrategicSummaryMatrix(viewZone);
+        } else {
+          primaryTitle.innerText = "Programme Level: Financial Outlay Analytics";
+          renderProgrammeFinancialOutlayAnalytics(viewZone);
+        }
       } else {
-        // Project Level Master Ledger Framework Generation
-        titleZone.innerText = `Project Isolation Master Ledger — Sheet ${activePageIndex + 1}`;
-        
-        // Generate Header Column Rows with Freeze Utility States
-        let headerThHtml = `
-          <th class="px-3 py-2 bg-gray-100 text-center sticky-header z-30" style="width: 40px;">
-            <input type="checkbox" onchange="toggleSelectAllVisibleLedgerRows(this)" class="h-3.5 w-3.5 rounded text-blue-600 border-gray-300">
-          </th>
-        `;
-        
-        rawTableColumns.forEach(col => {
-          if (!col.visible) return;
-          headerThHtml += `
-            <th class="px-3 py-2 bg-gray-100 font-bold uppercase text-[9px] tracking-wider text-gray-600 sticky-header ${col.frozen ? 'sticky-column bg-gray-200' : ''}">
-              <div class="flex flex-col gap-1">
-                <span>${col.label}</span>
-                <input type="text" placeholder="🔍 Filter..." 
-                  value="${inlineTableFilters[col.id] || ''}"
-                  oninput="updateInlineTableSearchFilter('${col.id}', this.value)"
-                  class="w-full font-normal text-[10px] px-1.5 py-0.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white text-gray-800 normal-case font-sans">
-              </div>
-            </th>
-          `;
-        });
-
-        // Compute row item matrix layouts
-        let tableRowsHtml = computedRows.map((row, idx) => {
-          let isChecked = selectedRowIds.includes(row.id);
-          let rowBgClass = isChecked ? 'bg-amber-100' : (idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50');
-          
-          let cellsHtml = `
-            <td class="px-3 py-2 text-center border-b border-gray-100">
-              <input type="checkbox" data-row-id="${row.id}" ${isChecked ? 'checked' : ''} 
-                onchange="handleLedgerRowSelectionToggle(event, '${row.id}')" 
-                class="ledger-row-checkbox h-3.5 w-3.5 rounded text-blue-600 border-gray-300">
-            </td>
-          `;
-
-          rawTableColumns.forEach(col => {
-            if (!col.visible) return;
-            let val = row[col.id];
-            let alignment = "text-left";
-            let formatStyle = "";
-
-            if (col.id === "qty" || col.id === "rate" || col.id === "amount") {
-              alignment = "text-right";
-              formatStyle = "font-mono font-medium";
-            }
-            if (col.id === "guid" || col.id === "date" || col.id === "rolloutFY") {
-              formatStyle = "font-mono text-gray-600";
-            }
-
-            if (col.id === "rate" || col.id === "amount") {
-              val = "R " + (parseFloat(val) || 0).toLocaleString('en-ZA', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            }
-
-            // String wrap logic formatting specific to Audit Log tracking trails
-            if (col.id === "audit") {
-              cellsHtml += `
-                <td class="px-3 py-2 border-b border-gray-100 text-left font-mono text-[10px] text-slate-500 whitespace-nowrap overflow-visible ${col.frozen ? 'sticky-column bg-gray-50' : ''}">
-                  ${val || ''}
-                </td>
-              `;
-            } else {
-              cellsHtml += `
-                <td class="px-3 py-2 border-b border-gray-100 ${alignment} ${formatStyle} ${col.frozen ? 'sticky-column bg-gray-50' : ''}">
-                  ${val !== undefined ? val : ''}
-                </td>
-              `;
-            }
-          });
-
-          return `
-            <tr id="${row.id}" class="ledger-data-row hover:bg-amber-50/60 transition-colors cursor-pointer ${rowBgClass}" onclick="const cb = this.querySelector('.ledger-row-checkbox'); cb.checked = !cb.checked; handleLedgerRowSelectionToggle(event, '${row.id}');">
-              ${cellsHtml}
-            </tr>
-          `;
-        }).join('');
-
-        paneZone.innerHTML = `
-          <div class="flex flex-col gap-3 h-full overflow-hidden w-full relative">
-            
-            <div class="bg-white border border-gray-200 p-2.5 rounded-lg shadow-sm flex flex-wrap items-center justify-between gap-3 shrink-0">
-              <div class="flex items-center gap-2">
-                <span class="bg-blue-100 text-[#003161] px-2 py-1 rounded font-bold text-xs shadow-inner">
-                  Isolated Project Count: ${computedRows.length} Records
-                </span>
-                <span class="text-gray-400 font-mono text-[11px]">| Selected: <strong id="selectionCounterBadge" class="text-blue-800 font-bold">${selectedRowIds.length}</strong></span>
-              </div>
-              <div class="flex items-center gap-2">
-                <button onclick="clearSelectedFormState()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-2.5 py-1 rounded border border-gray-300 transition-all text-[11px] flex items-center gap-1">
-                  <i class="fa-solid fa-broom"></i> Clear Selections
-                </button>
-              </div>
-            </div>
-
-            <div class="flex-1 bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden flex flex-col w-full relative">
-              <div class="overflow-auto custom-scrollbar flex-1 w-full max-h-full">
-                <table class="w-full text-left border-collapse text-[11px] table-auto">
-                  <thead>
-                    <tr class="bg-gray-100 border-b border-gray-200 text-gray-700 sticky top-0 z-20">
-                      ${headerThHtml}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${tableRowsHtml || '<tr><td colspan="15" class="p-12 text-center text-gray-400 font-medium italic">No rows found corresponding to active project isolation scope guidelines.</td></tr>'}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-          </div>
-        `;
+        if (activeIdx === 0) {
+          primaryTitle.innerText = "Project Level: Operational Data Ledger";
+          renderProjectOperationalDataLedger(viewZone);
+        } else {
+          primaryTitle.innerText = "Project Level: Audit Matrix View";
+          renderProjectAuditMatrixView(viewZone);
+        }
       }
     }
 
-    // --- PANE SIZE RESIZER DRAGMECHANICS & COLLAPSE UI SYSTEM ---
-    function collapsePane(paneId) {
-      document.getElementById(paneId).classList.add("collapsed-pane");
-    }
-    function expandPane(paneId) {
-      document.getElementById(paneId).classList.remove("collapsed-pane");
-    }
-
-    function setupResizablePaneLogic(resizerId, paneId, isLeftResize) {
-      const resizer = document.getElementById(resizerId);
-      const pane = document.getElementById(paneId);
-      if (!resizer || !pane) return;
-
-      resizer.addEventListener("mousedown", function(e) {
-        e.preventDefault();
-        resizer.classList.add("dragging");
-        document.body.style.cursor = "col-resize";
-        
-        const startWidth = pane.offsetWidth;
-        const startX = e.clientX;
-
-        function onMouseMove(moveEvent) {
-          const deltaX = moveEvent.clientX - startX;
-          let newWidth = isLeftResize ? startWidth - deltaX : startWidth + deltaX;
-          
-          const minW = parseInt(pane.style.minWidth) || 100;
-          const maxW = parseInt(pane.style.maxWidth) || 800;
-          
-          if (newWidth < minW) newWidth = minW;
-          if (newWidth > maxW) newWidth = maxW;
-          
-          pane.style.width = newWidth + "px";
-        }
-
-        function onMouseUp() {
-          resizer.classList.remove("dragging");
-          document.body.style.cursor = "default";
-          document.removeEventListener("mousemove", onMouseMove);
-          document.removeEventListener("mouseup", onMouseUp);
-        }
-
-        document.addEventListener("mousemove", onMouseMove);
-        document.addEventListener("mouseup", onMouseUp);
+    // --- RENDER SUITE 1: PROGRAMME LEVEL - STRATEGIC SUMMARY ---
+    function renderProgrammeStrategicSummaryMatrix(targetZone) {
+      const compilationDataset = obtainActiveFilteredDataSet();
+      
+      // Calculate aggregations dynamically
+      let aggregateCapitalExpenditure = 0;
+      let programVolumeMap = {};
+      
+      compilationDataset.forEach(row => {
+        aggregateCapitalExpenditure += row.amount;
+        programVolumeMap[row.mainProgramme] = (programVolumeMap[row.mainProgramme] || 0) + row.amount;
       });
+
+      let container = document.createElement("div");
+      container.className = "flex flex-col gap-5 w-full h-full";
+
+      // KPI Widget Layout Outlines
+      container.innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="bg-gradient-to-br from-[#003161] to-[#001F3F] text-white rounded-lg p-4 shadow border border-blue-900 flex flex-col justify-between">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-blue-200">Aggregated Active Portfolio Capital</span>
+            <span class="text-xl font-bold tracking-tight mt-2 font-mono">R ${aggregateCapitalExpenditure.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</span>
+            <div class="text-[9px] text-blue-300 mt-1 font-mono">Tracked Scope Size: ${compilationDataset.length} Segment Entries</div>
+          </div>
+          <div class="bg-white text-gray-700 rounded-lg p-4 shadow border border-gray-200 flex flex-col justify-between">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Main Focus Streams Assigned</span>
+            <span class="text-xl font-bold text-gray-800 tracking-tight mt-2 font-mono">${Object.keys(programVolumeMap).length} Branches</span>
+            <div class="w-full bg-gray-100 rounded-full h-1.5 mt-2 overflow-hidden">
+              <div class="bg-amber-500 h-1.5" style="width: 75%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg border border-gray-200 shadow overflow-hidden flex flex-col flex-1">
+          <div class="bg-gray-50 border-b px-3 py-2 flex justify-between items-center">
+            <span class="font-bold text-gray-700 uppercase tracking-wider text-[10px]"><i class="fa-solid fa-chart-bar text-blue-800 mr-1"></i>Financial Allocation Apportionment Distribution Breakdown</span>
+          </div>
+          <div class="p-3 overflow-y-auto flex-1 custom-scrollbar">
+            <table class="w-full border-collapse text-left">
+              <thead>
+                <tr class="border-b border-gray-200 bg-gray-100/70 text-gray-500 uppercase font-bold tracking-wider text-[9px]">
+                  <th class="p-2">Main Strategic Cluster Programme</th>
+                  <th class="p-2 text-right">Sum of Allocated Resources</th>
+                  <th class="p-2 text-right">Proportional Weight</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 text-xs text-gray-700">
+                ${Object.keys(programVolumeMap).map(key => {
+                  let amt = programVolumeMap[key];
+                  let ratio = aggregateCapitalExpenditure > 0 ? (amt / aggregateCapitalExpenditure * 100).toFixed(1) : 0;
+                  return `
+                    <tr class="hover:bg-gray-50/50">
+                      <td class="p-2 font-medium text-gray-900">${key}</td>
+                      <td class="p-2 text-right font-mono font-semibold">R ${amt.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</td>
+                      <td class="p-2 text-right font-mono text-amber-700 font-bold">${ratio}%</td>
+                    </tr>
+                  `;
+                }).join('')}
+                ${Object.keys(programVolumeMap).length === 0 ? '<tr><td colspan="3" class="p-8 text-center text-gray-400 italic">No operational data matches active target tracking boundaries.</td></tr>' : ''}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+      targetZone.appendChild(container);
     }
 
-    setupResizablePaneLogic("resizer-secondaryNav", "secondaryNavPane", false);
-    setupResizablePaneLogic("resizer-dataInput", "dataInputPane", false);
-    setupResizablePaneLogic("resizer-information", "informationPane", true);
+    // --- RENDER SUITE 2: PROGRAMME LEVEL - FINANCIAL ANALYSIS ---
+    function renderProgrammeFinancialOutlayAnalytics(targetZone) {
+      const compilationDataset = obtainActiveFilteredDataSet();
 
-    function toggleProjectDetailsPane() {
-      const content = document.getElementById("projectDetailsContent");
-      const caret = document.getElementById("projectDetailsCaret");
-      if (content.classList.contains("hidden")) {
-        content.classList.remove("hidden");
-        caret.style.transform = "rotate(0deg)";
-      } else {
-        content.classList.add("hidden");
-        caret.style.transform = "rotate(180deg)";
-      }
+      let categorySummaryMatrix = {};
+      compilationDataset.forEach(row => {
+        if (!categorySummaryMatrix[row.mainCategory]) {
+          categorySummaryMatrix[row.mainCategory] = { volume: 0, costTotal: 0 };
+        }
+        categorySummaryMatrix[row.mainCategory].volume += 1;
+        categorySummaryMatrix[row.mainCategory].costTotal += row.amount;
+      });
+
+      let container = document.createElement("div");
+      container.className = "bg-white rounded-lg border border-gray-200 shadow overflow-hidden flex flex-col w-full h-full";
+      
+      container.innerHTML = `
+        <div class="bg-gray-50 border-b px-3 py-2">
+          <span class="font-bold text-gray-700 uppercase tracking-wider text-[10px]"><i class="fa-solid fa-receipt text-emerald-700 mr-1"></i>Expenditure Category Structural Profiling Matrix</span>
+        </div>
+        <div class="p-4 overflow-y-auto flex-1 custom-scrollbar flex flex-col gap-4">
+          <table class="w-full border-collapse text-left">
+            <thead>
+              <tr class="border-b border-gray-200 bg-gray-100/80 text-gray-500 uppercase font-bold tracking-wider text-[9px]">
+                <th class="p-2">Material Core Categorization</th>
+                <th class="p-2 text-center">Entry Row Counts</th>
+                <th class="p-2 text-right">Aggregated Budget Burden</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-xs text-gray-700">
+              ${Object.keys(categorySummaryMatrix).map(catKey => {
+                let stats = categorySummaryMatrix[catKey];
+                return `
+                  <tr class="hover:bg-gray-50/50">
+                    <td class="p-2 font-medium text-gray-800">${catKey}</td>
+                    <td class="p-2 text-center font-mono">${stats.volume} lines</td>
+                    <td class="p-2 text-right font-mono font-bold text-emerald-800">R ${stats.costTotal.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</td>
+                  </tr>
+                `;
+              }).join('')}
+              ${Object.keys(categorySummaryMatrix).length === 0 ? '<tr><td colspan="3" class="p-8 text-center text-gray-400 italic">No structured classifications match active target boundaries.</td></tr>' : ''}
+            </tbody>
+          </table>
+        </div>
+      `;
+      targetZone.appendChild(container);
     }
 
-    // --- INITIALIZATION ENTRYPOINT ---
-    changeNavContext("Project");
-  </script>
-</body>
-</html>
+    // --- RENDER SUITE 3: PROJECT LEVEL - OPERATIONAL DATA LEDGER WITH STABLE SELECTION HIGHLIGHTS ---
+    function renderProjectOperationalDataLedger(targetZone) {
+      const activeRows = obtainActiveFilteredDataSet();
+
+      let mainContainer = document.createElement("div");
+      mainContainer.className = "flex flex-col h-full w-full gap-3";
+
+      // Structural Search Toggle Strip Header layout block
+      let manipulationStrip = document.createElement("div");
+      manipulationStrip.className = "flex flex-wrap items-center justify-between gap-2 bg-gray-100 p-2 rounded-lg border border-gray-200 shrink-0";
+      
+      let filteringContextLabel = document
