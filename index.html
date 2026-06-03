@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>QuickTask Polls PRO v3.7 - Owner-Locked Deletion & Shared Analytical Filtering</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+  
+  <style>
+    body {
+      background-color: #efeae2;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.18);
+      border-radius: 10px;
+    }
+    .active-nav-tab {
+      background-color: #004d3e !important;
+      color: #ffffff !important;
+      border-color: #ffffff !important;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    }
+    #authStatusPanel {
+      transition: all 0.2s ease-in-out;
+    }
+    .auth-panel-success {
+      background-color: #004d3e !important;
+      border-color: #00a884 !important;
+    }
+    .auth-panel-failed {
+      background-color: #721c24 !important;
+      border-color: #f5c6cb !important;
+    }
+  </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-gray-800 antialiased select-none">
+
+  <header class="bg-[#008069] text-white px-3 py-2 sm:px-4 sm:py-3 shadow-md flex flex-col gap-2 shrink-0 z-20">
+    <div class="flex justify-between items-center">
+      <div class="flex items-center gap-2.5">
+        <div class="bg-white text-[#008069] rounded-full w-9 h-9 flex items-center justify-center font-bold text-lg shadow">
+          <i class="fa-solid fa-square-poll-horizontal"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-base sm:text-lg leading-tight">QuickTask Polls</h1>
+          <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+            <p id="userBadge" class="text-[11px] text-teal-100 opacity-90 cursor-pointer hover:underline"></p>
+            <div id="authStatusPanel" class="bg-teal-900/60 border border-teal-700 rounded px-1.5 py-0.5 text-[10px] font-mono inline-flex items-center gap-1 shadow-inner">
+              <span id="authStatusText" class="text-teal-200"><i class="fa-solid fa-circle-notch animate-spin mr-0.5"></i>Connecting Auth...</span>
+              <span id="authUidDisplay" class="text-white hidden ml-1 pl-1 border-l border-teal-700"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <select id="projectSelector" class="bg-teal-800 text-white text-xs font-semibold rounded-lg px-2.5 py-1.5 border border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-400 cursor-pointer">
+          <option value="General">📁 General</option>
+          <option value="Marketing">📁 Marketing</option>
+          <option value="Development">📁 Development</option>
+          <option value="Operations">📁 Operations</option>
+        </select>
+        
+        <button id="openModalBtn" disabled class="bg-gray-400 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1.5 cursor-not-allowed opacity-60">
+          <i class="fa-solid fa-lock text-[10px]"></i> <span>New Poll</span>
+        </button>
+      </div>
+    </div>
+
+    <nav class="flex bg-teal-900/40 p-1 rounded-lg border border-teal-700/50 gap-1.5 text-xs font-semibold mt-1">
+      <button onclick="switchView('feed')" id="tab-feed" class="flex-1 py-2 rounded-md text-center border-b-2 border-transparent text-teal-100 bg-teal-800/40 hover:bg-teal-800/80 hover:text-white transition duration-150 flex items-center justify-center gap-1.5 active:scale-[0.99]">
+        <i class="fa-solid fa-comments"></i> Feed
+      </button>
+      <button onclick="switchView('dashboard')" id="tab-dashboard" class="flex-1 py-2 rounded-md text-center border-b-2 border-transparent text-teal-100 bg-teal-800/40 hover:bg-teal-800/80 hover:text-white transition duration-150 flex items-center justify-center gap-1.5 active:scale-[0.99]">
+        <i class="fa-solid fa-chart-line"></i> Dashboard
+      </button>
+      <button onclick="switchView('table')" id="tab-table" class="flex-1 py-2 rounded-md text-center border-b-2 border-transparent text-teal-100 bg-teal-800/40 hover:bg-teal-800/80 hover:text-white transition duration-150 flex items-center justify-center gap-1.5 active:scale-[0.99]">
+        <i class="fa-solid fa-table-list"></i> Ledger Grid
+      </button>
+    </nav>
+  </header>
+
+  <div class="flex-1 overflow-hidden relative">
+
+    <section id="view-feed" class="absolute inset-0 flex flex-col">
+      <div class="bg-white/95 border-b p-3 shadow-xs flex flex-col gap-3 shrink-0 z-10">
+        
+        <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3 justify-between">
+          <div class="flex flex-wrap items-center gap-2 flex-1">
+            <div class="relative flex-1 max-w-xs min-w-[200px]">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+              <input type="text" id="feedSearch" placeholder="Search feed items..." class="w-full text-xs border rounded-lg pl-8 pr-3 py-2 focus:ring-2 focus:ring-[#00a884] focus:outline-none bg-gray-50">
+            </div>
+
+            <select id="feedFilterState" class="text-xs border rounded-lg px-2 py-2 bg-gray-50 text-gray-700 focus:outline-none cursor-pointer">
+              <option value="all">All States</option>
+              <option value="open">🟢 Active / Open</option>
+              <option value="closed">🔒 Closed History</option>
+            </select>
+
+            <select id="feedFilterType" class="text-xs border rounded-lg px-2 py-2 bg-gray-50 text-gray-700 focus:outline-none cursor-pointer">
+              <option value="all">All Task Types</option>
+              <option value="status">Status Polls</option>
+              <option value="decision">Decision Polls</option>
+              <option value="checklist">Checklist Polls</option>
+            </select>
+            
+            <button id="feedClearAllFiltersBtn" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-3 py-2 rounded-lg border transition flex items-center gap-1 active:scale-95">
+              <i class="fa-solid fa-broom text-teal-600"></i> Clear all filters
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2 justify-end shrink-0">
+            <button id="expandAllCardsBtn" class="text-[11px] font-bold text-teal-700 hover:text-teal-900 bg-teal-50 border border-teal-100 px-2.5 py-1.5 rounded-lg transition active:scale-95">
+              <i class="fa-solid fa-angles-down mr-0.5"></i> Expand All
+            </button>
+            <button id="collapseAllCardsBtn" class="text-[11px] font-bold text-gray-600 hover:text-gray-800 bg-gray-100 border border-gray-200 px-2.5 py-1.5 rounded-lg transition active:scale-95">
+              <i class="fa-solid fa-angles-up mr-0.5"></i> Collapse All
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="feedScrollContainer" class="flex-1 overflow-y-auto px-3 py-4 sm:px-4 max-w-xl mx-auto w-full space-y-3.5 custom-scrollbar pb-20">
+        <div id="feedPlaceholder" class="text-center py-20 text-gray-500">
+          <i class="fa-solid fa-circle-notch animate-spin text-3xl text-[#008069] mb-3"></i>
+          <p class="text-sm font-medium">Synchronizing live parameters...</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-dashboard" class="absolute inset-0 overflow-y-auto p-4 max-w-5xl mx-auto hidden custom-scrollbar pb-20 space-y-5">
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <div class="bg-white p-3 rounded-xl border shadow-2xs text-center">
+          <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total Tasks</p>
+          <p id="stat-total" class="text-xl font-black text-gray-800 mt-0.5">0</p>
+        </div>
+        <div class="bg-white p-3 rounded-xl border shadow-2xs text-center">
+          <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Active Run</p>
+          <p id="stat-active" class="text-xl font-black text-[#008069] mt-0.5">0</p>
+        </div>
+        <div class="bg-white p-3 rounded-xl border shadow-2xs text-center">
+          <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Concluded</p>
+          <p id="stat-closed" class="text-xl font-black text-gray-400 mt-0.5">0</p>
+        </div>
+        <div class="bg-white p-3 rounded-xl border shadow-2xs text-center">
+          <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Gross Votes</p>
+          <p id="stat-votes" class="text-xl font-black text-purple-600 mt-0.5">0</p>
+        </div>
+        <div class="bg-white p-3 rounded-xl border shadow-2xs text-center col-span-2 sm:col-span-1">
+          <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Avg Duration</p>
+          <p id="stat-avg-duration" class="text-xl font-black text-amber-600 mt-0.5">0 days</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white p-3.5 rounded-xl border shadow-2xs flex flex-col items-center">
+          <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 self-start"><i class="fa-solid fa-chart-pie mr-1 text-teal-600"></i> Task Lifecycle States</h3>
+          <div class="w-full max-w-[180px]"><canvas id="chartStatus"></canvas></div>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border shadow-2xs flex flex-col items-center">
+          <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 self-start"><i class="fa-solid fa-layer-group mr-1 text-blue-600"></i> Types Distribution</h3>
+          <div class="w-full max-w-[180px]"><canvas id="chartType"></canvas></div>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border shadow-2xs flex flex-col items-center">
+          <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 self-start"><i class="fa-solid fa-hourglass-half mr-1 text-amber-500"></i> Task Lifespan Durations</h3>
+          <div class="w-full max-w-[180px]"><canvas id="chartDurationRange"></canvas></div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border shadow-2xs md:col-span-3">
+          <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2"><i class="fa-solid fa-user-group mr-1 text-purple-600"></i> Team Allocation, Engagement &amp; Operational Efficiency Metrics</h3>
+          <div class="w-full h-[220px]"><canvas id="chartUserPerformance"></canvas></div>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl border shadow-2xs">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2"><i class="fa-solid fa-clock-rotate-left mr-1 text-amber-600"></i> Live Core Workspace Event Log Stream</h3>
+        <div id="dashboardAuditTrail" class="text-xs text-gray-600 divide-y max-h-[140px] overflow-y-auto custom-scrollbar pr-1"></div>
+      </div>
+    </section>
+
+    <section id="view-table" class="absolute inset-0 flex flex-col p-3 sm:p-4 hidden">
+      <div class="bg-white p-3 rounded-t-xl border-x border-t flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-2.5 shadow-2xs">
+        <div class="flex flex-wrap flex-1 gap-2 items-center">
+          <div class="relative flex-1 max-w-xs min-w-[160px]">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+            <input type="text" id="tableSearch" placeholder="Search parameters..." class="w-full text-xs border rounded-lg pl-8 pr-3 py-2 focus:ring-2 focus:ring-[#00a884] focus:outline-none">
+          </div>
+          <select id="tableFilterState" class="text-xs border rounded-lg px-2 py-2 bg-gray-50 text-gray-700 focus:outline-none cursor-pointer">
+            <option value="all">All States</option>
+            <option value="open">🟢 Active / Open</option>
+            <option value="closed">🔒 Closed</option>
+          </select>
+          <select id="tableFilterType" class="text-xs border rounded-lg px-2 py-2 bg-gray-50 text-gray-700 focus:outline-none cursor-pointer">
+            <option value="all">All Task Types</option>
+            <option value="status">Status Polls</option>
+            <option value="decision">Decision Polls</option>
+            <option value="checklist">Checklist Polls</option>
+          </select>
+          <button id="tableClearAllFiltersBtn" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-3 py-2 rounded-lg border transition flex items-center gap-1 active:scale-95">
+            <i class="fa-solid fa-broom text-teal-600"></i> Clear all filters
+          </button>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <button onclick="exportToCSV()" class="flex-1 md:flex-initial bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold text-xs px-3 py-2 rounded-lg border transition flex items-center justify-center gap-1.5 active:scale-95">
+            <i class="fa-solid fa-file-csv text-emerald-700"></i> Export CSV
+          </button>
+          <button onclick="exportToPDF()" class="flex-1 md:flex-initial bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold text-xs px-3 py-2 rounded-lg transition flex items-center justify-center gap-1.5 shadow-2xs active:scale-95">
+            <i class="fa-solid fa-file-pdf"></i> Export Wrapped Report PDF
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-auto border rounded-b-xl bg-white shadow-2xs custom-scrollbar">
+        <table class="w-full text-left border-collapse text-xs min-w-[1250px]">
+          <thead class="bg-gray-50 border-b text-gray-600 font-bold uppercase tracking-wider sticky top-0 z-10">
+            <tr>
+              <th class="p-3">Task Title</th>
+              <th class="p-3">Description</th>
+              <th class="p-3">Type</th>
+              <th class="p-3">State Status</th>
+              <th class="p-3">Created By</th>
+              <th class="p-3">Start Date</th>
+              <th class="p-3">End Date</th>
+              <th class="p-3">Tracked Lifespan</th>
+              <th class="p-3">Total Responses</th>
+              <th class="p-3">Leading Choice</th>
+              <th class="p-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y text-gray-700"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <div id="taskModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden transform scale-95 transition-transform duration-200">
+      <div class="bg-[#008069] text-white p-4 flex justify-between items-center">
+        <h3 class="font-bold text-base"><i class="fa-solid fa-file-circle-plus mr-1.5"></i>Create Task Poll</h3>
+        <button id="closeModalBtn" class="text-white/80 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <form id="taskForm" class="p-4 space-y-3.5 text-xs">
+        <div>
+          <label class="block font-semibold text-gray-700 mb-1">Task Title *</label>
+          <input type="text" id="taskTitle" required placeholder="What needs doing or deciding?" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00a884] text-xs">
+        </div>
+        <div>
+          <label class="block font-semibold text-gray-700 mb-1">Description (Optional)</label>
+          <textarea id="taskDescription" rows="2" placeholder="Add metrics or validation configurations..." class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00a884] text-xs"></textarea>
+        </div>
+        <div>
+          <label class="block font-semibold text-gray-700 mb-1">Poll Context Configuration Template</label>
+          <select id="pollType" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00a884] bg-gray-50 text-xs cursor-pointer">
+            <option value="status">🟢 Status Poll (Not Started, In Progress, Blocked, Done)</option>
+            <option value="decision">🔵 Decision Poll (Yes, No, Unsure)</option>
+            <option value="checklist">🟣 Checklist Poll (Not Done, Done)</option>
+          </select>
+        </div>
+        <div class="flex justify-end gap-2 pt-1">
+          <button type="button" id="cancelModalBtn" class="px-3 py-2 font-medium text-gray-500 hover:text-gray-700">Cancel</button>
+          <button type="submit" class="bg-[#008069] hover:bg-[#01604f] text-white font-bold px-4 py-2 rounded-lg shadow">Deploy Poll</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="deleteConfirmationModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200">
+    <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200 border border-red-100">
+      <div class="p-5 flex flex-col items-center text-center gap-3.5">
+        <div class="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center text-xl shadow-sm border border-red-100">
+          <i class="fa-solid fa-triangle-exclamation animate-bounce"></i>
+        </div>
+        <div>
+          <h3 class="font-black text-gray-900 text-sm tracking-tight">Confirm Task Deletion</h3>
+          <p class="text-xs text-gray-500 mt-1.5 leading-normal">
+            Warning: This process is <strong class="text-red-600 font-bold">permanent and irreversible</strong>. All collected responses and timeline parameters will be wiped from the live registry. Are you sure you want to proceed?
+          </p>
+        </div>
+      </div>
+      <div class="bg-gray-50 px-4 py-3 flex items-center gap-2 justify-end border-t">
+        <button id="cancelDeleteBtn" class="text-xs font-semibold text-gray-500 hover:text-gray-700 px-3 py-2 transition">
+          Cancel, Keep Task
+        </button>
+        <button id="confirmDeleteBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow transition active:scale-95">
+          Yes, Delete Permanently
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCL6iJKRp-WjCgBTtRCuRny14lUOMP9KJg",
+      authDomain: "data-tracker-f11df.firebaseapp.com",
+      databaseURL: "https://data-tracker-f11df-default-rtdb.firebaseio.com",
+      projectId: "data-tracker-f11df",
+      storageBucket: "data-tracker-f11df.firebasestorage.app",
+      messagingSenderId: "462872028246",
+      appId: "1:462872028246:web:eb90490bd650a85d76c7f7"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database(app);
+    const auth = firebase.auth(app);
+
+    window.globalUserUid = null;
+
+    const SoundEffects = {
+      ctx: null,
+      init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+      playVote() {
+        this.init(); const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(490, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(690, this.ctx.currentTime + 0.08);
+        g.gain.setValueAtTime(0.08, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
+        osc.connect(g); g.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.08);
+      },
+      playComplete() {
+        this.init(); const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
+        osc.type = 'triangle'; osc.frequency.setValueAtTime(523, this.ctx.currentTime);
+        osc.frequency.setValueAtTime(659, this.ctx.currentTime + 0.06);
+        osc.frequency.setValueAtTime(784, this.ctx.currentTime + 0.12);
+        g.gain.setValueAtTime(0.12, this.ctx.currentTime); g.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+        osc.connect(g); g.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.3);
+      },
+      playReopen() {
+        this.init(); const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(360, this.ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(220, this.ctx.currentTime + 0.12);
+        g.gain.setValueAtTime(0.08, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+        osc.connect(g); g.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.12);
+      },
+      playDelete() {
+        this.init(); const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(90, this.ctx.currentTime + 0.2);
+        g.gain.setValueAtTime(0.15, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+        osc.connect(g); g.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.2);
+      }
+    };
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    function validateAndSetAlias(requestedAlias, isInitialLoad = false) {
+      if (!requestedAlias || requestedAlias.trim() === "") {
+        if (isInitialLoad) requestedAlias = "Anonymous";
+        else return;
+      }
+      requestedAlias = requestedAlias.trim();
+
+      db.ref('tasks').once('value', (snapshot) => {
+        let isCollision = false;
+        snapshot.forEach((childSnapshot) => {
+          const task = childSnapshot.val();
+          if (task.createdBy && task.createdBy.toLowerCase() === requestedAlias.toLowerCase() && task.uid !== window.globalUserUid) {
+            isCollision = true;
+          }
+        });
+
+        if (isCollision) {
+          alert(`The Alias "${requestedAlias}" is currently claimed by another user ID. Please choose a unique operational handle.`);
+          if (isInitialLoad) {
+            const retry = prompt("Enter your corporate handle initialization moniker:") || "Anonymous";
+            validateAndSetAlias(retry, true);
+          }
+        } else {
+          currentUser = requestedAlias;
+          localStorage.setItem("qt_username", currentUser);
+          document.getElementById("userBadge").innerHTML = `<i class="fa-solid fa-user-circle mr-0.5"></i> Alias: <strong>${escapeHtml(currentUser)}</strong>`;
+          if (!isInitialLoad) {
+            renderApplicationPipeline();
+          }
+        }
+      });
+    }
+
+    let currentUser = localStorage.getItem("qt_username");
+    if (!currentUser || currentUser.trim() === "") {
+      currentUser = prompt("Enter your corporate handle initialization moniker:") || "Anonymous";
+      currentUser = currentUser.trim() === "" ? "Anonymous" : currentUser;
+      localStorage.setItem("qt_username", currentUser);
+    }
+
+    let currentProject = document.getElementById("projectSelector").value;
+    let localDataStore = {};
+    let targetTaskIdForDeletion = null;
+    let manualCardTrackingState = JSON.parse(localStorage.getItem("qt_manual_card_toggles") || "{}");
+
+    const POLL_OPTIONS_MAP = {
+      status: ["Not Started", "In Progress", "Blocked", "Done"],
+      decision: ["👍 Yes", "👎 No", "🤔 Unsure"],
+      checklist: ["⬜ Not Done", "✅ Done"]
+    };
+
+    const feedScrollContainer = document.getElementById("feedScrollContainer");
+    const projectSelector = document.getElementById("projectSelector");
+    const taskModal = document.getElementById("taskModal");
+    const taskForm = document.getElementById("taskForm");
+    const deleteModal = document.getElementById("deleteConfirmationModal");
+    const authStatusPanel = document.getElementById("authStatusPanel");
+    const authStatusText = document.getElementById("authStatusText");
+    const authUidDisplay = document.getElementById("authUidDisplay");
+    const openModalBtn = document.getElementById("openModalBtn");
+
+    let statusChartInstance = null;
+    let typeChartInstance = null;
+    let durationChartInstance = null;
+    let performanceChartInstance = null;
+
+    auth.signInAnonymously()
+      .then(function(userCredential) {
+        const user = userCredential.user;
+        window.globalUserUid = user.uid;
+
+        authStatusPanel.className = "bg-[#004d3e] border border-[#00a884] rounded px-1.5 py-0.5 text-[10px] font-mono inline-flex items-center gap-1 shadow-md";
+        authStatusText.innerHTML = "Auth Success ✔";
+        authUidDisplay.innerText = "UID: " + window.globalUserUid;
+        authUidDisplay.classList.remove("hidden");
+
+        openModalBtn.disabled = false;
+        openModalBtn.className = "bg-[#00a884] hover:bg-[#00cc99] text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1.5 active:scale-95 cursor-pointer opacity-100";
+        openModalBtn.querySelector("i").className = "fa-solid fa-plus text-[10px]";
+
+        validateAndSetAlias(currentUser, true);
+        initDatabaseStreamingChannel();
+      })
+      .catch(function(error) {
+        console.error(" Handshake Loop Exception: ", error);
+        authStatusPanel.className = "bg-red-900 border border-red-500 rounded px-1.5 py-0.5 text-[10px] font-mono inline-flex items-center gap-1 shadow-md";
+        authStatusText.innerHTML = "Auth Failed ❌ " + escapeHtml(error.message);
+      });
+
+    document.getElementById("userBadge").innerHTML = `<i class="fa-solid fa-user-circle mr-0.5"></i> Alias: <strong>${escapeHtml(currentUser)}</strong>`;
+    document.getElementById("userBadge").addEventListener("click", () => {
+      const n = prompt("Modify current operational profile string name:", currentUser);
+      if (n && n.trim() !== "") {
+        validateAndSetAlias(n, false);
+      }
+    });
+
+    function initDatabaseStreamingChannel() {
+      db.ref("tasks").orderByChild("projectId").equalTo(currentProject).on("value", function(snapshot) {
+        localDataStore = snapshot.val() || {};
+        renderApplicationPipeline();
+      }, function(error) {
+        console.error("Pipeline Sync Interrupted:", error);
+      });
+    }
+
+    function renderApplicationPipeline() {
+      const currentActiveTab = document.querySelector(".active-nav-tab")?.id || "tab-feed";
+      if (currentActiveTab === "tab-feed") renderFeedView();
+      if (currentActiveTab === "tab-dashboard") reinitializeVisualAnalyticsCharts();
+      if (currentActiveTab === "tab-table") renderTabularLedgerGrid();
+    }
+
+    window.switchView = function(viewId) {
+      ["feed", "dashboard", "table"].forEach(v => {
+        document.getElementById(`view-${v}`).classList.add("hidden");
+        document.getElementById(`tab-${v}`).classList.remove("active-nav-tab");
+      });
+      document.getElementById(`view-${viewId}`).classList.remove("hidden");
+      document.getElementById(`tab-${viewId}`).classList.add("active-nav-tab");
+      
+      if (viewId === 'feed') renderFeedView();
+      if (viewId === 'dashboard') reinitializeVisualAnalyticsCharts();
+      if (viewId === 'table') renderTabularLedgerGrid();
+    };
+
+    projectSelector.addEventListener("change", (e) => {
+      currentProject = e.target.value;
+      if (window.globalUserUid) initDatabaseStreamingChannel();
+    });
+
+    document.getElementById("feedSearch").addEventListener("input", renderFeedView);
+    document.getElementById("feedFilterState").addEventListener("change", renderFeedView);
+    document.getElementById("feedFilterType").addEventListener("change", renderFeedView);
+    document.getElementById("feedClearAllFiltersBtn").addEventListener("click", () => {
+      document.getElementById("feedSearch").value = "";
+      document.getElementById("feedFilterState").value = "all";
+      document.getElementById("feedFilterType").value = "all";
+      renderFeedView();
+    });
+
+    document.getElementById("tableSearch").addEventListener("input", renderTabularLedgerGrid);
+    document.getElementById("tableFilterState").addEventListener("change", renderTabularLedgerGrid);
+    document.getElementById("tableFilterType").addEventListener("change", renderTabularLedgerGrid);
+    document.getElementById("tableClearAllFiltersBtn").addEventListener("click", () => {
+      document.getElementById("tableSearch").value = "";
+      document.getElementById("tableFilterState").value = "all";
+      document.getElementById("tableFilterType").value = "all";
+      renderTabularLedgerGrid();
+    });
+
+    document.getElementById("expandAllCardsBtn").addEventListener("click", () => {
+      Object.keys(localDataStore).forEach(id => { manualCardTrackingState[id] = false; });
+      localStorage.setItem("qt_manual_card_toggles", JSON.stringify(manualCardTrackingState));
+      renderFeedView();
+    });
+
+    document.getElementById("collapseAllCardsBtn").addEventListener("click", () => {
+      Object.keys(localDataStore).forEach(id => { manualCardTrackingState[id] = true; });
+      localStorage.setItem("qt_manual_card_toggles", JSON.stringify(manualCardTrackingState));
+      renderFeedView();
+    });
+
+    const setModalVisibility = (show) => {
+      if (show) {
+        taskModal.classList.remove("hidden");
+        setTimeout(() => { taskModal.classList.remove("opacity-0"); taskModal.querySelector("div").classList.remove("scale-95"); }, 10);
+      } else {
+        taskModal.classList.add("opacity-0"); taskModal.querySelector("div").classList.add("scale-95");
+        setTimeout(() => taskModal.classList.add("hidden"), 200);
+        taskForm.reset();
+      }
+    };
+    openModalBtn.addEventListener("click", () => setModalVisibility(true));
+    document.getElementById("closeModalBtn").addEventListener("click", () => setModalVisibility(false));
+    document.getElementById("cancelModalBtn").addEventListener("click", () => setModalVisibility(false));
+
+    const setDeleteModalVisibility = (show, targetId = null) => {
+      if (show) {
+        const targetTask = localDataStore[targetId];
+        if (targetTask && targetTask.uid !== window.globalUserUid) {
+          alert("Action denied: You are not authorized to edit or delete records created by another user.");
+          return;
+        }
+        targetTaskIdForDeletion = targetId;
+        deleteModal.classList.remove("hidden");
+        setTimeout(() => { deleteModal.classList.remove("opacity-0"); deleteModal.querySelector("div").classList.remove("scale-95"); }, 10);
+      } else {
+        deleteModal.classList.add("opacity-0"); deleteModal.querySelector("div").classList.add("scale-95");
+        setTimeout(() => deleteModal.classList.add("hidden"), 200);
+        targetTaskIdForDeletion = null;
+      }
+    };
+    document.getElementById("cancelDeleteBtn").addEventListener("click", () => setDeleteModalVisibility(false));
+    document.getElementById("confirmDeleteBtn").addEventListener("click", () => {
+      if (targetTaskIdForDeletion) {
+        db.ref(`tasks/${targetTaskIdForDeletion}`).remove()
+          .then(() => {
+            SoundEffects.playDelete();
+            appendAuditTrailLog("DELETION", `Permanently dropped asset identity hash context allocation point.`);
+            setDeleteModalVisibility(false);
+          })
+          .catch(e => alert("Deletion sync exception occurred: " + e.message));
+      }
+    });
+
+    taskForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const title = document.getElementById("taskTitle").value.trim();
+      const desc = document.getElementById("taskDescription").value.trim();
+      const type = document.getElementById("pollType").value;
+      
+      if (!title) return;
+
+      const newTask = {
+        title: title,
+        description: desc,
+        type: type,
+        status: "open",
+        projectId: currentProject,
+        createdBy: currentUser,
+        uid: window.globalUserUid,
+        createdAt: new Date().toISOString(),
+        closedAt: null,
+        votes: {}
+      };
+
+      db.ref("tasks").push(newTask)
+        .then(() => {
+          SoundEffects.playComplete();
+          appendAuditTrailLog("CREATION", `Deployed new execution tracking block context mapping title: "${title}"`);
+          setModalVisibility(false);
+        })
+        .catch(err => alert("Registry writing fault encountered: " + err.message));
+    });
+
+    function toggleCardExpansion(taskId) {
+      manualCardTrackingState[taskId] = !manualCardTrackingState[taskId];
+      localStorage.setItem("qt_manual_card_toggles", JSON.stringify(manualCardTrackingState));
+      renderFeedView();
+    }
+
+    function calculateTimeMetrics(createdAt, closedAt) {
+      const start = new Date(createdAt);
+      const end = closedAt ? new Date(closedAt) : new Date();
+      const diffMs = Math.max(0, end - start);
+      
+      const totalSecs = Math.floor(diffMs / 1000);
+      const totalMins = Math.floor(totalSecs / 60);
+      const totalHours = Math.floor(totalMins / 60);
+      const days = Math.floor(totalHours / 24);
+      
+      const remHours = totalHours % 24;
+      const remMins = totalMins % 60;
+      
+      let durationStr = "";
+      if (days > 0) {
+        durationStr = `${days}d ${remHours}h ${remMins}m`;
+      } else if (remHours > 0) {
+        durationStr = `${remHours}h ${remMins}m`;
+      } else {
+        durationStr = `${remMins}m`;
+      }
+      
+      return {
+        days: days,
+        hours: remHours,
+        minutes: remMins,
+        durationStr: durationStr,
+        formattedStart: start.toLocaleDateString() + ' ' + start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+        formattedEnd: closedAt ? new Date(closedAt).toLocaleDateString() + ' ' + new Date(closedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "N/A"
+      };
+    }
+
+    function renderFeedView() {
+      const searchVal = document.getElementById("feedSearch").value.toLowerCase();
+      const filterState = document.getElementById("feedFilterState").value;
+      const filterType = document.getElementById("feedFilterType").value;
+
+      feedScrollContainer.innerHTML = "";
+      const keys = Object.keys(localDataStore);
+
+      const filteredKeys = keys.filter(k => {
+        const t = localDataStore[k];
+        if (filterState !== "all" && t.status !== filterState) return false;
+        if (filterType !== "all" && t.type !== filterType) return false;
+        
+        const mTitle = (t.title || "").toLowerCase().includes(searchVal);
+        const mDesc = (t.description || "").toLowerCase().includes(searchVal);
+        const mOwner = (t.createdBy || "").toLowerCase().includes(searchVal);
+        return mTitle || mDesc || mOwner;
+      });
+
+      if (filteredKeys.length === 0) {
+        feedScrollContainer.innerHTML = `
+          <div class="text-center py-16 bg-white border rounded-2xl p-6 shadow-sm">
+            <div class="w-12 h-12 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center text-xl mx-auto mb-2 border border-gray-100">
+              <i class="fa-solid fa-folder-open"></i>
+            </div>
+            <p class="text-xs font-semibold text-gray-500">No active parameter tracking records found matching parameters.</p>
+          </div>`;
+        return;
+      }
+
+      filteredKeys.sort((a,b) => new Date(localDataStore[b].createdAt) - new Date(localDataStore[a].createdAt));
+
+      filteredKeys.forEach(key => {
+        const task = localDataStore[key];
+        const isCollapsed = manualCardTrackingState[key] === undefined ? true : manualCardTrackingState[key];
+        
+        const metrics = calculateTimeMetrics(task.createdAt, task.closedAt);
+        const options = POLL_OPTIONS_MAP[task.type] || [];
+        const voteCounts = {};
+        options.forEach(opt => voteCounts[opt] = 0);
+        
+        let grandTotalVotes = 0;
+        if (task.votes) {
+          Object.values(task.votes).forEach(v => {
+            if (voteCounts[v] !== undefined) {
+              voteCounts[v]++;
+              grandTotalVotes++;
+            }
+          });
+        }
+
+        let leadingChoice = "None";
+        let maxVal = -1;
+        options.forEach(opt => {
+          if (voteCounts[opt] > maxVal && voteCounts[opt] > 0) {
+            maxVal = voteCounts[opt];
+            leadingChoice = opt;
+          }
+        });
+
+        const isOwner = task.uid === window.globalUserUid;
+        const stateIcon = task.status === 'open' 
+          ? '<i class="fa-solid fa-circle-dot text-emerald-500 text-sm animate-pulse"></i>' 
+          : '<i class="fa-solid fa-lock text-gray-400 text-sm"></i>';
+        
+        const typeBadgeColor = task.type === 'status' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
+                               task.type === 'decision' ? 'bg-blue-50 text-blue-700 border-blue-200' : 
+                               'bg-purple-50 text-purple-700 border-purple-200';
+
+        const card = document.createElement("div");
+        card.className = "bg-white border rounded-xl shadow-xs transition-all duration-200 overflow-hidden select-none hover:shadow-sm";
+        
+        if (isCollapsed) {
+          card.innerHTML = `
+            <div onclick="toggleCardExpansion('${key}')" class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-gray-50/80 gap-3">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="shrink-0">${stateIcon}</div>
+                <h3 class="font-bold text-xs sm:text-sm text-gray-800 truncate leading-snug">${escapeHtml(task.title)}</h3>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="text-[10px] px-2 py-0.5 rounded-full font-medium border text-gray-400 bg-gray-50">
+                  ${grandTotalVotes} ${grandTotalVotes === 1 ? 'vote' : 'votes'}
+                </span>
+                <i class="fa-solid fa-chevron-down text-gray-400 text-[11px] transition-transform duration-150"></i>
+              </div>
+            </div>
+          `;
+        } else {
+          let actionButtonBlock = "";
+          if (task.status === "open") {
+            actionButtonBlock = `
+              <button onclick="changeTaskLifecycleState('${key}', 'closed')" class="bg-gray-800 hover:bg-black text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition shadow-xs flex items-center gap-1">
+                <i class="fa-solid fa-lock-open text-[10px]"></i> Conclude Poll
+              </button>
+            `;
+          } else {
+            actionButtonBlock = `
+              <button onclick="changeTaskLifecycleState('${key}', 'open')" class="bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition shadow-xs flex items-center gap-1">
+                <i class="fa-solid fa-arrow-rotate-left text-[10px]"></i> Reopen context
+              </button>
+            `;
+          }
+
+          let pollInteractionInterface = "";
+          if (task.status === "open") {
+            const userVote = task.votes ? task.votes[window.globalUserUid] : null;
+            pollInteractionInterface = `<div class="space-y-1.5 pt-1">`;
+            options.forEach(opt => {
+              const isSelected = userVote === opt;
+              pollInteractionInterface += `
+                <button onclick="castLiveDatabaseVote('${key}', '${escapeHtml(opt)}')" class="w-full text-left text-xs border rounded-xl p-2.5 transition flex justify-between items-center ${isSelected ? 'border-[#00a884] bg-teal-50/50 font-semibold text-teal-900 ring-1 ring-[#00a884]' : 'bg-white hover:bg-gray-50 text-gray-700'}">
+                  <span>${escapeHtml(opt)}</span>
+                  ${isSelected ? '<i class="fa-solid fa-circle-check text-[#00a884] text-sm"></i>' : '<i class="fa-regular fa-circle text-gray-300"></i>'}
+                </button>
+              `;
+            });
+            pollInteractionInterface += `</div>`;
+          } else {
+            pollInteractionInterface = `<div class="bg-gray-50/80 rounded-xl border p-2.5 space-y-2 mt-1">
+              <div class="flex items-center gap-1.5 text-gray-500 font-bold text-[10px] uppercase tracking-wider">
+                <i class="fa-solid fa-circle-info text-gray-400"></i> Poll Concluded Results
+              </div>`;
+            options.forEach(opt => {
+              const count = voteCounts[opt] || 0;
+              const pct = grandTotalVotes > 0 ? Math.round((count / grandTotalVotes) * 100) : 0;
+              const isWinner = opt === leadingChoice && grandTotalVotes > 0;
+              pollInteractionInterface += `
+                <div class="space-y-1 text-xs">
+                  <div class="flex justify-between items-center text-[11px]">
+                    <span class="${isWinner ? 'font-bold text-gray-900' : 'text-gray-600'}">${escapeHtml(opt)}</span>
+                    <span class="font-mono text-[11px] text-gray-500">${count} (${pct}%)</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div class="h-full rounded-full ${isWinner ? 'bg-gradient-to-r from-teal-500 to-emerald-600' : 'bg-gray-400'}" style="width: ${pct}%"></div>
+                  </div>
+                </div>
+              `;
+            });
+            pollInteractionInterface += `</div>`;
+          }
+
+          let closureMetadataBlock = "";
+          if (task.status !== "open") {
+            closureMetadataBlock = `
+              <div class="bg-amber-50/80 border border-amber-200 text-amber-900 rounded-lg p-2.5 text-[11px] space-y-1 mt-1">
+                <div class="flex justify-between">
+                  <span class="opacity-70 font-medium"><i class="fa-solid fa-calendar-check mr-1"></i>Conclusion Time:</span>
+                  <span class="font-semibold">${metrics.formattedEnd}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="opacity-70 font-medium"><i class="fa-solid fa-stopwatch mr-1"></i>Tracked Lifespan:</span>
+                  <span class="font-semibold font-mono">${metrics.durationStr}</span>
+                </div>
+              </div>
+            `;
+          }
+
+          card.innerHTML = `
+            <div class="p-3.5 bg-gray-50/50 border-b flex items-center justify-between cursor-pointer hover:bg-gray-50 gap-3" onclick="toggleCardExpansion('${key}')">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="shrink-0">${stateIcon}</div>
+                <h3 class="font-bold text-xs sm:text-sm text-gray-900 truncate leading-snug">${escapeHtml(task.title)}</h3>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="text-[10px] border px-2 py-0.5 rounded-full font-bold uppercase tracking-wide ${typeBadgeColor}">
+                  ${task.type}
+                </span>
+                <i class="fa-solid fa-chevron-up text-gray-500 text-[11px] transition-transform duration-150"></i>
+              </div>
+            </div>
+
+            <div class="p-3.5 space-y-3.5 bg-white">
+              ${task.description ? `
+                <div>
+                  <h4 class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Context Blueprint</h4>
+                  <p class="text-xs text-gray-600 leading-relaxed bg-gray-50/80 p-2.5 rounded-lg border border-dashed whitespace-pre-wrap">${escapeHtml(task.description)}</p>
+                </div>
+              ` : ''}
+
+              <div>
+                <h4 class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1.5">Poll Matrix Configuration</h4>
+                ${pollInteractionInterface}
+              </div>
+
+              ${closureMetadataBlock}
+
+              <div class="bg-gray-50 p-2.5 rounded-xl text-[11px] text-gray-500 grid grid-cols-2 gap-2 border">
+                <div>
+                  <span class="block text-[9px] text-gray-400 uppercase tracking-wider font-bold">Created By</span>
+                  <span class="font-semibold text-gray-700 truncate block"><i class="fa-solid fa-user-tie text-gray-400 mr-0.5"></i>${escapeHtml(task.createdBy)}</span>
+                </div>
+                <div>
+                  <span class="block text-[9px] text-gray-400 uppercase tracking-wider font-bold">Initiated Timestamp</span>
+                  <span class="font-semibold text-gray-700 block"><i class="fa-regular fa-clock text-gray-400 mr-0.5"></i>${metrics.formattedStart}</span>
+                </div>
+                <div>
+                  <span class="block text-[9px] text-gray-400 uppercase tracking-wider font-bold">Live Data Yield</span>
+                  <span class="font-semibold text-gray-700 block font-mono text-xs text-purple-600"><i class="fa-solid fa-chart-bar text-purple-400 mr-0.5"></i>${grandTotalVotes} items</span>
+                </div>
+                <div>
+                  <span class="block text-[9px] text-gray-400 uppercase tracking-wider font-bold">Consensus Anchor</span>
+                  <span class="font-semibold text-teal-700 truncate block"><i class="fa-solid fa-trophy text-amber-500 mr-0.5"></i>${escapeHtml(leadingChoice)}</span>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between gap-2 pt-1 border-t">
+                <div class="flex items-center gap-1.5">
+                  ${isOwner ? actionButtonBlock : `
+                    <span class="text-[10px] text-gray-400 font-medium italic bg-gray-100 px-2 py-1 rounded-md border border-dashed">
+                      <i class="fa-solid fa-shield mr-0.5"></i> Read-only parameters
+                    </span>
+                  `}
+                </div>
+                ${isOwner ? `
+                  <button onclick="setDeleteModalVisibility(true, '${key}')" class="bg-red-50 hover:bg-red-100 text-red-600 font-bold text-[11px] px-2.5 py-1.5 rounded-lg border border-red-200 transition active:scale-95 flex items-center gap-1">
+                    <i class="fa-solid fa-trash-can text-[10px]"></i> Delete Task
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        }
+
+        feedScrollContainer.appendChild(card);
+      });
+    }
+
+    function renderTabularLedgerGrid() {
+      const searchVal = document.getElementById("tableSearch").value.toLowerCase();
+      const filterState = document.getElementById("tableFilterState").value;
+      const filterType = document.getElementById("tableFilterType").value;
+      const tbody = document.getElementById("tableBody");
+      
+      tbody.innerHTML = "";
+      const keys = Object.keys(localDataStore);
+
+      const filteredKeys = keys.filter(k => {
+        const t = localDataStore[k];
+        if (filterState !== "all" && t.status !== filterState) return false;
+        if (filterType !== "all" && t.type !== filterType) return false;
+        
+        return (t.title || "").toLowerCase().includes(searchVal) ||
+               (t.description || "").toLowerCase().includes(searchVal) ||
+               (t.createdBy || "").toLowerCase().includes(searchVal);
+      });
+
+      if (filteredKeys.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-gray-400 font-medium italic">No rows located inside tracking register array boundaries.</td></tr>`;
+        return;
+      }
+
+      filteredKeys.sort((a,b) => new Date(localDataStore[b].createdAt) - new Date(localDataStore[a].createdAt));
+
+      filteredKeys.forEach(key => {
+        const task = localDataStore[key];
+        const metrics = calculateTimeMetrics(task.createdAt, task.closedAt);
+        const options = POLL_OPTIONS_MAP[task.type] || [];
+        
+        let grandTotalVotes = 0;
+        const voteCounts = {};
+        options.forEach(o => voteCounts[o] = 0);
+        
+        if (task.votes) {
+          Object.values(task.votes).forEach(v => {
+            if (voteCounts[v] !== undefined) { voteCounts[v]++; grandTotalVotes++; }
+          });
+        }
+
+        let leadingChoice = "None";
+        let maxVal = -1;
+        options.forEach(opt => {
+          if (voteCounts[opt] > maxVal && voteCounts[opt] > 0) {
+            maxVal = voteCounts[opt];
+            leadingChoice = opt;
+          }
+        });
+
+        const isOwner = task.uid === window.globalUserUid;
+        const row = document.createElement("tr");
+        row.className = "hover:bg-gray-50/80 transition duration-150 odd:bg-gray-50/30";
+
+        row.innerHTML = `
+          <td class="p-3 font-bold text-gray-900 max-w-[180px] truncate">${escapeHtml(task.title)}</td>
+          <td class="p-3 text-gray-500 max-w-[220px] truncate">${escapeHtml(task.description) || '<span class="text-gray-300 italic">None</span>'}</td>
+          <td class="p-3 uppercase font-mono text-[10px] tracking-wider"><span class="px-2 py-0.5 rounded border ${task.type==='status'?'bg-emerald-50 text-emerald-700 border-emerald-200':task.type==='decision'?'bg-blue-50 text-blue-700 border-blue-200':'bg-purple-50 text-purple-700 border-purple-200'}">${task.type}</span></td>
+          <td class="p-3 font-semibold">${task.status === 'open' ? '<span class="text-emerald-600 flex items-center gap-1">🟢 Active</span>' : '<span class="text-gray-400 flex items-center gap-1">🔒 Closed</span>'}</td>
+          <td class="p-3 text-gray-600 font-medium">${escapeHtml(task.createdBy)}</td>
+          <td class="p-3 font-mono text-[11px] text-gray-500">${metrics.formattedStart}</td>
+          <td class="p-3 font-mono text-[11px] text-gray-500">${metrics.formattedEnd}</td>
+          <td class="p-3 text-gray-600 font-medium font-mono">${metrics.durationStr}</td>
+          <td class="p-3 font-bold font-mono text-center text-purple-600 bg-purple-50/20">${grandTotalVotes}</td>
+          <td class="p-3 font-semibold text-teal-700 truncate max-w-[120px]">${escapeHtml(leadingChoice)}</td>
+          <td class="p-3 text-right">
+            <div class="flex items-center justify-end gap-1.5">
+              ${isOwner ? `
+                <button onclick="changeTaskLifecycleState('${key}', '${task.status === 'open' ? 'closed' : 'open'}')" class="text-[11px] text-gray-700 hover:text-black bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded font-bold border shadow-3xs transition">
+                  ${task.status === 'open' ? 'Close' : 'Reopen'}
+                </button>
+                <button onclick="setDeleteModalVisibility(true, '${key}')" class="text-[11px] text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2 py-1 rounded font-bold border border-red-200 shadow-3xs transition">
+                  Drop
+                </button>
+              ` : '<span class="text-[10px] text-gray-400 italic">Read-only</span>'}
+            </div>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    window.castLiveDatabaseVote = function(taskId, selectedOption) {
+      if (!window.globalUserUid) return;
+      SoundEffects.playVote();
+      db.ref(`tasks/${taskId}/votes/${window.globalUserUid}`).set(selectedOption)
+        .then(() => {
+          appendAuditTrailLog("RESPONSE", `Registered vote value matching choice selection: "${selectedOption}"`);
+        })
+        .catch(err => alert("Registry storage failure node trace dropped context: " + err.message));
+    };
+
+    window.changeTaskLifecycleState = function(taskId, targetState) {
+      const task = localDataStore[taskId];
+      if (task && task.uid !== window.globalUserUid) {
+        alert("Action denied: Unauthorized user identity contextual mutation vector.");
+        return;
+      }
+      
+      const payload = {
+        status: targetState,
+        closedAt: targetState === "closed" ? new Date().toISOString() : null
+      };
+
+      db.ref(`tasks/${taskId}`).update(payload)
+        .then(() => {
+          if (targetState === "closed") {
+            SoundEffects.playComplete();
+            appendAuditTrailLog("CONCLUSION", `Concluded event loop pipeline validation metrics context trace.`);
+          } else {
+            SoundEffects.playReopen();
+            appendAuditTrailLog("REOPEN", `Re-instantiated state parameters for modification sequencing tracking.`);
+          }
+        })
+        .catch(err => alert("Registry update malfunction path trace error: " + err.message));
+    };
+
+    function appendAuditTrailLog(actionTag, logStringText) {
+      const loggerContainer = document.getElementById("dashboardAuditTrail");
+      if (!loggerContainer) return;
+      
+      const logRow = document.createElement("div");
+      logRow.className = "py-1.5 flex items-start gap-2 leading-normal";
+      
+      const timestampText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+      const badgeColors = actionTag === "CREATION" ? "bg-emerald-100 text-emerald-800 border-emerald-200" :
+                          actionTag === "DELETION" ? "bg-red-100 text-red-800 border-red-200" :
+                          actionTag === "CONCLUSION" ? "bg-gray-800 text-white border-black" :
+                          actionTag === "RESPONSE" ? "bg-purple-100 text-purple-800 border-purple-200" :
+                          "bg-amber-100 text-amber-800 border-amber-200";
+
+      logRow.innerHTML = `
+        <span class="font-mono text-gray-400 shrink-0 text-[10px] mt-0.5">${timestampText}</span>
+        <span class="px-1 py-0.5 rounded text-[9px] font-mono font-bold tracking-wider uppercase border shrink-0 ${badgeColors}">${actionTag}</span>
+        <span class="text-gray-700 break-words flex-1">${escapeHtml(logStringText)}</span>
+      `;
+      
+      loggerContainer.insertBefore(logRow, loggerContainer.firstChild);
+    }
+
+    function reinitializeVisualAnalyticsCharts() {
+      const tasks = Object.values(localDataStore);
+      let countOpen = 0, countClosed = 0, countStatus = 0, countDecision = 0, countChecklist = 0, grossVotes = 0;
+      let totalLifespanDays = 0, resolvedTasksCount = 0;
+      
+      const userAllocationMetrics = {};
+      let rangeLess1d = 0, range1to3d = 0, range3to7d = 0, rangePlus7d = 0;
+
+      tasks.forEach(t => {
+        if (t.status === 'open') countOpen++;
+        else countClosed++;
+
+        if (t.type === 'status') countStatus++;
+        else if (t.type === 'decision') countDecision++;
+        else if (t.type === 'checklist') countChecklist++;
+
+        let localTaskVoteCount = 0;
+        if (t.votes) {
+          const votesArray = Object.values(t.votes);
+          localTaskVoteCount = votesArray.length;
+          grossVotes += localTaskVoteCount;
+        }
+
+        const metrics = calculateTimeMetrics(t.createdAt, t.closedAt);
+        if (t.status === 'closed') {
+          totalLifespanDays += metrics.days;
+          resolvedTasksCount++;
+        }
+
+        const calculatedDays = metrics.days;
+        if (calculatedDays < 1) rangeLess1d++;
+        else if (calculatedDays <= 3) range1to3d++;
+        else if (calculatedDays <= 7) range3to7d++;
+        else rangePlus7d++;
+
+        const user = t.createdBy || "Unknown Source";
+        if (!userAllocationMetrics[user]) {
+          userAllocationMetrics[user] = { created: 0, actions: 0 };
+        }
+        userAllocationMetrics[user].created++;
+        userAllocationMetrics[user].actions += localTaskVoteCount;
+      });
+
+      document.getElementById("stat-total").innerText = tasks.length;
+      document.getElementById("stat-active").innerText = countOpen;
+      document.getElementById("stat-closed").innerText = countClosed;
+      document.getElementById("stat-votes").innerText = grossVotes;
+      document.getElementById("stat-avg-duration").innerText = resolvedTasksCount > 0 ? Math.round(totalLifespanDays / resolvedTasksCount) + " days" : "0 days";
+
+      if (statusChartInstance) statusChartInstance.destroy();
+      if (typeChartInstance) typeChartInstance.destroy();
+      if (durationChartInstance) durationChartInstance.destroy();
+      if (performanceChartInstance) performanceChartInstance.destroy();
+
+      const ctxStatus = document.getElementById("chartStatus")?.getContext("2d");
+      if (ctxStatus) {
+        statusChartInstance = new Chart(ctxStatus, {
+          type: 'doughnut',
+          data: {
+            labels: ['Active Run', 'Concluded'],
+            datasets: [{
+              data: [countOpen, countClosed],
+              backgroundColor: ['#00a884', '#9ca3af'],
+              borderWidth: 1
+            }]
+          },
+          options: { plugins: { legend: { display: false } }, responsive: true, maintainAspectRatio: true }
+        });
+      }
+
+      const ctxType = document.getElementById("chartType")?.getContext("2d");
+      if (ctxType) {
+        typeChartInstance = new Chart(ctxType, {
+          type: 'doughnut',
+          data: {
+            labels: ['Status', 'Decision', 'Checklist'],
+            datasets: [{
+              data: [countStatus, countDecision, countChecklist],
+              backgroundColor: ['#10b981', '#3b82f6', '#a855f7'],
+              borderWidth: 1
+            }]
+          },
+          options: { plugins: { legend: { display: false } }, responsive: true, maintainAspectRatio: true }
+        });
+      }
+
+      const ctxDuration = document.getElementById("chartDurationRange")?.getContext("2d");
+      if (ctxDuration) {
+        durationChartInstance = new Chart(ctxDuration, {
+          type: 'polarArea',
+          data: {
+            labels: ['<1d', '1-3d', '3-7d', '>7d'],
+            datasets: [{
+              data: [rangeLess1d, range1to3d, range3to7d, rangePlus7d],
+              backgroundColor: ['rgba(245,158,11,0.7)', 'rgba(59,130,246,0.7)', 'rgba(168,85,247,0.7)', 'rgba(239,68,68,0.7)'],
+              borderWidth: 1
+            }]
+          },
+          options: { plugins: { legend: { display: false } }, responsive: true, maintainAspectRatio: true }
+        });
+      }
+
+      const ctxPerformance = document.getElementById("chartUserPerformance")?.getContext("2d");
+      if (ctxPerformance) {
+        const usersArray = Object.keys(userAllocationMetrics);
+        const tasksCreatedData = usersArray.map(u => userAllocationMetrics[u].created);
+        const dataActionsInteraction = usersArray.map(u => userAllocationMetrics[u].actions);
+
+        performanceChartInstance = new Chart(ctxPerformance, {
+          type: 'bar',
+          data: {
+            labels: usersArray,
+            datasets: [
+              { label: 'Deployed Components', data: tasksCreatedData, backgroundColor: '#008069' },
+              { label: 'Aggregated Engagement Interactions', data: dataActionsInteraction, backgroundColor: '#c084fc' }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+            plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } } }
+          }
+        });
+      }
+    }
+
+    window.exportToCSV = function() {
+      const tasks = Object.values(localDataStore);
+      if (tasks.length === 0) {
+        alert("Export operation halted: Selected datastore parameters partition array target is dry.");
+        return;
+      }
+
+      let csvContent = "data:text/csv;charset=utf-8,Task Title,Description,Type,State Status,Created By,Start Date,End Date,Lifespan,Total Votes\n";
+      
+      tasks.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
+      tasks.forEach(t => {
+        const metrics = calculateTimeMetrics(t.createdAt, t.closedAt);
+        let voteCount = 0;
+        if (t.votes) voteCount = Object.keys(t.votes).length;
+        
+        const rTitle = `"${(t.title || "").replace(/"/g, '""')}"`;
+        const rDesc = `"${(t.description || "").replace(/"/g, '""')}"`;
+        const rType = `"${t.type}"`;
+        const rStatus = `"${t.status}"`;
+        const rUser = `"${(t.createdBy || "").replace(/"/g, '""')}"`;
+        const rStart = `"${metrics.formattedStart}"`;
+        const rEnd = `"${metrics.formattedEnd}"`;
+        const rDuration = `"${metrics.durationStr}"`;
+        
+        csvContent += `${rTitle},${rDesc},${rType},${rStatus},${rUser},${rStart},${rEnd},${rDuration},${voteCount}\n`;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `quicktask_ledger_${currentProject.toLowerCase()}_stream.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    window.exportToPDF = function() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('p', 'mm', 'a4');
+      
+      const tasks = Object.values(localDataStore);
+      
+      let countOpen = 0, countClosed = 0, grossVotes = 0;
+      let countStatus = 0, countDecision = 0, countChecklist = 0;
+      
+      tasks.forEach(t => {
+        if (t.status === 'open') countOpen++; else countClosed++;
+        if (t.type === 'status') countStatus++;
+        else if (t.type === 'decision') countDecision++;
+        else if (t.type === 'checklist') countChecklist++;
+        if (t.votes) grossVotes += Object.keys(t.votes).length;
+      });
+
+      let pageNum = 1;
+      function injectReportHeader(titleLabel) {
+        doc.setFillColor(0, 128, 105);
+        doc.rect(0, 0, 210, 24, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text("QUICKTASK POLLS SYSTEM EXECUTIVE ANALYTICS REPORT", 14, 11);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.text(`PROJECT CHANNEL: SPECIFIED WORKSPACE [${currentProject.toUpperCase()}]`, 14, 16);
+        doc.text(`GENERATION DATESTAMP: ${new Date().toLocaleString()}`, 14, 20);
+        
+        doc.setFont("helvetica", "bold");
+        doc.text(`SECTION ${pageNum}: ${titleLabel.toUpperCase()}`, 196, 14, { align: "right" });
+        
+        doc.setLineWidth(0.3);
+        doc.setDrawColor(0, 77, 62);
+        doc.line(0, 24, 210, 24);
+      }
+
+      function injectReportFooter() {
+        doc.setLineWidth(0.3);
+        doc.setDrawColor(200, 200, 200);
+        doc.line(14, 282, 196, 282);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(120, 120, 120);
+        doc.text("QuickTask Analytics Matrix Registry Engine Architecture Log Trace Node Protocol (A4 Wrapped Report Specification Form).", 14, 286);
+        doc.text(`Page Counter System Identifier Node Reference: [ ${pageNum} ]`, 196, 286, { align: "right" });
+      }
+
+      // --- PAGE 1: HIGH LEVEL SUMMARY & METRICS SUMMARY INTERACTION OVERVIEW ---
+      injectReportHeader("Executive Data Metrics Overview Summary");
+      
+      doc.setTextColor(40, 40, 40);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("1. QUANTITATIVE ANALYSIS CORE METRICS SUMMARY BLOCK", 14, 34);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9.5);
+      doc.text("Below is the compiled high-level statistical summary across the operational pipeline. These indicators reflect total deployment metrics and overall interaction counts.", 14, 40);
+      
+      const statSummariesData = [
+        ["Core Tracking Cluster Metric Type", "Live Registry Value Allocation Graph Count Mapping Parameter"],
+        ["Target Filter Project Context Group", currentProject],
+        ["Aggregated Context Elements Count (Total Tasks)", `${tasks.length} Deployed Records`],
+        ["Active Execution Elements Counter (Active Polls)", `${countOpen} Open Run Nodes`],
+        ["Concluded State Context Points (Closed History)", `${countClosed} Finalized Invariants`],
+        ["Gross Workspace Response Points Captured (Total Votes)", `${grossVotes} Input Interventions`],
+        ["Status Context Distribution Pattern Ratio", `${countStatus} Status Polls`],
+        ["Decision Matrix Structure Ratio Counts", `${countDecision} Decision Polls`],
+        ["Checklist Verification Points Allocation Elements", `${countChecklist} Checklist Polls`]
+      ];
+
+      doc.autoTable({
+        startY: 44,
+        head: [statSummariesData[0]],
+        body: statSummariesData.slice(1),
+        theme: 'striped',
+        headStyles: { fillColor: [0, 77, 62], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
+        bodyStyles: { fontStyle: 'normal', fontSize: 9.5, textColor: [50, 50, 50] },
+        columnStyles: { 0: { fontStyle: 'bold', width: 85 }, 1: { width: 97 } },
+        margin: { left: 14, right: 14 }
+      });
+
+      let nextY = doc.lastAutoTable.finalY + 10;
+      
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("2. OPERATIONAL INSIGHTS & STRUCTURAL INTEGRITY ANALYSIS", 14, nextY);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9.5);
+      nextY += 6;
+      
+      const analyticalNarrativeText = `The structural data yield mapping configuration for workspace [${currentProject}] demonstrates an interaction density balance sheet score of ${grossVotes} metrics points distributed over ${tasks.length} architectural parameters. Open active nodes represent ${Math.round((countOpen/(tasks.length||1))*100)}% of the tracking array matrix capacity, requiring monitoring vectors. Concluded records have successfully written back to the primary database ledger and are completely locked from external modification workflows, guaranteeing high corporate operational validation integrity standards.`;
+      
+      const splitNarrativeLines = doc.splitTextToSize(analyticalNarrativeText, 182);
+      doc.text(splitNarrativeLines, 14, nextY);
+      
+      injectReportFooter();
+
+      // --- PAGE 2+: COMPREHENSIVE DETAIL ROWS (THE LEDGER REGISTER DEEP LOG MATRIX) ---
+      pageNum++;
+      doc.addPage();
+      injectReportHeader("Comprehensive Ledger Grid Detail Matrix Register");
+      
+      doc.setTextColor(40, 40, 40);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("3. DEEP TRANSACTION LOG TRACKING RECORD INDEX BLOCK", 14, 34);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9.5);
+      doc.text("The complete ledger log grid of the specified operational channel database structure is listed below, detailing lifespan, responses, and anchor points.", 14, 40);
+
+      const tableRowsData = [];
+      tasks.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      tasks.forEach(t => {
+        const timeMetrics = calculateTimeMetrics(t.createdAt, t.closedAt);
+        let taskTotalVotes = 0;
+        const localVoteMap = {};
+        const opts = POLL_OPTIONS_MAP[t.type] || [];
+        opts.forEach(o => localVoteMap[o] = 0);
+        
+        if (t.votes) {
+          Object.values(t.votes).forEach(v => {
+            if (localVoteMap[v] !== undefined) { localVoteMap[v]++; taskTotalVotes++; }
+          });
+        }
+        
+        let leadChoiceText = "None";
+        let trackingMax = -1;
+        opts.forEach(o => {
+          if (localVoteMap[o] > trackingMax && localVoteMap[o] > 0) {
+            trackingMax = localVoteMap[o];
+            leadChoiceText = o;
+          }
+        });
+
+        const statusLabelText = t.status === 'open' ? "🟢 OPEN" : "🔒 CLOSED";
+        
+        let detailsStringText = "";
+        opts.forEach(o => {
+          const count = localVoteMap[o] || 0;
+          const percentage = taskTotalVotes > 0 ? Math.round((count / taskTotalVotes) * 100) : 0;
+          detailsStringText += `${o}: ${count} (${percentage}%)\n`;
+        });
+        
+        if (t.description) {
+          detailsStringText += `\nDesc: ${t.description}`;
+        }
+
+        tableRowsData.push([
+          t.title || "Untitled Task",
+          t.type.toUpperCase(),
+          statusLabelText,
+          t.createdBy || "System",
+          `${timeMetrics.formattedStart}\nTo:\n${timeMetrics.formattedEnd}`,
+          timeMetrics.durationStr,
+          `${taskTotalVotes} votes\n\nWinner:\n${leadChoiceText}`,
+          detailsStringText
+        ]);
+      });
+
+      doc.autoTable({
+        startY: 44,
+        head: [["Task Title", "Type", "State Status", "Created By", "Timeline Bounds", "Lifespan", "Metrics Anchor", "Deep Yield breakdown Breakdown & Options Analysis"]],
+        body: tableRowsData,
+        theme: 'grid',
+        headStyles: { fillColor: [0, 128, 105], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+        bodyStyles: { fontSize: 8, textColor: [60, 60, 60], overflow: 'linebreak' },
+        columnStyles: {
+          0: { fontStyle: 'bold', width: 26 },
+          1: { width: 14 },
+          2: { fontStyle: 'bold', width: 15 },
+          3: { width: 18 },
+          4: { fontSize: 7, fontStyle: 'italic', width: 24 },
+          5: { width: 16 },
+          6: { width: 22, fontStyle: 'bold' },
+          7: { fontSize: 7.5, width: 47 }
+        },
+        margin: { left: 14, right: 14 },
+        didDrawPage: function(data) {
+          injectReportFooter();
+          pageNum++;
+          data.settings.margin.top = 28;
+          
+          if(data.cursor.y > 20) {
+            injectReportHeader("Comprehensive Ledger Grid Detail Matrix Register Continuation");
+          }
+        }
+      });
+
+      doc.save(`quicktask_executive_wrapped_report_${currentProject.toLowerCase()}_a4.pdf`);
+    };
+  </script>
+</body>
+</html>
