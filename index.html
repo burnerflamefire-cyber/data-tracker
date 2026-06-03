@@ -50,10 +50,20 @@
       min-width: 0px !important;
       max-width: 0px !important;
       overflow: hidden !important;
+      padding: 0 !important;
+      border: none !important;
     }
     .collapsed-pane .pane-content {
       opacity: 0;
       pointer-events: none;
+    }
+    /* Restore Ribbon Triggers */
+    .restore-ribbon {
+      display: none;
+    }
+    .collapsed-pane + .restore-ribbon,
+    .collapsed-pane + .pane-resizer + .restore-ribbon {
+      display: flex;
     }
   </style>
 </head>
@@ -76,25 +86,30 @@
       </div>
     </div>
     
-    <div id="headerDetailsExtensionZone" class="flex flex-wrap items-center gap-x-4 gap-y-1 text-blue-100 font-mono text-[11px] bg-blue-950/40 px-3 py-1.5 rounded-md border border-blue-800/60 shadow-inner">
-      <div class="flex items-center gap-1">
-        <i class="fa-solid fa-calendar-days text-[#A6CDC6]"></i>
-        <span>FY: <strong id="fyDisplay" class="text-white font-bold">--/--</strong></span>
+    <div class="flex flex-col items-end gap-1">
+      <div class="text-[9px] font-mono text-blue-200 uppercase tracking-wider bg-blue-950/30 px-2 py-0.5 rounded border border-blue-800/30">
+        National Treasury Cycle: April 01 — March 31
       </div>
-      <div class="h-3 border-l border-blue-800 hidden sm:block"></div>
-      <div class="flex items-center gap-1">
-        <i class="fa-solid fa-chart-pie text-[#A6CDC6]"></i>
-        <span>Period: <strong id="fqDisplay" class="text-white font-bold">--</strong></span>
-      </div>
-      <div class="h-3 border-l border-blue-800 hidden sm:block"></div>
-      <div class="flex items-center gap-1">
-        <i class="fa-solid fa-hourglass-half text-[#A6CDC6]"></i>
-        <span>Elapsed: <strong id="fyPercentDisplay" class="text-white font-bold">--%</strong></span>
-      </div>
-      <div class="h-3 border-l border-blue-800 hidden md:block"></div>
-      <div class="flex items-center gap-1">
-        <i class="fa-solid fa-clock text-[#A6CDC6]"></i>
-        <span>Countdown: <strong id="fyCountdownDisplay" class="text-white font-bold">--d --h</strong></span>
+      <div id="headerDetailsExtensionZone" class="flex flex-wrap items-center gap-x-4 gap-y-1 text-blue-100 font-mono text-[11px] bg-blue-950/40 px-3 py-1.5 rounded-md border border-blue-800/60 shadow-inner">
+        <div class="flex items-center gap-1">
+          <i class="fa-solid fa-calendar-days text-[#A6CDC6]"></i>
+          <span>Current FY: <strong id="fyDisplay" class="text-white font-bold">--/--</strong></span>
+        </div>
+        <div class="h-3 border-l border-blue-800 hidden sm:block"></div>
+        <div class="flex items-center gap-1">
+          <i class="fa-solid fa-chart-pie text-[#A6CDC6]"></i>
+          <span>Period: <strong id="fqDisplay" class="text-white font-bold">--</strong></span>
+        </div>
+        <div class="h-3 border-l border-blue-800 hidden sm:block"></div>
+        <div class="flex items-center gap-1">
+          <i class="fa-solid fa-hourglass-half text-[#A6CDC6]"></i>
+          <span>Elapsed: <strong id="fyPercentDisplay" class="text-white font-bold">--%</strong></span>
+        </div>
+        <div class="h-3 border-l border-blue-800 hidden md:block"></div>
+        <div class="flex items-center gap-1">
+          <i class="fa-solid fa-clock text-[#A6CDC6]"></i>
+          <span>Countdown to <span id="nextFyLabel" class="text-[#A6CDC6] font-bold">FY--/--</span>: <strong id="fyCountdownDisplay" class="text-white font-bold">--d --h</strong></span>
+        </div>
       </div>
     </div>
   </header>
@@ -111,17 +126,20 @@
       </button>
     </div>
 
-    <div id="secondaryNavPane" class="bg-[#0F2027] border-r border-slate-800 text-slate-200 flex flex-col shrink-0 relative collapsed-pane" style="width: 200px; min-width: 140px; max-width: 350px;">
+    <div id="secondaryNavPane" class="bg-[#0F2027] border-r border-slate-800 text-slate-200 flex flex-col shrink-0 relative" style="width: 200px; min-width: 140px; max-width: 350px;">
       <div class="pane-content flex flex-col h-full w-full overflow-hidden">
         <div class="p-3 border-b border-slate-800 flex justify-between items-center bg-black/20">
           <h2 id="secondaryNavHeading" class="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Pages</h2>
-          <button onclick="collapsePane('secondaryNavPane')" class="text-slate-400 hover:text-white p-1"><i class="fa-solid fa-chevron-left"></i></button>
+          <button onclick="collapsePane('secondaryNavPane')" class="text-slate-400 hover:text-white p-1" title="Collapse Panel"><i class="fa-solid fa-chevron-left"></i></button>
         </div>
         <div id="secondaryNavButtonsZone" class="p-2 flex flex-col gap-1 overflow-y-auto custom-scrollbar flex-1">
           </div>
       </div>
     </div>
     <div class="pane-resizer" id="resizer-secondaryNav"></div>
+    <button onclick="expandPane('secondaryNavPane')" class="restore-ribbon hidden w-6 bg-[#0F2027] hover:bg-[#152e38] text-slate-400 hover:text-white border-r border-slate-800 items-center justify-center cursor-pointer transition-colors shrink-0 z-10" title="Expand Pages Panel">
+      <div class="vertical-text transform rotate-180 font-bold uppercase tracking-widest text-[9px]"><i class="fa-solid fa-chevron-right mb-2"></i> Pages</div>
+    </button>
 
     <div id="dataInputPane" class="bg-white border-r border-gray-200 flex flex-col shrink-0 relative" style="width: 320px; min-width: 200px; max-width: 600px;">
       <div class="pane-content flex flex-col h-full w-full overflow-hidden">
@@ -129,7 +147,7 @@
           <div class="flex items-center gap-1.5 font-bold text-gray-700 uppercase tracking-wider text-[10px]">
             <i class="fa-solid fa-pen-to-square text-[#003161]"></i> Data Input Engine
           </div>
-          <button onclick="collapsePane('dataInputPane')" class="text-gray-400 hover:text-gray-600 p-1"><i class="fa-solid fa-chevron-left"></i></button>
+          <button onclick="collapsePane('dataInputPane')" class="text-gray-400 hover:text-gray-600 p-1" title="Collapse Panel"><i class="fa-solid fa-chevron-left"></i></button>
         </div>
         <div class="p-4 overflow-y-auto custom-scrollbar flex-1 bg-gray-50/50">
           <div class="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400 mt-4">
@@ -139,6 +157,9 @@
       </div>
     </div>
     <div class="pane-resizer" id="resizer-dataInput"></div>
+    <button onclick="expandPane('dataInputPane')" class="restore-ribbon hidden w-6 bg-gray-100 hover:bg-gray-200 text-gray-500 border-r border-gray-200 items-center justify-center cursor-pointer transition-colors shrink-0 z-10" title="Expand Input Engine">
+      <div class="vertical-text transform rotate-180 font-bold uppercase tracking-widest text-[9px]"><i class="fa-solid fa-chevron-right mb-2"></i> Input Engine</div>
+    </button>
 
     <div id="informationPane" class="bg-white flex flex-col flex-1 relative min-w-[250px]">
       <div class="pane-content flex flex-col h-full w-full overflow-hidden">
@@ -146,7 +167,7 @@
           <div class="flex items-center gap-1.5 font-bold text-gray-700 uppercase tracking-wider text-[10px]">
             <i class="fa-solid fa-circle-info text-blue-800"></i> Analytics &amp; Ledger Information
           </div>
-          <button onclick="collapsePane('informationPane')" class="text-gray-400 hover:text-gray-600 p-1"><i class="fa-solid fa-expand"></i></button>
+          <button onclick="collapsePane('informationPane')" class="text-gray-400 hover:text-gray-600 p-1" title="Collapse Panel"><i class="fa-solid fa-compress"></i></button>
         </div>
         <div class="p-4 overflow-y-auto custom-scrollbar flex-1">
           <div class="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400 mt-4">
@@ -156,6 +177,9 @@
       </div>
     </div>
     <div class="pane-resizer" id="resizer-information"></div>
+    <button onclick="expandPane('informationPane')" class="restore-ribbon hidden w-6 bg-gray-100 hover:bg-gray-200 text-gray-500 border-r border-gray-200 items-center justify-center cursor-pointer transition-colors shrink-0 z-10" title="Expand Analytics Panel">
+      <div class="vertical-text transform rotate-180 font-bold uppercase tracking-widest text-[9px]"><i class="fa-solid fa-expand mb-2"></i> Analytics Matrix</div>
+    </button>
 
     <div id="filtersPane" class="bg-gray-50 border-l border-gray-200 flex flex-col shrink-0 relative" style="width: 240px; min-width: 160px; max-width: 400px;">
       <div class="pane-content flex flex-col h-full w-full overflow-hidden">
@@ -163,7 +187,7 @@
           <div class="flex items-center gap-1.5 font-bold text-gray-700 uppercase tracking-wider text-[10px]">
             <i class="fa-solid fa-filter text-amber-700"></i> Global Filters
           </div>
-          <button onclick="collapsePane('filtersPane')" class="text-gray-400 hover:text-gray-600 p-1"><i class="fa-solid fa-chevron-right"></i></button>
+          <button onclick="collapsePane('filtersPane')" class="text-gray-400 hover:text-gray-600 p-1" title="Collapse Panel"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
         <div class="p-4 overflow-y-auto custom-scrollbar flex-1">
           <div class="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400 mt-4">
@@ -172,6 +196,9 @@
         </div>
       </div>
     </div>
+    <button onclick="expandPane('filtersPane')" class="restore-ribbon hidden w-6 bg-gray-100 hover:bg-gray-200 text-gray-500 border-l border-gray-200 items-center justify-center cursor-pointer transition-colors shrink-0 z-10" title="Expand Filters Panel">
+      <div class="vertical-text transform rotate-180 font-bold uppercase tracking-widest text-[9px]"><i class="fa-solid fa-filter mb-2"></i> Global Filters</div>
+    </button>
 
   </div>
 
@@ -225,7 +252,6 @@
       
       let fyStartYear, fyEndYear;
       
-      // Government financial cycle baseline setup: April 1st of current cycle to March 31st of following year
       if (now.getMonth() >= 3) { // April onwards
         fyStartYear = currentYear;
         fyEndYear = currentYear + 1;
@@ -239,11 +265,11 @@
       
       // Calculate active Quarter designation
       let quarter = "Q1";
-      const monthIndex = now.getMonth(); // 0-indexed
-      if (monthIndex >= 3 && monthIndex <= 5) quarter = "Q1";      // Apr - Jun
-      else if (monthIndex >= 6 && monthIndex <= 8) quarter = "Q2"; // Jul - Sep
-      else if (monthIndex >= 9 && monthIndex <= 11) quarter = "Q3"; // Oct - Dec
-      else if (monthIndex >= 0 && monthIndex <= 2) quarter = "Q4";  // Jan - Mar
+      const monthIndex = now.getMonth();
+      if (monthIndex >= 3 && monthIndex <= 5) quarter = "Q1";
+      else if (monthIndex >= 6 && monthIndex <= 8) quarter = "Q2";
+      else if (monthIndex >= 9 && monthIndex <= 11) quarter = "Q3";
+      else if (monthIndex >= 0 && monthIndex <= 2) quarter = "Q4";
       
       // Percentage Elapsed calculations
       const totalDuration = fyEndDate - fyStartDate;
@@ -257,22 +283,29 @@
       const daysRemaining = Math.floor(timeDelta / (1000 * 60 * 60 * 24));
       const hoursRemaining = Math.floor((timeDelta % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       
+      // Label generation for Next Financial Year Target Identification
+      const nextFyStart = fyEndYear;
+      const nextFyEnd = fyEndYear + 1;
+      const nextFyString = `FY${nextFyStart}/${nextFyEnd.toString().substring(2)}`;
+      
       // DOM Injection bindings
       document.getElementById("fyDisplay").innerText = `${fyStartYear}/${fyEndYear.toString().substring(2)}`;
       document.getElementById("fqDisplay").innerText = quarter;
       document.getElementById("fyPercentDisplay").innerText = `${percentElapsed}%`;
+      document.getElementById("nextFyLabel").innerText = nextFyString;
       document.getElementById("fyCountdownDisplay").innerText = `${daysRemaining}d ${hoursRemaining}h`;
     }
     
     // Core Clock Initializer Initialization
     updateGovernmentFinancialMetrics();
-    setInterval(updateGovernmentFinancialMetrics, 60000); // Compute fresh metrics every minute
+    setInterval(updateGovernmentFinancialMetrics, 60000);
 
     // --- STRUCTURAL SHELL INTERACTION CONTROLLER MECHANICS ---
     let activeNavContext = null;
+    let selectedPagesStore = { "Programme": 0, "Project": 0 }; // Remembers separate selections per context
 
     // Secondary Navigation Pane Content Generation & Display Controller
-    function toggleSecondaryNav(context) {
+    function toggleSecondaryNav(context, forceOpen = false) {
       const pane = document.getElementById('secondaryNavPane');
       const heading = document.getElementById('secondaryNavHeading');
       const zone = document.getElementById('secondaryNavButtonsZone');
@@ -280,28 +313,25 @@
       const btnProgramme = document.getElementById('btnNavProgramme');
       const btnProject = document.getElementById('btnNavProject');
       
-      // Clear visual button indicator hooks
+      if (!forceOpen && activeNavContext === context && !pane.classList.contains('collapsed-pane')) {
+        collapsePane('secondaryNavPane');
+        return;
+      }
+      
+      // Clear visual buttons baseline
       btnProgramme.classList.remove('bg-[#003161]', 'text-white', 'border-blue-400');
       btnProject.classList.remove('bg-[#003161]', 'text-white', 'border-blue-400');
       btnProgramme.classList.add('text-blue-300/70', 'border-transparent');
       btnProject.classList.add('text-blue-300/70', 'border-transparent');
       
-      if (activeNavContext === context && !pane.classList.contains('collapsed-pane')) {
-        pane.classList.add('collapsed-pane');
-        activeNavContext = null;
-        return;
-      }
-      
       activeNavContext = context;
       heading.innerText = `${context} Level Pages`;
       pane.classList.remove('collapsed-pane');
       
-      // Highlighting selected primary pillar anchor item
       const activeBtn = context === 'Programme' ? btnProgramme : btnProject;
       activeBtn.classList.remove('text-blue-300/70', 'border-transparent');
       activeBtn.classList.add('bg-[#003161]', 'text-white', 'border-blue-400');
       
-      // Clear and insert functional page layout selection anchors
       zone.innerHTML = '';
       const dummyPages = ['Overview Matrix', 'Financial Engine Metrics', 'Performance Analytics', 'Audit Logging Ledger'];
       
@@ -309,7 +339,14 @@
         const btn = document.createElement('button');
         btn.className = "w-full text-left py-2 px-3 rounded text-[11px] text-slate-300 hover:bg-[#003161]/40 hover:text-white transition flex items-center gap-2 border border-transparent hover:border-slate-700/80";
         btn.innerHTML = `<i class="fa-solid fa-file-invoice text-slate-500 text-[10px]"></i> <span>${pageName}</span>`;
+        
+        // Read selected cache database memory logs to highlight correctly
+        if (selectedPagesStore[context] === idx) {
+          btn.classList.add('bg-[#001F3F]', 'text-white', 'border-blue-800/80', 'font-semibold');
+        }
+        
         btn.onclick = () => {
+          selectedPagesStore[context] = idx;
           document.querySelectorAll('#secondaryNavButtonsZone button').forEach(b => b.classList.remove('bg-[#001F3F]', 'text-white', 'border-blue-800/80', 'font-semibold'));
           btn.classList.add('bg-[#001F3F]', 'text-white', 'border-blue-800/80', 'font-semibold');
         };
@@ -320,15 +357,21 @@
     // Explicit Utility wrapper to enforce global component breakdown states
     function collapsePane(paneId) {
       document.getElementById(paneId).classList.add('collapsed-pane');
-      if(paneId === 'secondaryNavPane') {
+      if (paneId === 'secondaryNavPane') {
         document.getElementById('btnNavProgramme').classList.remove('bg-[#003161]', 'text-white', 'border-blue-400');
         document.getElementById('btnNavProject').classList.remove('bg-[#003161]', 'text-white', 'border-blue-400');
+        document.getElementById('btnNavProgramme').classList.add('text-blue-300/70', 'border-transparent');
+        document.getElementById('btnNavProject').classList.add('text-blue-300/70', 'border-transparent');
         activeNavContext = null;
       }
     }
 
     function expandPane(paneId) {
       document.getElementById(paneId).classList.remove('collapsed-pane');
+      if (paneId === 'secondaryNavPane') {
+        // Restore context state parameters if standard data targets exist
+        toggleSecondaryNav(activeNavContext || 'Programme', true);
+      }
     }
 
     // --- SEAMLESS ADVANCED MOUSE & POINTER DRAG RESIZING MECHANICS ---
@@ -345,7 +388,6 @@
         const initialWidth = targetPane.getBoundingClientRect().width;
         const startX = initEvent.clientX;
         
-        // Ensure standard toggle layouts are overridden when user explicitly modifies space allocation bounds
         targetPane.classList.remove('collapsed-pane');
 
         function globalMouseMoveDragEngine(moveEvent) {
@@ -354,6 +396,13 @@
           
           const minAllowed = parseInt(targetPane.style.minWidth || '100');
           const maxAllowed = parseInt(targetPane.style.maxWidth || '800');
+          
+          // Collapse cleanly if dragged below minimum limit thresholds
+          if (engineeredWidth < minAllowed - 30) {
+            collapsePane(targetPaneId);
+            globalMouseUpTerminationEngine();
+            return;
+          }
           
           if(engineeredWidth < minAllowed) engineeredWidth = minAllowed;
           if(engineeredWidth > maxAllowed) engineeredWidth = maxAllowed;
@@ -376,6 +425,12 @@
     initializeResizerMechanics('resizer-secondaryNav', 'secondaryNavPane', true);
     initializeResizerMechanics('resizer-dataInput', 'dataInputPane', true);
     initializeResizerMechanics('resizer-information', 'informationPane', true);
+
+    // Default System State Setup Framework
+    document.addEventListener("DOMContentLoaded", () => {
+      // Auto-load Programme context map to show clear initial UI state
+      toggleSecondaryNav('Programme', true);
+    });
 
   </script>
 </body>
