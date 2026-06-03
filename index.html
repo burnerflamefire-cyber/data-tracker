@@ -1,13 +1,15 @@
-<!DOCTYPE html><html lang="en"><head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>QuickTask Polls PRO v4.0 - Engineered Enterprise Ledger & Feed Engine</title>
+  <title>Project Data Tracker</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   
   <style>
     body {
@@ -23,358 +25,140 @@
       background-color: rgba(0, 0, 0, 0.15);
       border-radius: 10px;
     }
-    .active-nav-tab {
-      background-color: #004d3e !important;
-      color: #ffffff !important;
-      border-color: #ffffff !important;
-      box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+    /* Vertical Text Rotation utility */
+    .vertical-text {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      white-space: nowrap;
     }
-    #authStatusPanel {
-      transition: all 0.2s ease-in-out;
+    /* Resizer Drag Handle Mechanics */
+    .pane-resizer {
+      width: 6px;
+      cursor: col-resize;
+      background-color: rgba(0,0,0,0.05);
+      transition: background-color 0.15s;
     }
-    .auth-panel-success {
-      background-color: #004d3e !important;
-      border-color: #00a884 !important;
+    .pane-resizer:hover, .pane-resizer.dragging {
+      background-color: #008069;
     }
-    .auth-panel-failed {
-      background-color: #721c24 !important;
-      border-color: #f5c6cb !important;
+    /* Handle collapsed states elegantly */
+    .pane-content {
+      transition: opacity 0.15s ease-out;
     }
-    
-    /* Cross Axis Grid Lock Mechanics */
-    .sticky-th {
-      position: sticky !important;
-      top: 0;
-      z-index: 30;
-      background-color: #f9fafb;
+    .collapsed-pane {
+      width: 0px !important;
+      min-width: 0px !important;
+      max-width: 0px !important;
+      overflow: hidden !important;
     }
-    .sticky-col {
-      position: sticky !important;
-      left: 0;
-      z-index: 20;
-      background-color: #ffffff;
-      box-shadow: 2px 0 4px -2px rgba(0,0,0,0.15);
+    .collapsed-pane .pane-content {
+      opacity: 0;
+      pointer-events: none;
     }
-    tr:nth-child(even) .sticky-col {
-      background-color: #f9fafb;
-    }
-    .sticky-intersect {
-      position: sticky !important;
-      top: 0;
-      left: 0;
-      z-index: 40 !important;
-      background-color: #f3f4f6 !important;
-    }
-    
-    /* Smooth height animations */
-    .collapsible-section {
-      transition: max-height 0.25s ease-out, opacity 0.2s ease-out, padding 0.2s ease-out;
-      max-height: 1000px;
-      overflow: hidden;
-    }
-    .collapsible-section.collapsed {
-      max-height: 0 !important;
-      opacity: 0 !important;
-      padding-top: 0 !important;
-      padding-bottom: 0 !important;
-      margin-top: 0 !important;
-      margin-bottom: 0 !important;
-      border: none !important;
-    }
-  </style></head><body class="h-screen flex flex-col overflow-hidden text-gray-800 antialiased select-none text-xs">
+  </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-gray-800 antialiased select-none text-xs">
 
-  <div id="appPushNotificationWrapper" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-[280px] w-full"></div>
-
-  <header class="bg-[#008069] text-white px-2.5 py-2 shadow-md flex flex-col gap-2 shrink-0 z-20">
-    <div class="flex flex-col gap-1.5 sm:flex-row sm:justify-between sm:items-center">
-      <div class="flex items-center gap-2">
-        <div class="bg-white text-[#008069] rounded-full w-7 h-7 flex items-center justify-center font-bold text-sm shadow shrink-0">
-          <i class="fa-solid fa-square-poll-horizontal"></i>
-        </div>
-        <div class="min-w-0 flex-1">
-          <h1 class="font-bold text-sm sm:text-base leading-tight truncate">QuickTask Polls</h1>
-          <div class="flex flex-wrap items-center gap-1.5 mt-0.5">
-            <p id="userBadge" class="text-[10px] text-teal-100 opacity-90 cursor-pointer hover:underline truncate"></p>
-            <div id="authStatusPanel" class="bg-teal-900/60 border border-teal-700/50 rounded px-1 py-0.5 text-[9px] font-mono inline-flex items-center gap-0.5 shadow-inner max-w-full truncate">
-              <span id="authStatusText" class="text-teal-200 truncate"><i class="fa-solid fa-circle-notch animate-spin mr-0.5"></i>Connecting...</span>
-              <span id="authUidDisplay" class="text-white hidden ml-1 pl-1 border-l border-teal-700 truncate"></span>
-            </div>
+  <header class="bg-[#008069] text-white px-4 py-2.5 shadow-md flex justify-between items-center shrink-0 z-20">
+    <div class="flex items-center gap-3">
+      <div class="bg-white text-[#008069] rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shadow shrink-0">
+        <i class="fa-solid fa-layer-group"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-base leading-tight tracking-wide">Project Data Tracker</h1>
+        <div class="flex items-center gap-2 mt-0.5">
+          <p id="userBadge" class="text-[10px] text-teal-100 opacity-90"></p>
+          <div id="authStatusPanel" class="bg-teal-900/60 border border-teal-700/50 rounded px-1.5 py-0.5 text-[9px] font-mono inline-flex items-center gap-1 shadow-inner">
+            <span id="authStatusText" class="text-teal-200"><i class="fa-solid fa-circle-notch animate-spin mr-0.5"></i>Connecting System Auth...</span>
+            <span id="authUidDisplay" class="text-white hidden ml-1 pl-1 border-l border-teal-700"></span>
           </div>
         </div>
       </div>
-      
-      <div class="flex items-center gap-1.5 w-full sm:w-auto">
-        <select id="projectSelector" class="flex-1 sm:flex-initial bg-teal-800 text-white text-[11px] font-semibold rounded-md px-2 py-1.5 border border-teal-700 focus:outline-none focus:ring-1 focus:ring-teal-400 cursor-pointer h-8">
-          <option value="General">📁 General</option>
-          <option value="Marketing">📁 Marketing</option>
-          <option value="Development">📁 Development</option>
-          <option value="Operations">📁 Operations</option>
-        </select>
-        
-        <button id="openModalBtn" disabled class="flex-1 sm:flex-initial bg-gray-400 text-white font-bold text-[11px] px-2.5 py-1.5 rounded-md shadow-sm transition flex items-center justify-center gap-1 cursor-not-allowed opacity-60 h-8">
-          <i class="fa-solid fa-lock text-[9px]"></i> <span>New Poll</span>
-        </button>
-      </div>
     </div>
-
-    <nav class="flex bg-teal-900/40 p-0.5 rounded-md border border-teal-700/50 gap-0.5 font-semibold text-[11px]">
-      <button onclick="switchView('feed')" id="tab-feed" class="flex-1 py-1.5 rounded text-center text-teal-100 bg-teal-800/40 hover:bg-teal-800/80 hover:text-white transition flex items-center justify-center gap-1 h-7">
-        <i class="fa-solid fa-comments"></i> Feed
-      </button>
-      <button onclick="switchView('dashboard')" id="tab-dashboard" class="flex-1 py-1.5 rounded text-center text-teal-100 bg-teal-800/40 hover:bg-teal-800/80 hover:text-white transition flex items-center justify-center gap-1 h-7">
-        <i class="fa-solid fa-chart-line"></i> Dashboard
-      </button>
-      <button onclick="switchView('table')" id="tab-table" class="flex-1 py-1.5 rounded text-center text-teal-100 bg-teal-800/40 hover:bg-teal-800/80 hover:text-white transition flex items-center justify-center gap-1 h-7">
-        <i class="fa-solid fa-table-list"></i> Ledger Grid
-      </button>
-    </nav>
+    
+    <div id="headerDetailsExtensionZone" class="flex items-center gap-2 text-teal-100 font-mono text-[11px] bg-teal-900/30 px-3 py-1.5 rounded-md border border-teal-700/30">
+      <i class="fa-solid fa-cubes"></i> Environment Active
+    </div>
   </header>
 
-  <div class="flex-1 overflow-hidden relative">
-
-    <section id="view-feed" class="absolute inset-0 flex flex-col">
-      <div class="bg-white border-b px-2.5 py-1.5 shadow-sm flex flex-col shrink-0 z-10">
-        <button onclick="toggleCollapseSection('feedControlsWrapper', 'feedAngleIcon')" class="flex items-center justify-between w-full text-[11px] font-bold text-gray-500 uppercase tracking-wider py-0.5">
-          <span><i class="fa-solid fa-filter mr-1 text-teal-600"></i> Poll Filters & Actions</span>
-          <i id="feedAngleIcon" class="fa-solid fa-angle-down transition-transform duration-200"></i>
-        </button>
-        
-        <div id="feedControlsWrapper" class="collapsible-section collapsed mt-1.5 space-y-1.5">
-          <div class="relative w-full">
-            <i class="fa-solid fa-magnifying-glass absolute left-2 top-2.5 text-gray-400 text-[10px]"></i>
-            <input type="text" id="feedSearch" placeholder="Search items..." class="w-full text-[11px] border rounded-md pl-6 pr-2 py-1.5 focus:ring-1 focus:ring-[#00a884] focus:outline-none bg-gray-50 h-7">
-          </div>
-
-          <div class="grid grid-cols-2 gap-1.5">
-            <select id="feedFilterState" class="text-[11px] border rounded-md px-1.5 py-1 bg-gray-50 text-gray-700 h-7 cursor-pointer focus:outline-none">
-              <option value="all">All States</option>
-              <option value="open">🟢 Active / Open</option>
-              <option value="closed">🔒 Closed History</option>
-            </select>
-
-            <select id="feedFilterType" class="text-[11px] border rounded-md px-1.5 py-1 bg-gray-50 text-gray-700 h-7 cursor-pointer focus:outline-none">
-              <option value="all">All Task Types</option>
-              <option value="status">Status Polls</option>
-              <option value="decision">Decision Polls</option>
-              <option value="checklist">Checklist Polls</option>
-            </select>
-          </div>
-          
-          <div class="flex items-center gap-1.5">
-            <button id="feedClearAllFiltersBtn" class="flex-1 text-[10px] bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-1 px-2 rounded border transition flex items-center justify-center gap-1 h-7">
-              <i class="fa-solid fa-broom text-teal-600"></i> Clear Filters
-            </button>
-            <button id="expandAllCardsBtn" class="text-[10px] font-bold text-teal-700 hover:text-teal-900 bg-teal-50 border border-teal-100 px-2 py-1 rounded transition h-7">
-              <i class="fa-solid fa-angles-down"></i> Expand All
-            </button>
-            <button id="collapseAllCardsBtn" class="text-[10px] font-bold text-gray-600 hover:text-gray-800 bg-gray-100 border border-gray-200 px-2 py-1 rounded transition h-7">
-              <i class="fa-solid fa-angles-up"></i> Collapse All
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div id="feedScrollContainer" class="flex-1 overflow-y-auto px-2 py-2 max-w-xl mx-auto w-full space-y-2 custom-scrollbar pb-16">
-        <div id="feedPlaceholder" class="text-center py-12 text-gray-500">
-          <i class="fa-solid fa-circle-notch animate-spin text-xl text-[#008069] mb-2"></i>
-          <p class="text-[11px] font-medium">Synchronizing parameters...</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="view-dashboard" class="absolute inset-0 overflow-y-auto p-2 max-w-5xl mx-auto hidden custom-scrollbar pb-16 space-y-2.5">
-      <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
-        <div class="bg-white p-1.5 rounded-lg border shadow-sm text-center">
-          <p class="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Total Tasks</p>
-          <p id="stat-total" class="text-sm font-black text-gray-800 mt-0.5">0</p>
-        </div>
-        <div class="bg-white p-1.5 rounded-lg border shadow-sm text-center">
-          <p class="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Active Run</p>
-          <p id="stat-active" class="text-sm font-black text-[#008069] mt-0.5">0</p>
-        </div>
-        <div class="bg-white p-1.5 rounded-lg border shadow-sm text-center">
-          <p class="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Concluded</p>
-          <p id="stat-closed" class="text-sm font-black text-gray-400 mt-0.5">0</p>
-        </div>
-        <div class="bg-white p-1.5 rounded-lg border shadow-sm text-center">
-          <p class="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Gross Votes</p>
-          <p id="stat-votes" class="text-sm font-black text-purple-600 mt-0.5">0</p>
-        </div>
-        <div class="bg-white p-1.5 rounded-lg border shadow-sm text-center col-span-2 sm:col-span-1">
-          <p class="text-[8px] text-gray-400 font-bold uppercase tracking-wider">Avg Duration</p>
-          <p id="stat-avg-duration" class="text-sm font-black text-amber-600 mt-0.5">0 days</p>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-        <div class="bg-white p-2 rounded-lg border shadow-sm flex flex-col items-center">
-          <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1 self-start"><i class="fa-solid fa-chart-pie mr-1 text-teal-600"></i> Lifecycle States</h3>
-          <div class="w-full max-w-[110px]"><canvas id="chartStatus"></canvas></div>
-        </div>
-        <div class="bg-white p-2 rounded-lg border shadow-sm flex flex-col items-center">
-          <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1 self-start"><i class="fa-solid fa-layer-group mr-1 text-blue-600"></i> Types</h3>
-          <div class="w-full max-w-[110px]"><canvas id="chartType"></canvas></div>
-        </div>
-        <div class="bg-white p-2 rounded-lg border shadow-sm flex flex-col items-center">
-          <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1 self-start"><i class="fa-solid fa-hourglass-half mr-1 text-amber-500"></i> Task Lifespan</h3>
-          <div class="w-full max-w-[110px]"><canvas id="chartDurationRange"></canvas></div>
-        </div>
-        <div class="bg-white p-2.5 rounded-lg border shadow-sm md:col-span-3">
-          <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1"><i class="fa-solid fa-user-group mr-1 text-purple-600"></i> Team Allocation Efficiency</h3>
-          <div class="w-full h-[140px]"><canvas id="chartUserPerformance"></canvas></div>
-        </div>
-      </div>
-
-      <div class="bg-white p-2 rounded-lg border shadow-sm">
-        <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1"><i class="fa-solid fa-clock-rotate-left mr-1 text-amber-600"></i> Live Events Stream</h3>
-        <div id="dashboardAuditTrail" class="text-[10px] text-gray-600 divide-y max-h-[100px] overflow-y-auto custom-scrollbar pr-1"></div>
-      </div>
-    </section>
-
-    <section id="view-table" class="absolute inset-0 flex flex-col p-2 hidden">
-      <div class="bg-white p-2 rounded-t-lg border-x border-t flex flex-col shadow-sm shrink-0">
-        <button onclick="toggleCollapseSection('tableControlsWrapper', 'tableAngleIcon')" class="flex items-center justify-between w-full text-[11px] font-bold text-gray-500 uppercase tracking-wider py-0.5">
-          <span><i class="fa-solid fa-sliders mr-1 text-teal-600"></i> Ledger Filters & Export Panel</span>
-          <i id="tableAngleIcon" class="fa-solid fa-angle-down transition-transform duration-200"></i>
-        </button>
-        
-        <div id="tableControlsWrapper" class="collapsible-section collapsed mt-1.5 space-y-1.5">
-          <div class="relative w-full">
-            <i class="fa-solid fa-magnifying-glass absolute left-2 top-2.5 text-gray-400 text-[10px]"></i>
-            <input type="text" id="tableSearch" placeholder="Search parameters..." class="w-full text-[11px] border rounded-md pl-6 pr-2 py-1.5 focus:ring-1 focus:ring-[#00a884] focus:outline-none h-7">
-          </div>
-          
-          <div class="grid grid-cols-2 gap-1.5">
-            <select id="tableFilterState" class="text-[11px] border rounded-md px-1.5 py-1 bg-gray-50 text-gray-700 h-7 focus:outline-none cursor-pointer">
-              <option value="all">All States</option>
-              <option value="open">🟢 Active / Open</option>
-              <option value="closed">🔒 Closed</option>
-            </select>
-            <select id="tableFilterType" class="text-[11px] border rounded-md px-1.5 py-1 bg-gray-50 text-gray-700 h-7 focus:outline-none cursor-pointer">
-              <option value="all">All Task Types</option>
-              <option value="status">Status Polls</option>
-              <option value="decision">Decision Polls</option>
-              <option value="checklist">Checklist Polls</option>
-            </select>
-          </div>
-
-          <div class="grid grid-cols-3 gap-1.5">
-            <button id="tableClearAllFiltersBtn" class="text-[10px] bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded border transition flex items-center justify-center gap-1 h-7">
-              <i class="fa-solid fa-broom text-teal-600"></i> Clear
-            </button>
-            <button onclick="exportToCSV()" class="bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold text-[10px] rounded border transition flex items-center justify-center gap-1 h-7">
-              <i class="fa-solid fa-file-csv text-emerald-700"></i> CSV
-            </button>
-            <button onclick="exportToPDF()" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold text-[10px] rounded transition flex items-center justify-center gap-1 shadow-sm h-7">
-              <i class="fa-solid fa-file-pdf"></i> PDF Report
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex-1 overflow-auto border rounded-b-lg bg-white shadow-sm custom-scrollbar relative">
-        <table class="w-full text-left border-collapse text-[11px] min-w-[900px]">
-          <thead>
-            <tr class="bg-gray-50 border-b text-gray-600 font-bold uppercase tracking-wider">
-              <th class="p-2 sticky-th sticky-intersect">Task Title</th>
-              <th class="p-2 sticky-th">Description</th>
-              <th class="p-2 sticky-th">Type</th>
-              <th class="p-2 sticky-th">State Status</th>
-              <th class="p-2 sticky-th">Created By</th>
-              <th class="p-2 sticky-th">Start Date</th>
-              <th class="p-2 sticky-th">End Date</th>
-              <th class="p-2 sticky-th">Lifespan</th>
-              <th class="p-2 sticky-th">Responses</th>
-              <th class="p-2 sticky-th">Leading Choice</th>
-              <th class="p-2 sticky-th text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody" class="divide-y text-gray-700"></tbody>
-        </table>
-      </div>
-    </section>
-  </div>
-
-  <div id="taskModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 hidden opacity-0 transition-opacity duration-200">
-    <div class="bg-white w-full max-w-sm rounded-xl shadow-xl overflow-hidden transform scale-95 transition-transform duration-200">
-      <div class="bg-[#008069] text-white p-3 flex justify-between items-center">
-        <h3 class="font-bold text-xs"><i class="fa-solid fa-file-circle-plus mr-1"></i>Create Task Poll</h3>
-        <button id="closeModalBtn" class="text-white/80 hover:text-white text-base p-0.5"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      
-      <form id="taskForm" class="p-3 space-y-3 text-[11px]">
-        <div>
-          <label class="block font-semibold text-gray-700 mb-0.5">Task Title *</label>
-          <input type="text" id="taskTitle" required placeholder="What needs doing or deciding?" class="w-full border rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#00a884] text-[11px] h-8">
-        </div>
-        <div>
-          <label class="block font-semibold text-gray-700 mb-0.5">Description (Optional)</label>
-          <textarea id="taskDescription" rows="2" placeholder="Add metrics or validation configurations..." class="w-full border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#00a884] text-[11px]"></textarea>
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block font-semibold text-gray-700 mb-0.5">Poll Context Template</label>
-            <select id="pollType" class="w-full border rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#00a884] bg-gray-50 text-[11px] cursor-pointer h-8">
-              <option value="status">🟢 Status Poll</option>
-              <option value="decision">🔵 Decision Poll</option>
-              <option value="checklist">🟣 Checklist Poll</option>
-            </select>
-          </div>
-          <div>
-            <label class="block font-semibold text-gray-700 mb-0.5">Time-To-Live duration</label>
-            <select id="taskDurationTtl" class="w-full border rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#00a884] bg-gray-50 text-[11px] cursor-pointer h-8">
-              <option value="infinite">♾️ Indefinite</option>
-              <option value="1">⏱️ 1 Minute</option>
-              <option value="5">⏱️ 5 Minutes</option>
-              <option value="60">⏱️ 1 Hour</option>
-              <option value="1440">⏱️ 24 Hours</option>
-              <option value="10080">⏱️ 7 Days</option>
-            </select>
-          </div>
-        </div>
-        <div class="flex items-center gap-2 bg-gray-50 p-2 rounded border">
-          <input type="checkbox" id="keepFieldsToggle" class="w-3.5 h-3.5 text-[#008069] border-gray-300 rounded focus:ring-[#00a884] cursor-pointer">
-          <label for="keepFieldsToggle" class="font-semibold text-gray-700 cursor-pointer select-none">
-            🚀 Keep fields active (Smart Cloning Mode)
-          </label>
-        </div>
-        <div class="flex justify-end gap-2 pt-1.5">
-          <button type="button" id="cancelModalBtn" class="px-2 py-1 font-medium text-gray-500 hover:text-gray-700 h-8">Cancel</button>
-          <button type="submit" class="bg-[#008069] hover:bg-[#01604f] text-white font-bold px-3 py-1.5 rounded-md shadow h-8">Deploy Poll</button>
-        </div>
-      </form>
+  <div class="flex-1 flex overflow-hidden relative w-full">
+    
+    <div id="primaryNavPane" class="w-12 bg-slate-900 flex flex-col items-center py-4 gap-6 shrink-0 z-10 border-r border-slate-800 shadow-xl">
+      <button onclick="toggleSecondaryNav('Programme')" id="btnNavProgramme" class="text-slate-400 hover:text-white transition-colors py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-slate-800 w-full">
+        <span class="vertical-text font-bold tracking-widest text-[11px] uppercase"><i class="fa-solid fa-grip-vertical mr-1.5 rotate-90"></i> Programme Level</span>
+      </button>
+      <div class="w-8 border-b border-slate-800"></div>
+      <button onclick="toggleSecondaryNav('Project')" id="btnNavProject" class="text-slate-400 hover:text-white transition-colors py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-slate-800 w-full">
+        <span class="vertical-text font-bold tracking-widest text-[11px] uppercase"><i class="fa-solid fa-diagram-project mr-1.5 rotate-90"></i> Project Level</span>
+      </button>
     </div>
-  </div>
 
-  <div id="deleteConfirmationModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 hidden opacity-0 transition-opacity duration-200">
-    <div class="bg-white w-full max-w-xs rounded-xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200 border border-red-100">
-      <div class="p-4 flex flex-col items-center text-center gap-2">
-        <div class="w-9 h-9 bg-red-50 text-red-600 rounded-full flex items-center justify-center text-base shadow-sm border border-red-100 shrink-0">
-          <i class="fa-solid fa-triangle-exclamation"></i>
+    <div id="secondaryNavPane" class="bg-slate-800 border-r border-slate-700 text-slate-200 flex flex-col shrink-0 relative collapsed-pane" style="width: 200px; min-width: 140px; max-width: 350px;">
+      <div class="pane-content flex flex-col h-full w-full overflow-hidden">
+        <div class="p-3 border-b border-slate-700 flex justify-between items-center bg-slate-800/50">
+          <h2 id="secondaryNavHeading" class="font-bold text-slate-300 uppercase tracking-wider text-[10px]">Pages</h2>
+          <button onclick="collapsePane('secondaryNavPane')" class="text-slate-400 hover:text-white p-1"><i class="fa-solid fa-chevron-left"></i></button>
         </div>
-        <div>
-          <h3 class="font-black text-gray-900 text-xs tracking-tight">Confirm Task Deletion</h3>
-          <p class="text-[10px] text-gray-500 mt-1 leading-normal">
-            Warning: This process is <strong class="text-red-600 font-bold">permanent and irreversible</strong>. All registry values will be wiped.
-          </p>
-        </div>
-      </div>
-      <div class="bg-gray-50 px-3 py-2 flex flex-col gap-1 items-center justify-end border-t">
-        <button id="confirmDeleteBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-[11px] py-1.5 rounded-md shadow text-center order-1">
-          Yes, Delete Permanently
-        </button>
-        <button id="cancelDeleteBtn" class="w-full text-[10px] font-semibold text-gray-500 hover:text-gray-700 py-1.5 text-center order-2">
-          Cancel, Keep Task
-        </button>
+        <div id="secondaryNavButtonsZone" class="p-2 flex flex-col gap-1 overflow-y-auto custom-scrollbar flex-1">
+          </div>
       </div>
     </div>
-  </div>
+    <div class="pane-resizer" id="resizer-secondaryNav"></div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <div id="dataInputPane" class="bg-white border-r border-gray-200 flex flex-col shrink-0 relative" style="width: 320px; min-width: 200px; max-width: 600px;">
+      <div class="pane-content flex flex-col h-full w-full overflow-hidden">
+        <div class="p-3 border-b bg-gray-50 flex justify-between items-center">
+          <div class="flex items-center gap-1.5 font-bold text-gray-700 uppercase tracking-wider text-[10px]">
+            <i class="fa-solid fa-pen-to-square text-[#008069]"></i> Data Input Engine
+          </div>
+          <button onclick="collapsePane('dataInputPane')" class="text-gray-400 hover:text-gray-600 p-1"><i class="fa-solid fa-chevron-left"></i></button>
+        </div>
+        <div class="p-4 overflow-y-auto custom-scrollbar flex-1 bg-gray-50/50">
+          <div class="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400 mt-4">
+            Input Matrix Controls Placeholder
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pane-resizer" id="resizer-dataInput"></div>
+
+    <div id="informationPane" class="bg-white flex flex-col flex-1 relative min-w-[250px]">
+      <div class="pane-content flex flex-col h-full w-full overflow-hidden">
+        <div class="p-3 border-b bg-gray-50 flex justify-between items-center">
+          <div class="flex items-center gap-1.5 font-bold text-gray-700 uppercase tracking-wider text-[10px]">
+            <i class="fa-solid fa-circle-info text-blue-600"></i> Analytics &amp; Ledger Information
+          </div>
+          <button onclick="collapsePane('informationPane')" class="text-gray-400 hover:text-gray-600 p-1"><i class="fa-solid fa-expand"></i></button>
+        </div>
+        <div class="p-4 overflow-y-auto custom-scrollbar flex-1">
+          <div class="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400 mt-4">
+            Primary Visualisation Matrix &amp; Ledger Grid Placement Area
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pane-resizer" id="resizer-information"></div>
+
+    <div id="filtersPane" class="bg-gray-50 border-l border-gray-200 flex flex-col shrink-0 relative" style="width: 240px; min-width: 160px; max-width: 400px;">
+      <div class="pane-content flex flex-col h-full w-full overflow-hidden">
+        <div class="p-3 border-b bg-gray-100/80 flex justify-between items-center">
+          <div class="flex items-center gap-1.5 font-bold text-gray-700 uppercase tracking-wider text-[10px]">
+            <i class="fa-solid fa-filter text-amber-600"></i> Global Filters
+          </div>
+          <button onclick="collapsePane('filtersPane')" class="text-gray-400 hover:text-gray-600 p-1"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+        <div class="p-4 overflow-y-auto custom-scrollbar flex-1">
+          <div class="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400 mt-4">
+            System Filters Configuration Panel
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
 
   <script>
+    // --- LEGACY RETAINED FIREBASE CONFIGURATION & REGISTRY HOOKS ---
     const firebaseConfig = {
       apiKey: "AIzaSyCL6iJKRp-WjCgBTtRCuRny14lUOMP9KJg",
       authDomain: "data-tracker-f11df.firebaseapp.com",
@@ -390,965 +174,122 @@
     const auth = firebase.auth(app);
 
     window.globalUserUid = null;
-    let localGlobalCollapseAllTrigger = false; 
-    let activeChatListeners = {};
+    let currentUser = localStorage.getItem("qt_username") || "Operational User";
 
-    const SoundEffects = {
-      ctx: null,
-      init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
-      playVote() {
-        try {
-          this.init(); const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
-          osc.type = 'sine'; osc.frequency.setValueAtTime(490, this.ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(690, this.ctx.currentTime + 0.08);
-          g.gain.setValueAtTime(0.04, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
-          osc.connect(g); g.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.08);
-        } catch(e){}
-      },
-      playComplete() {
-        try {
-          this.init(); const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
-          osc.type = 'triangle'; osc.frequency.setValueAtTime(523, this.ctx.currentTime);
-          osc.frequency.setValueAtTime(659, this.ctx.currentTime + 0.06);
-          osc.frequency.setValueAtTime(784, this.ctx.currentTime + 0.12);
-          g.gain.setValueAtTime(0.06, this.ctx.currentTime); g.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
-          osc.connect(g); g.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.3);
-        } catch(e){}
-      },
-      playReopen() {
-        try {
-          this.init(); const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
-          osc.type = 'sine'; osc.frequency.setValueAtTime(360, this.ctx.currentTime);
-          osc.frequency.linearRampToValueAtTime(220, this.ctx.currentTime + 0.12);
-          g.gain.setValueAtTime(0.04, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
-          osc.connect(g); g.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.12);
-        } catch(e){}
-      },
-      playDelete() {
-        try {
-          this.init(); const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
-          osc.type = 'sawtooth'; osc.frequency.setValueAtTime(180, this.ctx.currentTime);
-          osc.frequency.linearRampToValueAtTime(90, this.ctx.currentTime + 0.2);
-          g.gain.setValueAtTime(0.06, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
-          osc.connect(g); g.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.2);
-        } catch(e){}
-      }
-    };
+    const authStatusPanel = document.getElementById("authStatusPanel");
+    const authStatusText = document.getElementById("authStatusText");
+    const authUidDisplay = document.getElementById("authUidDisplay");
+    const userBadge = document.getElementById("userBadge");
 
-    // Global Section Toggle Helper
-    window.toggleCollapseSection = function(elementId, angleIconId) {
-      const el = document.getElementById(elementId);
-      const icon = document.getElementById(angleIconId);
-      if (el.classList.contains('collapsed')) {
-        el.classList.remove('collapsed');
-        if(icon) icon.classList.replace('fa-angle-down', 'fa-angle-up');
-      } else {
-        el.classList.add('collapsed');
-        if(icon) icon.classList.replace('fa-angle-up', 'fa-angle-down');
-      }
-    };
-
-    // Inter-User Network Push Notification Layer
-    function dispatchGlobalAppNotification(actionMessage) {
-      if(!window.globalUserUid) return;
-      const notifRef = db.ref("notifications").push();
-      notifRef.set({
-        senderUid: window.globalUserUid,
-        senderAlias: currentUser || "Anonymous",
-        message: actionMessage,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-      });
-    }
-
-    function listenGlobalAppNotifications() {
-      db.ref("notifications").limitToLast(1).on("child_added", function(snapshot) {
-        const data = snapshot.val();
-        if(!data || data.senderUid === window.globalUserUid) return;
-        if(Date.now() - data.timestamp > 15000) return;
-        renderFloatingPushBanner(data.senderAlias, data.message);
-      });
-    }
-
-    function renderFloatingPushBanner(user, msg) {
-      const wrapper = document.getElementById("appPushNotificationWrapper");
-      const alertNode = document.createElement("div");
-      alertNode.className = "bg-slate-900/95 text-white p-2 rounded-lg shadow-lg border border-teal-500 text-[10px] flex items-start gap-1.5 pointer-events-auto animate-fade-in duration-300";
-      alertNode.innerHTML = `
-        <div class="bg-teal-600 text-white rounded-full p-1 text-[8px] shrink-0"><i class="fa-solid fa-bell"></i></div>
-        <div class="flex-1 min-w-0">
-          <p class="font-bold text-teal-400 truncate">${escapeHtml(user)}</p>
-          <p class="text-gray-200 break-words leading-tight">${escapeHtml(msg)}</p>
-        </div>
-      `;
-      wrapper.appendChild(alertNode);
-      setTimeout(() => {
-        alertNode.classList.add("opacity-0", "transition-opacity", "duration-500");
-        setTimeout(() => alertNode.remove(), 500);
-      }, 3500);
-    }
-
-    function escapeHtml(str) {
-      if (!str) return '';
-      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-    }
-
-    function validateAndSetAlias(requestedAlias, isInitialLoad = false) {
-      if (!requestedAlias || requestedAlias.trim() === "") {
-        if (isInitialLoad) requestedAlias = "Anonymous";
-        else return;
-      }
-      requestedAlias = requestedAlias.trim();
-
-      db.ref('tasks').once('value', (snapshot) => {
-        let isCollision = false;
-        snapshot.forEach((childSnapshot) => {
-          const task = childSnapshot.val();
-          if (task.createdBy && task.createdBy.toLowerCase() === requestedAlias.toLowerCase() && task.uid !== window.globalUserUid) {
-            isCollision = true;
-          }
-        });
-
-        if (isCollision) {
-          alert(`The Alias "${requestedAlias}" is currently claimed by another user ID.`);
-          if (isInitialLoad) {
-            const retry = prompt("Enter unique operational handle moniker:") || "Anonymous";
-            validateAndSetAlias(retry, true);
-          }
-        } else {
-          currentUser = requestedAlias;
-          localStorage.setItem("qt_username", currentUser);
-          document.getElementById("userBadge").innerHTML = `<i class="fa-solid fa-user-circle mr-0.5"></i> Alias: <strong>${escapeHtml(currentUser)}</strong>`;
-          if (!isInitialLoad) {
-            dispatchGlobalAppNotification(`changed their handle moniker identifier to ${currentUser}`);
-            renderApplicationPipeline();
-          }
-        }
-      });
-    }
-
-    let currentUser = localStorage.getItem("qt_username");
-    if (!currentUser || currentUser.trim() === "") {
-      currentUser = prompt("Enter your corporate handle initialization moniker:") || "Anonymous";
-      currentUser = currentUser.trim() === "" ? "Anonymous" : currentUser;
-      localStorage.setItem("qt_username", currentUser);
-    }
-
-    let currentProject = document.getElementById("projectSelector").value;
-    let localDataStore = {};
-    let targetTaskIdForDeletion = null;
-    let manualCardTrackingState = JSON.parse(localStorage.getItem("qt_manual_card_toggles2") || "{}");
-
-    const POLL_OPTIONS_MAP = {
-      status: ["Not Started", "In Progress", "Blocked", "Done"],
-      decision: ["👍 Yes", "👎 No", "🤔 Unsure"],
-      checklist: ["⬜ Not Done", "✅ Done"]
-    };
-
-    const feedScrollContainer = document.getElementById("feedScrollContainer");
-    const projectSelector = document.getElementById("projectSelector");
-    const taskModal = document.getElementById("taskModal");
-    const taskForm = document.getElementById("taskForm");
-    const deleteModal = document.getElementById("deleteConfirmationModal");
-
-    // Real-Time Live Clock Engine for TTL Calculations
-    setInterval(() => {
-      let stateChanged = false;
-      const now = Date.now();
-      Object.keys(localDataStore).forEach(taskId => {
-        const item = localDataStore[taskId];
-        if (item.project === currentProject && item.state === "open" && item.expiresAt && now >= item.expiresAt) {
-          stateChanged = true;
-          db.ref(`tasks/${taskId}`).update({ state: "closed", closedAt: item.expiresAt });
-          dispatchGlobalAppNotification(`Poll status automatically concluded via TTL expiration: "${item.title}"`);
-        }
-      });
-      if (stateChanged) {
-        renderApplicationPipeline();
-      } else {
-        // Dynamic countdown update cycle inside the DOM structure without complete reflows
-        document.querySelectorAll("[data-countdown-id]").forEach(node => {
-          const expiresAt = parseInt(node.getAttribute("data-countdown-id"));
-          const diff = expiresAt - Date.now();
-          if (diff <= 0) {
-            node.innerHTML = `<span class="text-red-600 font-bold"><i class="fa-solid fa-clock"></i> Terminated</span>`;
-          } else {
-            const secs = Math.floor((diff / 1000) % 60);
-            const mins = Math.floor((diff / (1000 * 60)) % 60);
-            const hrs = Math.floor((diff / (1000 * 60 * 60)) % 24);
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            let str = "";
-            if (days > 0) str += `${days}d `;
-            if (hrs > 0 || days > 0) str += `${hrs}h `;
-            str += `${mins}m ${secs}s`;
-            node.innerHTML = `<span class="text-amber-600 font-bold"><i class="fa-solid fa-hourglass-start animate-pulse"></i> Expires in: ${str}</span>`;
-          }
-        });
-      }
-    }, 1000);
-
-    // Dynamic Live Thread Handler
-    window.initializeLiveTaskChatStream = function(taskId) {
-      const chatContainer = document.getElementById(`chat-stream-${taskId}`);
-      if (!chatContainer || activeChatListeners[taskId]) return;
-
-      activeChatListeners[taskId] = true;
-      db.ref(`tasks/${taskId}/comments`).on("value", (snapshot) => {
-        chatContainer.innerHTML = "";
-        const data = snapshot.val();
-        if (!data) {
-          chatContainer.innerHTML = `<p class="text-[10px] text-gray-400 italic text-center py-1">No operational arguments posted yet.</p>`;
-          return;
-        }
-        Object.keys(data).forEach(commentId => {
-          const comment = data[commentId];
-          const timeStr = new Date(comment.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          const row = document.createElement("div");
-          row.className = "text-[10px] bg-gray-50 p-1 rounded border border-gray-100 flex flex-col gap-0.5 max-w-full break-words";
-          row.innerHTML = `
-            <div class="flex justify-between items-center opacity-80 text-[9px]">
-              <span class="font-bold text-teal-700">${escapeHtml(comment.author)}</span>
-              <span>${timeStr}</span>
-            </div>
-            <p class="text-gray-700 font-medium leading-tight">${escapeHtml(comment.text)}</p>
-          `;
-          chatContainer.appendChild(row);
-        });
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-      });
-    };
-
-    window.submitTaskCommentMessage = function(taskId) {
-      const input = document.getElementById(`chat-input-${taskId}`);
-      if (!input || !input.value.trim()) return;
-      const commentText = input.value.trim();
-      input.value = "";
-
-      db.ref(`tasks/${taskId}/comments`).push({
-        author: currentUser || "Anonymous",
-        text: commentText,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-      });
-    };
-
-    // View Routing Management
-    window.switchView = function(viewId) {
-      ['feed', 'dashboard', 'table'].forEach(v => {
-        document.getElementById(`view-${v}`).classList.add('hidden');
-        document.getElementById(`tab-${v}`).classList.remove('active-nav-tab');
-      });
-      document.getElementById(`view-${viewId}`).classList.remove('hidden');
-      document.getElementById(`tab-${viewId}`).classList.add('active-nav-tab');
-      if(viewId === 'dashboard') triggerDashboardChartsRender();
-    };
-
-    // Firebase Auth Lifecycle Hooks
-    auth.onAuthStateChanged((user) => {
-      const panel = document.getElementById("authStatusPanel");
-      const text = document.getElementById("authStatusText");
-      const uidDisp = document.getElementById("authUidDisplay");
-      const openBtn = document.getElementById("openModalBtn");
-
-      if (user) {
+    // Anonymous Handshake Connection Authentication Sequence Flow
+    auth.signInAnonymously()
+      .then(function(userCredential) {
+        const user = userCredential.user;
         window.globalUserUid = user.uid;
-        panel.className = "auth-panel-success border rounded px-1 py-0.5 text-[9px] font-mono inline-flex items-center gap-0.5 shadow-inner max-w-full truncate text-white";
-        text.innerHTML = `<i class="fa-solid fa-shield-solid text-emerald-400"></i> Connected`;
-        uidDisp.textContent = `UID: ${user.uid.substring(0,6)}`;
-        uidDisp.classList.remove('hidden');
+
+        authStatusPanel.className = "bg-[#004d3e] border border-[#00a884] rounded px-1.5 py-0.5 text-[9px] font-mono inline-flex items-center gap-1 shadow-md";
+        authStatusText.innerHTML = "Connected ✔";
+        authUidDisplay.innerText = "UID: " + window.globalUserUid.substring(0,5);
+        authUidDisplay.classList.remove("hidden");
         
-        openBtn.disabled = false;
-        openBtn.className = "flex-1 sm:flex-initial bg-white text-[#008069] font-bold text-[11px] px-2.5 py-1.5 rounded-md shadow-sm transition flex items-center justify-center gap-1 hover:bg-teal-50 h-8 cursor-pointer";
-        openBtn.querySelector('i').className = "fa-solid fa-plus";
-
-        validateAndSetAlias(currentUser, true);
-        listenGlobalAppNotifications();
-        syncDataPipeline();
-      } else {
-        text.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Disconnected`;
-        auth.signInAnonymously().catch(err => {
-          panel.className = "auth-panel-failed border rounded px-1 py-0.5 text-[9px] font-mono inline-flex items-center gap-0.5 shadow-inner max-w-full truncate text-white";
-          text.innerHTML = `<i class="fa-solid fa-ban text-red-400"></i> Sync Broken`;
-          console.error(err);
-        });
-      }
-    });
-
-    // Database Streaming Synchronization Architecture
-    function syncDataPipeline() {
-      db.ref('tasks').on('value', (snapshot) => {
-        localDataStore = snapshot.val() || {};
-        renderApplicationPipeline();
-        if(document.getElementById('view-dashboard').classList.contains('hidden') === false) {
-          triggerDashboardChartsRender();
-        }
+        userBadge.innerHTML = `<i class="fa-solid fa-user-gear mr-0.5"></i> Operator: <strong>${currentUser}</strong>`;
+      })
+      .catch(function(error) {
+        console.error("Authentication Layer Collision Failure: ", error);
+        authStatusPanel.className = "bg-red-900/80 border border-red-500 rounded px-1.5 py-0.5 text-[9px] font-mono inline-flex items-center gap-1 shadow-md";
+        authStatusText.innerHTML = "Auth Broken ✘";
       });
-    }
 
-    projectSelector.addEventListener("change", () => {
-      currentProject = projectSelector.value;
-      renderApplicationPipeline();
-      triggerDashboardChartsRender();
-    });
+    // --- STRUCTURAL SHELL INTERACTION CONTROLLER MECHANICS ---
+    let activeNavContext = null;
 
-    // Modal Lifecycle Hooks
-    document.getElementById("openModalBtn").addEventListener("click", () => {
-      taskModal.classList.remove("hidden");
-      setTimeout(() => taskModal.classList.remove("opacity-0", "scale-95"), 10);
-    });
-
-    function hideModalStructure() {
-      taskModal.classList.add("opacity-0", "scale-95");
-      setTimeout(() => {
-        taskModal.classList.add("hidden");
-        // Only wipe the input if Keep Fields mode is disabled
-        if (!document.getElementById("keepFieldsToggle").checked) {
-          taskForm.reset();
-        } else {
-          document.getElementById("taskTitle").value = "";
-        }
-      }, 200);
-    }
-    document.getElementById("closeModalBtn").addEventListener("click", hideModalStructure);
-    document.getElementById("cancelModalBtn").addEventListener("click", hideModalStructure);
-
-    // Form Deployment Logic
-    taskForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      if(!window.globalUserUid) return;
-
-      const title = document.getElementById("taskTitle").value.trim();
-      const desc = document.getElementById("taskDescription").value.trim();
-      const type = document.getElementById("pollType").value;
-      const ttlVal = document.getElementById("taskDurationTtl").value;
-      const keepFieldsChecked = document.getElementById("keepFieldsToggle").checked;
-
-      const now = Date.now();
-      let expiresAt = null;
-      if (ttlVal !== "infinite") {
-        expiresAt = now + parseInt(ttlVal) * 60 * 1000;
-      }
-
-      const newTask = {
-        title: title,
-        description: desc,
-        type: type,
-        state: "open",
-        project: currentProject,
-        createdBy: currentUser || "Anonymous",
-        uid: window.globalUserUid,
-        createdAt: now,
-        expiresAt: expiresAt,
-        responses: {}
-      };
-
-      db.ref('tasks').push(newTask).then(() => {
-        dispatchGlobalAppNotification(`deployed a tactical new poll matrix tracker: "${title}"`);
-        SoundEffects.playComplete();
-        hideModalStructure();
-      });
-    });
-
-    // Execution Core Logic for Rendering Pipeline
-    function renderApplicationPipeline() {
-      const feedContainer = document.getElementById("feedScrollContainer");
-      const tableBody = document.getElementById("tableBody");
+    // Secondary Navigation Pane Content Generation & Display Controller
+    function toggleSecondaryNav(context) {
+      const pane = document.getElementById('secondaryNavPane');
+      const heading = document.getElementById('secondaryNavHeading');
+      const zone = document.getElementById('secondaryNavButtonsZone');
       
-      const feedSearch = document.getElementById("feedSearch").value.toLowerCase();
-      const feedFState = document.getElementById("feedFilterState").value;
-      const feedFType = document.getElementById("feedFilterType").value;
+      if (activeNavContext === context && !pane.classList.contains('collapsed-pane')) {
+        pane.classList.add('collapsed-pane');
+        activeNavContext = null;
+        return;
+      }
+      
+      activeNavContext = context;
+      heading.innerText = `${context} Level Pages`;
+      pane.classList.remove('collapsed-pane');
+      
+      // Clear and insert functional page layout selection anchors
+      zone.innerHTML = '';
+      const dummyPages = ['Overview Matrix', 'Financial Engine Metrics', 'Performance Analytics', 'Audit Logging Ledger'];
+      
+      dummyPages.forEach((pageName, idx) => {
+        const btn = document.createElement('button');
+        btn.className = "w-full text-left py-2 px-3 rounded text-[11px] text-slate-300 hover:bg-slate-700 hover:text-white transition flex items-center gap-2 border border-transparent hover:border-slate-600";
+        btn.innerHTML = `<i class="fa-solid fa-file-invoice text-slate-500 text-[10px]"></i> <span>${pageName}</span>`;
+        btn.onclick = () => {
+          document.querySelectorAll('#secondaryNavButtonsZone button').forEach(b => b.classList.remove('bg-slate-900', 'text-white', 'border-slate-600'));
+          btn.classList.add('bg-slate-900', 'text-white', 'border-slate-600');
+        };
+        zone.appendChild(btn);
+      });
+    }
 
-      const tableSearch = document.getElementById("tableSearch").value.toLowerCase();
-      const tableFState = document.getElementById("tableFilterState").value;
-      const tableFType = document.getElementById("tableFilterType").value;
+    // Explicit Utility wrapper to enforce global component breakdown states
+    function collapsePane(paneId) {
+      document.getElementById(paneId).classList.add('collapsed-pane');
+    }
 
-      feedContainer.innerHTML = "";
-      tableBody.innerHTML = "";
+    function expandPane(paneId) {
+      document.getElementById(paneId).classList.remove('collapsed-pane');
+    }
 
-      const keys = Object.keys(localDataStore).sort((a,b) => localDataStore[b].createdAt - localDataStore[a].createdAt);
-      let feedActiveItemsCount = 0;
+    // --- SEAMLESS ADVANCED MOUSE & POINTER DRAG RESIZING MECHANICS ---
+    function initializeResizerMechanics(resizerId, targetPaneId, isLeftDirectionResize) {
+      const resizer = document.getElementById(resizerId);
+      const targetPane = document.getElementById(targetPaneId);
+      
+      if(!resizer || !targetPane) return;
 
-      keys.forEach(key => {
-        const item = localDataStore[key];
-        if (item.project !== currentProject) return;
-
-        // Process data responses block metric parameters
-        const options = POLL_OPTIONS_MAP[item.type] || [];
-        const voteDistribution = {};
-        options.forEach(opt => voteDistribution[opt] = 0);
+      resizer.addEventListener('mousedown', function(initEvent) {
+        initEvent.preventDefault();
+        resizer.classList.add('dragging');
         
-        let grossVotesCount = 0;
-        if (item.responses) {
-          Object.values(item.responses).forEach(resp => {
-            if (voteDistribution[resp.choice] !== undefined) {
-              voteDistribution[resp.choice]++;
-              grossVotesCount++;
-            }
-          });
-        }
+        const initialWidth = targetPane.getBoundingClientRect().width;
+        const startX = initEvent.clientX;
+        
+        // Ensure standard toggle layouts are overridden when user explicitly modifies space allocation bounds
+        targetPane.classList.remove('collapsed-pane');
 
-        let leadingChoice = "None";
-        let peakVotes = 0;
-        options.forEach(opt => {
-          if (voteDistribution[opt] > peakVotes) {
-            peakVotes = voteDistribution[opt];
-            leadingChoice = opt;
-          } else if (voteDistribution[opt] === peakVotes && peakVotes > 0) {
-            leadingChoice = "Tie / Inconclusive";
-          }
-        });
-
-        // Resolve Local Memory Expansions
-        if (manualCardTrackingState[key] === undefined) {
-          manualCardTrackingState[key] = !localGlobalCollapseAllTrigger;
-        }
-        const isExpanded = manualCardTrackingState[key];
-
-        // Pipeline A: DOM Assembly for Responsive Stream/Feed Cards
-        const matchFeedSearch = item.title.toLowerCase().includes(feedSearch) || item.description.toLowerCase().includes(feedSearch);
-        const matchFeedState = (feedFState === "all") || (feedFState === item.state);
-        const matchFeedType = (feedFType === "all") || (feedFType === item.type);
-
-        if (matchFeedSearch && matchFeedState && matchFeedType) {
-          feedActiveItemsCount++;
-          const card = document.createElement("div");
-          card.className = "bg-white rounded-xl border shadow-sm overflow-hidden transition-all duration-200";
+        function globalMouseMoveDragEngine(moveEvent) {
+          const deltaX = moveEvent.clientX - startX;
+          let engineeredWidth = isLeftDirectionResize ? (initialWidth + deltaX) : (initialWidth - deltaX);
           
-          let headerBadges = "";
-          if (item.type === 'status') headerBadges = `<span class="bg-teal-50 text-[#008069] border border-teal-100 font-bold px-1.5 py-0.5 rounded-[4px] text-[9px] uppercase">Status Matrix</span>`;
-          if (item.type === 'decision') headerBadges = `<span class="bg-blue-50 text-blue-700 border border-blue-100 font-bold px-1.5 py-0.5 rounded-[4px] text-[9px] uppercase">Decision</span>`;
-          if (item.type === 'checklist') headerBadges = `<span class="bg-purple-50 text-purple-700 border border-purple-100 font-bold px-1.5 py-0.5 rounded-[4px] text-[9px] uppercase">Verification Checklist</span>`;
-
-          const stateIndicatorBadge = item.state === 'open' 
-            ? `<span class="bg-emerald-500 text-white font-extrabold px-1.5 py-0.5 rounded-full text-[9px] inline-flex items-center gap-0.5 shrink-0 shadow-sm animate-pulse">● Active</span>`
-            : `<span class="bg-gray-400 text-white font-extrabold px-1.5 py-0.5 rounded-full text-[9px] inline-flex items-center gap-0.5 shrink-0 shadow-sm">🔒 Closed</span>`;
-
-          // Handle client rendering countdown values for automated TTL boundaries
-          let ttlTimerMarkup = "";
-          if (item.state === "open" && item.expiresAt) {
-            ttlTimerMarkup = `<div class="text-[10px] font-mono shrink-0 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200" data-countdown-id="${item.expiresAt}"></div>`;
-          }
-
-          let cardInteractionViewBlock = "";
-          if (isExpanded) {
-            // Option Voter Matrix Loop Block Layout
-            let choicesListMarkup = `<div class="space-y-1.5 mt-2.5">`;
-            options.forEach(opt => {
-              const count = voteDistribution[opt];
-              const pct = grossVotesCount > 0 ? Math.round((count / grossVotesCount) * 100) : 0;
-              
-              let currentAliasChoiceMarker = "";
-              if (item.responses && item.responses[window.globalUserUid] && item.responses[window.globalUserUid].choice === opt) {
-                currentAliasChoiceMarker = `<i class="fa-solid fa-circle-check text-[#00a884] text-[11px] shadow-sm bg-white rounded-full"></i>`;
-              }
-
-              const disabledAttr = item.state === 'closed' ? "disabled" : "";
-              const activeInteractiveCursorClass = item.state === 'closed' ? "cursor-not-allowed opacity-90" : "cursor-pointer hover:bg-gray-50 active:scale-[0.99]";
-
-              choicesListMarkup += `
-                <button ${disabledAttr} onclick="registerVoteExecution('${key}', '${opt}')" class="w-full text-left bg-gray-50 border rounded-lg p-2 flex flex-col relative overflow-hidden transition-all duration-150 ${activeInteractiveCursorClass}">
-                  <div class="absolute left-0 top-0 bottom-0 bg-teal-500/10 transition-all duration-300" style="width: ${pct}%"></div>
-                  <div class="flex justify-between items-center w-full z-10 relative font-medium">
-                    <span class="flex items-center gap-1.5 truncate text-gray-700">${opt} ${currentAliasChoiceMarker}</span>
-                    <span class="font-bold text-gray-900 text-[11px] font-mono">${count} <span class="text-[9px] text-gray-400 font-normal">(${pct}%)</span></span>
-                  </div>
-                </button>
-              `;
-            });
-            choicesListMarkup += `</div>`;
-
-            // Operational Access Controls Validation
-            const clientAccessOverrideAllowed = (item.uid === window.globalUserUid);
-            let operationalStateActionButton = "";
-            
-            if (clientAccessOverrideAllowed) {
-              if (item.state === 'open') {
-                operationalStateActionButton = `
-                  <button onclick="toggleLifecycleStateValue('${key}', 'closed')" class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold px-2 py-1 rounded transition border text-[10px] flex items-center gap-1 h-6 shadow-sm">
-                    <i class="fa-solid fa-lock"></i> Close Poll
-                  </button>
-                `;
-              } else {
-                operationalStateActionButton = `
-                  <button onclick="toggleLifecycleStateValue('${key}', 'open')" class="bg-teal-50 hover:bg-teal-100 text-teal-700 font-bold px-2 py-1 rounded transition border border-teal-200 text-[10px] flex items-center gap-1 h-6 shadow-sm">
-                    <i class="fa-solid fa-lock-open"></i> Reopen
-                  </button>
-                `;
-              }
-            }
-
-            const deleteMarkupBlock = clientAccessOverrideAllowed ? `
-              <button onclick="triggerTargetedDeletionPrompt('${key}')" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 font-bold p-1 rounded transition flex items-center justify-center w-6 h-6 shadow-sm" title="Delete Permanent">
-                <i class="fa-solid fa-trash-can text-[10px]"></i>
-              </button>
-            ` : "";
-
-            cardInteractionViewBlock = `
-              <div class="border-t px-3 py-2.5 bg-white space-y-3">
-                ${item.description ? `<p class="text-[11px] text-gray-600 font-normal leading-relaxed break-words border-l-2 border-gray-300 pl-2 bg-gray-50/50 py-1 rounded-r">${escapeHtml(item.description)}</p>` : ""}
-                ${choicesListMarkup}
-                
-                <div class="flex items-center justify-between gap-2 border-t pt-2.5 text-[10px] text-gray-400 font-medium">
-                  <div class="flex flex-wrap items-center gap-1.5 min-w-0">
-                    <span class="truncate">Owner: <strong class="text-gray-600">${escapeHtml(item.createdBy)}</strong></span>
-                    <span>•</span>
-                    <span class="font-mono">${new Date(item.createdAt).toLocaleDateString()}</span>
-                  </div>
-                  <div class="flex items-center gap-1.5 shrink-0">
-                    ${operationalStateActionButton}
-                    ${deleteMarkupBlock}
-                  </div>
-                </div>
-
-                <div class="border-t pt-2 mt-2 space-y-1.5">
-                  <div class="flex items-center justify-between text-[10px] font-bold text-gray-500 uppercase tracking-wide">
-                    <span><i class="fa-solid fa-comments text-teal-600"></i> Discussion thread</span>
-                  </div>
-                  <div id="chat-stream-${key}" class="space-y-1 max-h-[110px] overflow-y-auto custom-scrollbar border p-1.5 rounded bg-gray-50/50">
-                    <p class="text-[10px] text-gray-400 italic text-center py-1">Initializing context stream...</p>
-                  </div>
-                  <div class="flex gap-1.5 items-center">
-                    <input type="text" id="chat-input-${key}" placeholder="Type message argument..." class="flex-1 text-[10px] border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#00a884] h-6 bg-white" onkeydown="if(event.key==='Enter') submitTaskCommentMessage('${key}')">
-                    <button onclick="submitTaskCommentMessage('${key}')" class="bg-[#008069] text-white rounded px-2.5 py-1 text-[10px] font-bold shadow hover:bg-[#01604f] transition flex items-center justify-center h-6">
-                      <i class="fa-solid fa-paper-plane"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            `;
-          }
-
-          card.innerHTML = `
-            <div class="p-3 flex items-start gap-2.5 cursor-pointer hover:bg-gray-50/70 select-none" onclick="toggleCardUIExpansionState('${key}', event)">
-              <div class="w-5 h-5 rounded-full bg-teal-50 flex items-center justify-center text-[#008069] border border-teal-100 shrink-0 text-[10px] mt-0.5">
-                <i class="fa-solid ${isExpanded ? 'fa-folder-open' : 'fa-folder'}"></i>
-              </div>
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-1.5 flex-wrap">
-                  ${headerBadges}
-                  ${stateIndicatorBadge}
-                  ${ttlTimerMarkup}
-                </div>
-                <h2 class="font-black text-gray-900 text-xs sm:text-[13px] leading-tight mt-1 tracking-tight break-words">${escapeHtml(item.title)}</h2>
-                <div class="flex items-center gap-2 mt-1 text-[10px] text-gray-400 font-bold">
-                  <span>Gross Responses: <strong class="text-[#008069]">${grossVotesCount}</strong></span>
-                  <span>•</span>
-                  <span class="truncate">Leading: <strong class="text-gray-700">${leadingChoice}</strong></span>
-                </div>
-              </div>
-              <div class="text-gray-400 text-xs px-1 shrink-0 self-center">
-                <i class="fa-solid ${isExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
-              </div>
-            </div>
-            ${cardInteractionViewBlock}
-          `;
-          feedContainer.appendChild(card);
-
-          if (isExpanded) {
-            setTimeout(() => initializeLiveTaskChatStream(key), 5);
-          }
-        }
-
-        // Pipeline B: DOM Assembly for Ledger Data Matrix Grid View
-        const matchTableSearch = item.title.toLowerCase().includes(tableSearch) || item.description.toLowerCase().includes(tableSearch);
-        const matchTableState = (tableFState === "all") || (tableFState === item.state);
-        const matchTableType = (tableFType === "all") || (tableFType === item.type);
-
-        if (matchTableSearch && matchTableState && matchTableType) {
-          const row = document.createElement("tr");
-          row.className = "hover:bg-gray-50 border-b last:border-b-0 font-medium transition-colors";
+          const minAllowed = parseInt(targetPane.style.minWidth || '100');
+          const maxAllowed = parseInt(targetPane.style.maxWidth || '800');
           
-          const startStr = new Date(item.createdAt).toLocaleDateString();
-          const endStr = item.closedAt ? new Date(item.closedAt).toLocaleDateString() : "—";
+          if(engineeredWidth < minAllowed) engineeredWidth = minAllowed;
+          if(engineeredWidth > maxAllowed) engineeredWidth = maxAllowed;
           
-          let lifespanStr = "Active";
-          if (item.closedAt) {
-            const diffDays = Math.round((item.closedAt - item.createdAt) / (1000 * 60 * 60 * 24));
-            lifespanStr = `${diffDays} days`;
-          } else {
-            const currentDiff = Math.round((Date.now() - item.createdAt) / (1000 * 60 * 60 * 24));
-            lifespanStr = `${currentDiff}d active`;
-          }
-
-          const stateCellMarkup = item.state === 'open' 
-            ? `<span class="text-emerald-600 font-extrabold bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded">🟢 Open</span>`
-            : `<span class="text-gray-500 font-extrabold bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded">🔒 Closed</span>`;
-
-          const clientAccessOverrideAllowed = (item.uid === window.globalUserUid);
-          const ledgerRowActionBtn = clientAccessOverrideAllowed 
-            ? `<button onclick="triggerTargetedDeletionPrompt('${key}')" class="text-red-600 hover:text-red-800 p-1 font-bold text-[10px] flex items-center justify-center gap-0.5 mx-auto transition"><i class="fa-solid fa-trash-can"></i> WIPE</button>`
-            : `<span class="text-gray-300 italic text-[9px]">Restricted</span>`;
-
-          row.innerHTML = `
-            <td class="p-2 font-bold text-gray-900 border-r max-w-[160px] truncate sticky-col">${escapeHtml(item.title)}</td>
-            <td class="p-2 text-gray-500 max-w-[200px] truncate border-r" title="${escapeHtml(item.description)}">${item.description ? escapeHtml(item.description) : "—"}</td>
-            <td class="p-2 capitalize border-r font-semibold text-gray-600">${item.type}</td>
-            <td class="p-2 border-r text-center">${stateCellMarkup}</td>
-            <td class="p-2 border-r font-semibold text-gray-700 max-w-[80px] truncate">${escapeHtml(item.createdBy)}</td>
-            <td class="p-2 border-r font-mono text-[10px] text-gray-500">${startStr}</td>
-            <td class="p-2 border-r font-mono text-[10px] text-gray-500">${endStr}</td>
-            <td class="p-2 border-r font-mono font-bold text-amber-700">${lifespanStr}</td>
-            <td class="p-2 border-r text-center font-bold text-purple-600 font-mono">${grossVotesCount}</td>
-            <td class="p-2 border-r font-bold text-teal-800 max-w-[110px] truncate">${leadingChoice}</td>
-            <td class="p-2 text-right">${ledgerRowActionBtn}</td>
-          `;
-          tableBody.appendChild(row);
-        }
-      });
-
-      if (feedActiveItemsCount === 0) {
-        feedContainer.innerHTML = `
-          <div class="text-center py-12 text-gray-400 border border-dashed rounded-xl bg-white mt-4">
-            <i class="fa-solid fa-cubes text-xl mb-1.5 text-gray-300"></i>
-            <p class="text-[11px] font-bold">No active task metrics fall matching these criteria scope parameters.</p>
-          </div>
-        `;
-      }
-    }
-
-    // Toggle Multi-State Card Trackers View Configuration
-    window.toggleCardUIExpansionState = function(taskId, event) {
-      if (event.target.closest('button') || event.target.closest('input') || event.target.closest('select') || event.target.closest('a') || window.getSelection().toString()) {
-        return; 
-      }
-      manualCardTrackingState[taskId] = !manualCardTrackingState[taskId];
-      localStorage.setItem("qt_manual_card_toggles2", JSON.stringify(manualCardTrackingState));
-      renderApplicationPipeline();
-    };
-
-    // Bulk Management Expansion Engines
-    document.getElementById("expandAllCardsBtn").addEventListener("click", () => {
-      localGlobalCollapseAllTrigger = false;
-      Object.keys(localDataStore).forEach(k => manualCardTrackingState[k] = true);
-      localStorage.setItem("qt_manual_card_toggles2", JSON.stringify(manualCardTrackingState));
-      renderApplicationPipeline();
-    });
-
-    document.getElementById("collapseAllCardsBtn").addEventListener("click", () => {
-      localGlobalCollapseAllTrigger = true;
-      Object.keys(localDataStore).forEach(k => manualCardTrackingState[k] = false);
-      localStorage.setItem("qt_manual_card_toggles2", JSON.stringify(manualCardTrackingState));
-      renderApplicationPipeline();
-    });
-
-    // Client Voting Registry State Mechanics
-    window.registerVoteExecution = function(taskId, optionValue) {
-      if (!window.globalUserUid) return;
-      const item = localDataStore[taskId];
-      if (item.state === 'closed') return;
-
-      SoundEffects.playVote();
-      db.ref(`tasks/${taskId}/responses/${window.globalUserUid}`).set({
-        voterAlias: currentUser || "Anonymous",
-        choice: optionValue,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-      }).then(() => {
-        dispatchGlobalAppNotification(`registered transaction vote [${optionValue}] for matrix metric block: "${item.title}"`);
-      });
-    };
-
-    // Access Controlled Lifecycle Modifier Override Mutator
-    window.toggleLifecycleStateValue = function(taskId, newStateTarget) {
-      const item = localDataStore[taskId];
-      if (!item || item.uid !== window.globalUserUid) return;
-
-      if (newStateTarget === "open") SoundEffects.playReopen();
-      else SoundEffects.playComplete();
-
-      const patch = { state: newStateTarget };
-      if (newStateTarget === "closed") {
-        patch.closedAt = Date.now();
-      } else {
-        // Clear old dates if explicitly forced active again
-        db.ref(`tasks/${taskId}/closedAt`).remove();
-      }
-
-      db.ref(`tasks/${taskId}`).update(patch).then(() => {
-        dispatchGlobalAppNotification(`manually adjusted lifecycle constraint to [${newStateTarget.toUpperCase()}] for item: "${item.title}"`);
-      });
-    };
-
-    // Structural Deletion Pipeline Actions
-    window.triggerTargetedDeletionPrompt = function(taskId) {
-      const item = localDataStore[taskId];
-      if (!item || item.uid !== window.globalUserUid) return;
-
-      targetTaskIdForDeletion = taskId;
-      deleteModal.classList.remove("hidden");
-      setTimeout(() => deleteModal.classList.remove("opacity-0", "scale-95"), 10);
-    };
-
-    function dismissDeleteModalStructure() {
-      deleteModal.classList.add("opacity-0", "scale-95");
-      setTimeout(() => {
-        deleteModal.classList.add("hidden");
-        targetTaskIdForDeletion = null;
-      }, 200);
-    }
-    document.getElementById("cancelDeleteBtn").addEventListener("click", dismissDeleteModalStructure);
-
-    document.getElementById("confirmDeleteBtn").addEventListener("click", () => {
-      if (targetTaskIdForDeletion && localDataStore[targetTaskIdForDeletion]) {
-        const titleStr = localDataStore[targetTaskIdForDeletion].title;
-        SoundEffects.playDelete();
-        
-        // Wipe active listeners before memory allocation loss
-        if (activeChatListeners[targetTaskIdForDeletion]) {
-          db.ref(`tasks/${targetTaskIdForDeletion}/comments`).off();
-          delete activeChatListeners[targetTaskIdForDeletion];
+          targetPane.style.width = `${engineeredWidth}px`;
         }
 
-        db.ref(`tasks/${targetTaskIdForDeletion}`).remove().then(() => {
-          dispatchGlobalAppNotification(`purged/wiped metric ledger object permanently: "${titleStr}"`);
-          dismissDeleteModalStructure();
-        });
-      }
-    });
-
-    // Real-time Filtering Pipeline Setup Hooks
-    ['feedSearch', 'feedFilterState', 'feedFilterType'].forEach(id => {
-      document.getElementById(id).addEventListener("input", renderApplicationPipeline);
-    });
-    ['tableSearch', 'tableFilterState', 'tableFilterType'].forEach(id => {
-      document.getElementById(id).addEventListener("input", renderApplicationPipeline);
-    });
-
-    document.getElementById("feedClearAllFiltersBtn").addEventListener("click", () => {
-      document.getElementById("feedSearch").value = "";
-      document.getElementById("feedFilterState").value = "all";
-      document.getElementById("feedFilterType").value = "all";
-      renderApplicationPipeline();
-    });
-    document.getElementById("tableClearAllFiltersBtn").addEventListener("click", () => {
-      document.getElementById("tableSearch").value = "";
-      document.getElementById("tableFilterState").value = "all";
-      document.getElementById("tableFilterType").value = "all";
-      renderApplicationPipeline();
-    });
-
-    // Global Registry Analytics Aggregators & Chart Engine Mechanics
-    let instanceStatusChart = null;
-    let instanceTypeChart = null;
-    let instanceDurationChart = null;
-    let instancePerformanceChart = null;
-
-    function triggerDashboardChartsRender() {
-      const keys = Object.keys(localDataStore);
-      
-      let countOpen = 0, countClosed = 0, grossVotes = 0;
-      let distributionType = { status: 0, decision: 0, checklist: 0 };
-      let durationRanges = { "Under 1 Day": 0, "1-3 Days": 0, "3-7 Days": 0, "7+ Days": 0 };
-      let teamPerformanceMetrics = {};
-
-      let consolidatedClosedDurationsSum = 0;
-
-      keys.forEach(k => {
-        const item = localDataStore[k];
-        if (item.project !== currentProject) return;
-
-        if (item.state === 'open') countOpen++;
-        else countClosed++;
-
-        if (distributionType[item.type] !== undefined) distributionType[item.type]++;
-
-        let localItemVotesCount = 0;
-        if (item.responses) {
-          Object.values(item.responses).forEach(resp => {
-            grossVotes++;
-            localItemVotesCount++;
-            
-            const voter = resp.voterAlias || "Anonymous";
-            if (!teamPerformanceMetrics[voter]) teamPerformanceMetrics[voter] = 0;
-            teamPerformanceMetrics[voter]++;
-          });
+        function globalMouseUpTerminationEngine() {
+          resizer.classList.remove('dragging');
+          document.removeEventListener('mousemove', globalMouseMoveDragEngine);
+          document.removeEventListener('mouseup', globalMouseUpTerminationEngine);
         }
 
-        const terminalTime = item.closedAt || Date.now();
-        const diffDays = (terminalTime - item.createdAt) / (1000 * 60 * 60 * 24);
-        
-        if (item.state === 'closed') {
-          consolidatedClosedDurationsSum += diffDays;
-        }
-
-        if (diffDays < 1) durationRanges["Under 1 Day"]++;
-        else if (diffDays <= 3) durationRanges["1-3 Days"]++;
-        else if (diffDays <= 7) durationRanges["3-7 Days"]++;
-        else durationRanges["7+ Days"]++;
-      });
-
-      document.getElementById("stat-total").textContent = countOpen + countClosed;
-      document.getElementById("stat-active").textContent = countOpen;
-      document.getElementById("stat-closed").textContent = countClosed;
-      document.getElementById("stat-votes").textContent = grossVotes;
-      
-      const avgDurationVal = countClosed > 0 ? (consolidatedClosedDurationsSum / countClosed).toFixed(1) : "0.0";
-      document.getElementById("stat-avg-duration").textContent = `${avgDurationVal} days`;
-
-      // Live Historical Audit Stream Logger
-      const streamAuditBox = document.getElementById("dashboardAuditTrail");
-      streamAuditBox.innerHTML = "";
-      const loggedArray = keys.map(k => localDataStore[k]).filter(i => i.project === currentProject).sort((a,b) => b.createdAt - a.createdAt).slice(0,12);
-      
-      if(loggedArray.length === 0) {
-        streamAuditBox.innerHTML = `<p class="italic text-gray-400 text-center py-2">No trace arrays recorded.</p>`;
-      } else {
-        loggedArray.forEach(item => {
-          const block = document.createElement("div");
-          block.className = "py-1 flex justify-between items-center font-mono text-[9px]";
-          block.innerHTML = `
-            <span class="text-gray-700 font-sans truncate max-w-[200px]">Initialized <strong>"${escapeHtml(item.title)}"</strong></span>
-            <span class="text-gray-400 shrink-0">${new Date(item.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-          `;
-          streamAuditBox.appendChild(block);
-        });
-      }
-
-      // Chart Assembly Realization Canvas
-      const optionsConfig = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
-
-      if(instanceStatusChart) instanceStatusChart.destroy();
-      instanceStatusChart = new Chart(document.getElementById('chartStatus'), {
-        type: 'doughnut',
-        data: { labels: ['Active', 'Closed'], datasets: [{ data: [countOpen, countClosed], backgroundColor: ['#008069', '#9ca3af'] }] },
-        options: optionsConfig
-      });
-
-      if(instanceTypeChart) instanceTypeChart.destroy();
-      instanceTypeChart = new Chart(document.getElementById('chartType'), {
-        type: 'pie',
-        data: { labels: ['Status', 'Decision', 'Checklist'], datasets: [{ data: [distributionType.status, distributionType.decision, distributionType.checklist], backgroundColor: ['#0d9488', '#2563eb', '#7c3aed'] }] },
-        options: optionsConfig
-      });
-
-      if(instanceDurationChart) instanceDurationChart.destroy();
-      instanceDurationChart = new Chart(document.getElementById('chartDurationRange'), {
-        type: 'polarArea',
-        data: { labels: Object.keys(durationRanges), datasets: [{ data: Object.values(durationRanges), backgroundColor: ['#f59e0b', '#3b82f6', '#8b5cf6', '#ef4444'] }] },
-        options: optionsConfig
-      });
-
-      const userLabels = Object.keys(teamPerformanceMetrics);
-      const userValues = Object.values(teamPerformanceMetrics);
-
-      if(instancePerformanceChart) instancePerformanceChart.destroy();
-      instancePerformanceChart = new Chart(document.getElementById('chartUserPerformance'), {
-        type: 'bar',
-        data: { labels: userLabels, datasets: [{ label: 'Transactions Logs Executed', data: userValues, backgroundColor: '#7c3aed', borderRadius: 4 }] },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 9 } } }, x: { ticks: { font: { size: 9 } } } },
-          plugins: { legend: { display: false } }
-        }
+        document.addEventListener('mousemove', globalMouseMoveDragEngine);
+        document.addEventListener('mouseup', globalMouseUpTerminationEngine);
       });
     }
 
-    // Ledger Engine Export Mechanics: Comma Separated Values Data Stream
-    window.exportToCSV = function() {
-      const keys = Object.keys(localDataStore);
-      let csvContent = "data:text/csv;charset=utf-8,Task Title,Description,Type,State,Created By,Start Date,End Date,Gross Responses,Leading Choice\n";
-      
-      keys.forEach(k => {
-        const item = localDataStore[k];
-        if (item.project !== currentProject) return;
+    // Instantiate resizing physics engines across UI Grid Segments
+    initializeResizerMechanics('resizer-secondaryNav', 'secondaryNavPane', true);
+    initializeResizerMechanics('resizer-dataInput', 'dataInputPane', true);
+    initializeResizerMechanics('resizer-information', 'informationPane', true);
 
-        const options = POLL_OPTIONS_MAP[item.type] || [];
-        let grossVotesCount = 0;
-        const voteDistribution = {};
-        options.forEach(o => voteDistribution[o] = 0);
-        
-        if(item.responses) {
-          Object.values(item.responses).forEach(r => {
-            if (voteDistribution[r.choice] !== undefined) {
-              voteDistribution[r.choice]++; grossVotesCount++;
-            }
-          });
-        }
-
-        let leadingChoice = "None"; let peak = 0;
-        options.forEach(o => {
-          if(voteDistribution[o] > peak) { peak = voteDistribution[o]; leadingChoice = o; }
-          else if(voteDistribution[o] === peak && peak > 0) { leadingChoice = "Tie"; }
-        });
-
-        const titleEsc = `"${item.title.replace(/"/g, '""')}"`;
-        const descEsc = `"${(item.description || "").replace(/"/g, '""')}"`;
-        const startStr = new Date(item.createdAt).toLocaleDateString();
-        const endStr = item.closedAt ? new Date(item.closedAt).toLocaleDateString() : "—";
-
-        csvContent += `${titleEsc},${descEsc},${item.type},${item.state},"${item.createdBy}",${startStr},${endStr},${grossVotesCount},"${leadingChoice}"\n`;
-      });
-
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `QuickTask_Ledger_${currentProject}_2026.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    };
-
-    // Ledger Engine Export Mechanics: Formatted A4 Vector PDF Generation Layout
-    window.exportToPDF = function() {
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF('l', 'mm', 'a4');
-
-      pdf.setFont("Helvetica", "bold");
-      pdf.setFontSize(16);
-      pdf.textColor = [0, 128, 105];
-      pdf.text(`QuickTask Polls operational Matrix Ledger`, 10, 15);
-
-      pdf.setFont("Helvetica", "normal");
-      pdf.setFontSize(9);
-      pdf.textColor = [100, 100, 100];
-      pdf.text(`Project Scope Domain Environment: ${currentProject}  |  Generated Real-time Sync: ${new Date().toLocaleString()}`, 10, 21);
-
-      const tableRowsData = [];
-      const keys = Object.keys(localDataStore).sort((a,b) => localDataStore[b].createdAt - localDataStore[a].createdAt);
-
-      keys.forEach(k => {
-        const item = localDataStore[k];
-        if (item.project !== currentProject) return;
-
-        const options = POLL_OPTIONS_MAP[item.type] || [];
-        let grossVotesCount = 0;
-        const voteDistribution = {};
-        options.forEach(o => voteDistribution[o] = 0);
-        if(item.responses) {
-          Object.values(item.responses).forEach(r => {
-            if (voteDistribution[r.choice] !== undefined) { voteDistribution[r.choice]++; grossVotesCount++; }
-          });
-        }
-        let leadingChoice = "None"; let peak = 0;
-        options.forEach(o => {
-          if(voteDistribution[o] > peak) { peak = voteDistribution[o]; leadingChoice = o; }
-          else if(voteDistribution[o] === peak && peak > 0) { leadingChoice = "Tie"; }
-        });
-
-        tableRowsData.push([
-          item.title,
-          item.type.toUpperCase(),
-          item.state.toUpperCase(),
-          item.createdBy,
-          new Date(item.createdAt).toLocaleDateString(),
-          item.closedAt ? new Date(item.closedAt).toLocaleDateString() : "—",
-          grossVotesCount.toString(),
-          leadingChoice
-        ]);
-      });
-
-      pdf.autoTable({
-        startY: 26,
-        head: [['Task Title Metric Parameter', 'Type context', 'State Status', 'Owner Alias', 'Start Date', 'Concluded Date', 'Gross Votes', 'Leading Consensus Option']],
-        body: tableRowsData,
-        theme: 'striped',
-        headStyles: { fillColor: [0, 128, 105], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
-        bodyStyles: { fontSize: 8, textColor: [40, 40, 40] },
-        columnStyles: { 0: { cellWidth: 55 }, 1: { cellWidth: 25 }, 2: { cellWidth: 20 }, 3: { cellWidth: 25 }, 4: { cellWidth: 25 }, 5: { cellWidth: 25 }, 6: { cellWidth: 20 }, 7: { cellWidth: 45 } },
-        styles: { overflow: 'bleed' }
-      });
-
-      pdf.save(`QuickTask_Standard_Report_${currentProject}_2026.pdf`);
-    };
-
-    switchView('feed');
   </script>
-</body></html>
+</body>
+</html>
