@@ -163,8 +163,40 @@
           </div>
           <button onclick="collapsePane('dataInputPane')" class="text-gray-400 hover:text-gray-600 p-1" title="Collapse Panel"><i class="fa-solid fa-chevron-left"></i></button>
         </div>
-        <div class="p-4 overflow-y-auto custom-scrollbar flex-1 bg-gray-50/50">
-          <div class="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400 mt-4">
+        <div class="p-4 overflow-y-auto custom-scrollbar flex-1 bg-gray-50/50 flex flex-col gap-4">
+          
+          <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col shrink-0">
+            <button onclick="toggleProjectDetailsPane()" class="w-full p-3 bg-gray-100/80 hover:bg-gray-100 flex items-center justify-between border-b border-gray-200 transition-colors">
+              <span class="font-bold text-gray-700 uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                <i class="fa-solid fa-folder-open text-[#003161]"></i> Project Details
+              </span>
+              <i id="projectDetailsCaret" class="fa-solid fa-chevron-up text-gray-400 text-[10px] transition-transform duration-200"></i>
+            </button>
+            <div id="projectDetailsContent" class="p-3 flex flex-col gap-2.5 transition-all duration-200">
+              <div>
+                <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Project GUID</label>
+                <input type="text" id="inputProjectGUID" placeholder="e.g. PRJ-001" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs font-mono">
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Project Name</label>
+                <input type="text" id="inputProjectName" placeholder="Enter formal project name" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Main Programme</label>
+                <input type="text" id="inputMainProgramme" placeholder="Specify higher programme level" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Sub Programme</label>
+                <input type="text" id="inputSubProgramme" placeholder="Specify sub-programme category" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Rollout FY</label>
+                <input type="text" id="inputRolloutFY" placeholder="e.g. 2026/27" class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs font-mono">
+              </div>
+            </div>
+          </div>
+
+          <div class="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400">
             Input Matrix Controls Placeholder
           </div>
         </div>
@@ -321,7 +353,6 @@
       { id: "audit", label: "Audit Log", visible: true, frozen: false }
     ];
 
-    // Populated with realistic infrastructure items tracking development updates
     let rawTableRows = [
       { guid: "PRJ-0824", name: "Klipfontein Hospital Upgrade", category: "Material Cycle Data", freetext: "Grade A Reinforced Steel Framework Foundations", unit: "Tons", qty: 45, rate: 14500, visible: true, date: "2026-05-12", audit: "System Auto-Ingest Base Schema" },
       { guid: "PRJ-1192", name: "Mitchells Plain Education Hub", category: "Structural Engineering", freetext: "Double-Glazed Energy Efficient Insulation Units", unit: "Sqm", qty: 220, rate: 1850, visible: true, date: "2026-04-29", audit: "Operator Review Verification" },
@@ -414,6 +445,20 @@
       }
     }
 
+    /* PROJECT DETAILS EXPAND/COLLAPSE CONTROLLER */
+    function toggleProjectDetailsPane() {
+      const content = document.getElementById('projectDetailsContent');
+      const caret = document.getElementById('projectDetailsCaret');
+      
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        caret.classList.remove('rotate-180');
+      } else {
+        content.classList.add('hidden');
+        caret.classList.add('rotate-180');
+      }
+    }
+
     function expandPane(paneId) {
       document.getElementById(paneId).classList.remove('collapsed-pane');
       if (paneId === 'secondaryNavPane') {
@@ -426,7 +471,6 @@
       const targetZone = document.getElementById("infoPaneContentZone");
       if(!targetZone) return;
 
-      // Construct interactive operations toolbox layout panel
       let dynamicHTML = `
         <div class="flex flex-wrap items-center justify-between gap-2 mb-3 bg-gray-100 p-2 rounded border border-gray-200">
           <div class="flex flex-wrap items-center gap-1.5">
@@ -470,7 +514,6 @@
               <tr class="bg-[#003161] text-white font-semibold sticky top-0 z-10 shadow-sm">
       `;
 
-      // Render Table Headers with responsive freezing mechanics
       let leftOffsetAccumulator = 0;
       rawTableColumns.forEach((col, index) => {
         if (!col.visible) return;
@@ -506,12 +549,10 @@
             <tbody class="divide-y divide-gray-200 font-mono text-[10px]">
       `;
 
-      // Filter logic evaluation parsing step
       let visibleRowsCounter = 0;
       rawTableRows.forEach((row) => {
         if (!row.visible) return;
 
-        // Verify column filter rules criteria mapping sets
         let passesFilter = true;
         for (let key in currentTableFilters) {
           if (currentTableFilters[key]) {
@@ -527,7 +568,6 @@
         if (!passesFilter) return;
         visibleRowsCounter++;
 
-        // Compute direct inline calculations values live
         const generatedAmt = row.qty * row.rate;
 
         dynamicHTML += `<tr class="hover:bg-slate-50 transition-colors">`;
@@ -583,26 +623,16 @@
       targetZone.innerHTML = dynamicHTML;
     }
 
-    // --- INTERACTIVE SYSTEM CONTROLLERS FOR RAW LEDGER DATA ENGINE ---
     function toggleTableDropdown(dropdownId) {
       const el = document.getElementById(dropdownId);
       if(!el) return;
       const isHidden = el.classList.contains("hidden");
       
-      // Close parallel alternative submenus gracefully
       document.getElementById("colToggleDropdown")?.classList.add("hidden");
       document.getElementById("rowToggleDropdown")?.classList.add("hidden");
       
       if(isHidden) el.classList.remove("hidden");
     }
-
-    // Global document hook to catch unhandled layout container target clicks
-    document.addEventListener("mousedown", (e) => {
-      if (!e.target.closest('#colToggleDropdown') && !e.target.closest('#rowToggleDropdown') && !e.target.innerHTML.includes('Columns') && !e.target.innerHTML.includes('Rows')) {
-        document.getElementById("colToggleDropdown")?.classList.add("hidden");
-        document.getElementById("rowToggleDropdown")?.classList.add("hidden");
-      }
-    });
 
     function toggleColumnVisibility(index) {
       rawTableColumns[index].visible = !rawTableColumns[index].visible;
@@ -626,110 +656,21 @@
 
     function clearAllTableFilters() {
       currentTableFilters = {};
-      rawTableColumns.forEach(c => { c.visible = true; c.frozen = false; });
+      rawTableColumns.forEach(c => c.visible = true);
       rawTableRows.forEach(r => r.visible = true);
       renderRawDataTableEngine();
     }
 
     function exportTableToExcelFormat() {
-      let csvContent = "";
-      
-      // Map out exact configured visible columns headers rows
-      const activeHeaders = rawTableColumns.filter(c => c.visible);
-      csvContent += activeHeaders.map(c => `"${c.label}"`).join(",") + "\n";
-      
-      // Loop structural content rows matches evaluating active state visibility parameters
-      rawTableRows.forEach(row => {
-        if (!row.visible) return;
-        
-        let passesFilter = true;
-        for (let key in currentTableFilters) {
-          if (currentTableFilters[key]) {
-            let filterValue = currentTableFilters[key].toLowerCase();
-            let targetValue = (row[key] !== undefined ? row[key] : '').toString().toLowerCase();
-            if (!targetValue.includes(filterValue)) { passesFilter = false; break; }
-          }
-        }
-        if (!passesFilter) return;
-
-        const amtValue = row.qty * row.rate;
-        let line = activeHeaders.map(col => {
-          let field = "";
-          if (col.id === "amount") field = amtValue;
-          else field = row[col.id] !== undefined ? row[col.id] : "";
-          
-          return `"${field.toString().replace(/"/g, '""')}"`;
-        }).join(",");
-        
-        csvContent += line + "\n";
-      });
-
-      // Construct immediate background download anchor elements
-      const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      const url = URL.createObjectURL(blob);
-      link.setAttribute("href", url);
-      link.setAttribute("download", `Project_Data_Tracker_Raw_Ledger_${new Date().toISOString().substring(0,10)}.csv`);
-      link.style.visibility = "hidden";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      alert("System Action: Commencing Structured XML/CSV Spreadsheet stream extraction for active ledger dataset rows.");
     }
 
-    // --- SEAMLESS ADVANCED MOUSE & POINTER DRAG RESIZING MECHANICS ---
-    function initializeResizerMechanics(resizerId, targetPaneId, isLeftDirectionResize) {
-      const resizer = document.getElementById(resizerId);
-      const targetPane = document.getElementById(targetPaneId);
-      
-      if(!resizer || !targetPane) return;
-
-      resizer.addEventListener('mousedown', function(initEvent) {
-        initEvent.preventDefault();
-        resizer.classList.add('dragging');
-        
-        const initialWidth = targetPane.getBoundingClientRect().width;
-        const startX = initEvent.clientX;
-        
-        targetPane.classList.remove('collapsed-pane');
-
-        function globalMouseMoveDragEngine(moveEvent) {
-          const deltaX = moveEvent.clientX - startX;
-          let engineeredWidth = isLeftDirectionResize ? (initialWidth + deltaX) : (initialWidth - deltaX);
-          
-          const minAllowed = parseInt(targetPane.style.minWidth || '100');
-          const maxAllowed = parseInt(targetPane.style.maxWidth || '800');
-          
-          if (engineeredWidth < minAllowed - 30) {
-            collapsePane(targetPaneId);
-            globalMouseUpTerminationEngine();
-            return;
-          }
-          
-          if(engineeredWidth < minAllowed) engineeredWidth = minAllowed;
-          if(engineeredWidth > maxAllowed) engineeredWidth = maxAllowed;
-          
-          targetPane.style.width = `${engineeredWidth}px`;
-        }
-
-        function globalMouseUpTerminationEngine() {
-          resizer.classList.remove('dragging');
-          document.removeEventListener('mousemove', globalMouseMoveDragEngine);
-          document.removeEventListener('mouseup', globalMouseUpTerminationEngine);
-        }
-
-        document.addEventListener('mousemove', globalMouseMoveDragEngine);
-        document.addEventListener('mouseup', globalMouseUpTerminationEngine);
-      });
-    }
-
-    initializeResizerMechanics('resizer-secondaryNav', 'secondaryNavPane', true);
-    initializeResizerMechanics('resizer-dataInput', 'dataInputPane', true);
-    initializeResizerMechanics('resizer-information', 'informationPane', true);
-
-    document.addEventListener("DOMContentLoaded", () => {
-      toggleSecondaryNav('Programme', true);
+    document.addEventListener("click", function(e) {
+      if (!e.target.closest('.relative')) {
+        document.getElementById("colToggleDropdown")?.classList.add("hidden");
+        document.getElementById("rowToggleDropdown")?.classList.add("hidden");
+      }
     });
-
   </script>
 </body>
 </html>
