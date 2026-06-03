@@ -5,117 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Project Data Tracker</title>
 
-  <!-- Firebase -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <!-- CONFIG -->
-  <script>
-    window.firebaseConfig = {
-      apiKey: "AIzaSyCL6iJKRp-WjCgBTtRCuRny14lUOMP9KJg",
-      authDomain: "data-tracker-f11df.firebaseapp.com",
-      databaseURL: "https://data-tracker-f11df-default-rtdb.firebaseio.com",
-      projectId: "data-tracker-f11df",
-      storageBucket: "data-tracker-f11df.firebasestorage.app",
-      messagingSenderId: "462872028246",
-      appId: "1:462872028246:web:eb90490bd650a85d76c7f7"
-    };
-  </script>
+  <script src="./config/app.config.js"></script>
 
-  <script>
-    // -------------------------
-    // STATE CORE
-    // -------------------------
-    window.appState = {
-      user: null,
-      ready: false
-    };
+  <!-- CORE ENGINE (ORDER MATTERS) -->
+  <script src="./core/firebase.js"></script>
+  <script src="./core/state.js"></script>
+  <script src="./core/bootstrap.js"></script>
 
-    // -------------------------
-    // BOOT STRAP
-    // -------------------------
-    function boot() {
-      const app = firebase.initializeApp(window.firebaseConfig);
-      const auth = firebase.auth(app);
-
-      renderLoading();
-
-      auth.onAuthStateChanged((user) => {
-        if (user) {
-          window.appState.user = user;
-          window.firebaseAuthUser = user;
-          window.appState.ready = true;
-          renderApp(user);
-        } else {
-          auth.signInAnonymously();
-        }
-      });
-    }
-
-    // -------------------------
-    // UI: LOADING SCREEN
-    // -------------------------
-    function renderLoading() {
-      document.body.innerHTML = `
-        <div style="
-          font-family: Arial;
-          height: 100vh;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          flex-direction:column;
-          background:#0f172a;
-          color:white;
-        ">
-          <h2>Project Data Tracker</h2>
-          <p>Loading system...</p>
-        </div>
-      `;
-    }
-
-    // -------------------------
-    // UI: MAIN APP SHELL
-    // -------------------------
-    function renderApp(user) {
-      document.body.innerHTML = `
-        <div style="font-family: Arial;">
-          
-          <!-- HEADER -->
-          <div style="padding:12px;background:#003161;color:white;">
-            <b>Project Data Tracker</b>
-            <span style="float:right;font-size:12px;">
-              UID: ${user.uid}
-            </span>
-          </div>
-
-          <!-- APP ROOT -->
-          <div id="app"></div>
-
-        </div>
-      `;
-
-      mountDashboard();
-    }
-
-    // -------------------------
-    // FIRST REAL MODULE HOOK
-    // -------------------------
-    function mountDashboard() {
-      document.getElementById("app").innerHTML = `
-        <div style="padding:20px;">
-          <h3>Welcome ✔</h3>
-          <p>Your app shell is now active.</p>
-        </div>
-      `;
-    }
-
-    // -------------------------
-    // INIT
-    // -------------------------
-    window.addEventListener("DOMContentLoaded", boot);
-  </script>
 </head>
 
-<body></body>
+<body>
+  <div id="app"></div>
+</body>
 </html>
