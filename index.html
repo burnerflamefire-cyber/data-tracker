@@ -18,11 +18,11 @@
       -webkit-tap-highlight-color: transparent;
     }
     .custom-scrollbar::-webkit-scrollbar {
-      width: 4px;
-      height: 4px;
+      width: 6px;
+      height: 6px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-      background-color: rgba(0, 0, 0, 0.15);
+      background-color: rgba(0, 0, 0, 0.2);
       border-radius: 10px;
     }
     /* Vertical Text Rotation utility */
@@ -69,15 +69,20 @@
     /* Table Freeze Utilities */
     .sticky-column {
       position: sticky !important;
-      z-index: 2 !important;
-      background-color: #f8fafc !important;
+      z-index: 10 !important;
+      box-shadow: 2px 0 5px -2px rgba(0,0,0,0.15);
     }
     th.sticky-column {
-      z-index: 3 !important;
-      background-color: #003161 !important;
+      z-index: 30 !important;
     }
-    tr:nth-child(even) .sticky-column {
-      background-color: #f1f5f9 !important;
+    /* Header Row Stays Sticky Always */
+    .sticky-header {
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 20 !important;
+    }
+    th.sticky-header.sticky-column {
+      z-index: 40 !important;
     }
   </style>
 </head>
@@ -300,11 +305,8 @@
           </div>
           <button onclick="collapsePane('informationPane')" class="text-gray-400 hover:text-gray-600 p-1" title="Collapse Panel"><i class="fa-solid fa-compress"></i></button>
         </div>
-        <div id="infoPaneContentZone" class="p-4 overflow-y-auto custom-scrollbar flex-1 relative">
-          <div class="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400 mt-4">
-            Primary Visualisation Matrix &amp; Ledger Grid Placement Area
+        <div id="infoPaneContentZone" class="p-4 overflow-y-auto custom-scrollbar flex-1 relative bg-gray-50/30">
           </div>
-        </div>
       </div>
     </div>
     <div class="pane-resizer" id="resizer-information"></div>
@@ -424,10 +426,13 @@
     updateGovernmentFinancialMetrics();
     setInterval(updateGovernmentFinancialMetrics, 60000);
 
-    // --- RAW DATA STORES & MOCK VALUES GENERATION ---
+    // --- RAW DATA STORES WITH DYNAMIC ADDED COLUMNS & FREEZE SCHEMATICS ---
     const rawTableColumns = [
       { id: "guid", label: "Project GUID", visible: true, frozen: false },
       { id: "name", label: "Project Name", visible: true, frozen: false },
+      { id: "mainProgramme", label: "Main Programme", visible: true, frozen: false },
+      { id: "subProgramme", label: "Sub Programme", visible: true, frozen: false },
+      { id: "rolloutFY", label: "Rollout FY", visible: true, frozen: false },
       { id: "mainCategory", label: "Main Category", visible: true, frozen: false },
       { id: "subCategory", label: "Sub Category", visible: true, frozen: false },
       { id: "freetext", label: "Free Text", visible: true, frozen: false },
@@ -440,16 +445,21 @@
     ];
 
     let rawTableRows = [
-      { guid: "PRJ-0824", name: "Klipfontein Hospital Upgrade", mainCategory: "Material Cycle Data", subCategory: "Foundations", freetext: "Grade A Reinforced Steel Framework Foundations", unit: "Tons", qty: 45, rate: 14500, amount: 652500, visible: true, date: "2026-05-12", audit: "System Auto-Ingest Base Schema" },
-      { guid: "PRJ-1192", name: "Mitchells Plain Education Hub", mainCategory: "Structural Engineering", subCategory: "Insulation", freetext: "Double-Glazed Energy Efficient Insulation Units", unit: "Sqm", qty: 220, rate: 1850, amount: 407000, visible: true, date: "2026-04-29", audit: "Operator Review Verification" },
-      { guid: "PRJ-0431", name: "George Bulk Water Infrastructure", mainCategory: "Utility Automation", subCategory: "Distribution Valves", freetext: "High-Pressure Hydraulic Submersible Distribution Valves", unit: "Units", qty: 12, rate: 42300, amount: 507600, visible: true, date: "2026-05-20", audit: "API Payload Modification Execution" },
-      { guid: "PRJ-0954", name: "Khayelitsha Athletics Facility", mainCategory: "Civil Works", subCategory: "Surfacing Layout", freetext: "Synthetic Premium Polyurethane Surfacing Layout", unit: "Sqm", qty: 1200, rate: 650, amount: 780000, visible: true, date: "2026-06-01", audit: "Batch Script Verification Registry" },
-      { guid: "PRJ-0711", name: "Paarl Sustainable Housing Phase 2", mainCategory: "Material Cycle Data", subCategory: "Foundations", freetext: "Pre-fabricated Eco-Lite Cellular Concrete Walling", unit: "Blocks", qty: 8500, rate: 48, amount: 408000, visible: true, date: "2026-03-15", audit: "System Auto-Ingest Base Schema" }
+      { guid: "PRJ-0824", name: "Klipfontein Hospital Upgrade", mainProgramme: "Health Infrastructure", subProgramme: "Metro Hospitals", rolloutFY: "2026/27", mainCategory: "Material Cycle Data", subCategory: "Foundations", freetext: "Grade A Reinforced Steel Framework Foundations", unit: "Tons", qty: 45, rate: 14500, amount: 652500, visible: true, date: "2026-05-12", audit: "System Auto-Ingest Base Schema" },
+      { guid: "PRJ-1192", name: "Mitchells Plain Education Hub", mainProgramme: "Public Education", subProgramme: "Secondary Schools Hubs", rolloutFY: "2026/27", mainCategory: "Structural Engineering", subCategory: "Insulation", freetext: "Double-Glazed Energy Efficient Insulation Units", unit: "Sqm", qty: 220, rate: 1850, amount: 407000, visible: true, date: "2026-04-29", audit: "Operator Review Verification" },
+      { guid: "PRJ-0431", name: "George Bulk Water Infrastructure", mainProgramme: "Water & Sanitation", subProgramme: "Regional Reservoirs", rolloutFY: "2027/28", mainCategory: "Utility Automation", subCategory: "Distribution Valves", freetext: "High-Pressure Hydraulic Submersible Distribution Valves", unit: "Units", qty: 12, rate: 42300, amount: 507600, visible: true, date: "2026-05-20", audit: "API Payload Modification Execution" },
+      { guid: "PRJ-0954", name: "Khayelitsha Athletics Facility", mainProgramme: "Sports & Recreation", subProgramme: "Community Stadiums", rolloutFY: "2025/26", mainCategory: "Civil Works", subCategory: "Surfacing Layout", freetext: "Synthetic Premium Polyurethane Surfacing Layout", unit: "Sqm", qty: 1200, rate: 650, amount: 780000, visible: true, date: "2026-06-01", audit: "Batch Script Verification Registry" },
+      { guid: "PRJ-0711", name: "Paarl Sustainable Housing Phase 2", mainProgramme: "Human Settlements", subProgramme: "Social Housing", rolloutFY: "2026/27", mainCategory: "Material Cycle Data", subCategory: "Foundations", freetext: "Pre-fabricated Eco-Lite Cellular Concrete Walling", unit: "Blocks", qty: 8500, rate: 48, amount: 408000, visible: true, date: "2026-03-15", audit: "System Auto-Ingest Base Schema" }
     ];
 
-    let currentSelectedProjectFilterValue = "";
-    let activeNavContext = "Project"; // Default initialization context
+    // Navigation and Filtering State Memory
+    let selectedProjectsFilterList = []; // For Single-Select Radio binding
+    let selectedProgrammesFilterList = []; // Multi-Select for Programme context
+    let activeNavContext = "Project"; 
     let selectedPagesStore = { "Programme": 0, "Project": 0 }; 
+    
+    // In-Ledger Search Term Filter Map
+    let inlineTableFilters = {};
     
     // Form and Editing State Anchors
     let currentEditingRowIndex = null;
@@ -461,15 +471,28 @@
       document.getElementById("inputAmount").value = (qty * rate).toFixed(2);
     }
 
-    // --- GLOBAL FILTERS RENDERING BLOCK WITH DYNAMIC INLINE SEARCH ENGINE ---
+    // --- GLOBAL FILTERS RENDERING BLOCK WITH DYNAMIC SELECTION STRICTNESS ---
     function renderGlobalFiltersLayout() {
       const filterZone = document.getElementById("filtersPaneContent");
+      
       if (activeNavContext === "Project") {
         let uniqueProjectsMap = {};
         rawTableRows.forEach(row => {
           let comboKey = `${row.name} (${row.guid})`;
           uniqueProjectsMap[comboKey] = { name: row.name, guid: row.guid };
         });
+
+        let projectsHtml = Object.keys(uniqueProjectsMap).map(key => {
+          let p = uniqueProjectsMap[key];
+          let isChecked = selectedProjectsFilterList.includes(p.guid);
+          return `
+            <label class="flex items-start gap-2 p-1.5 hover:bg-gray-200/60 rounded cursor-pointer transition-colors text-xs">
+              <input type="radio" name="globalProjectRadioFilter" value="${p.guid}" ${isChecked ? 'checked' : ''} 
+                onchange="handleProjectRadioSelectionChange('${p.guid}')" class="mt-0.5 h-3.5 w-3.5 text-blue-600 focus:ring-blue-500 border-gray-300">
+              <span class="text-gray-700 font-medium leading-tight">${key}</span>
+            </label>
+          `;
+        }).join('');
 
         filterZone.innerHTML = `
           <div class="flex flex-col gap-3">
@@ -486,219 +509,371 @@
               <div id="searchFilterBoxWrapper" class="${isSearchFilterCollapsed ? 'hidden' : ''} mb-2">
                 <input type="text" id="projectFilterSearchBox" placeholder="Type to filter list options..." 
                   class="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs shadow-inner"
-                  oninput="executeProjectFilterSearchMatch()" onfocus="handleSearchFocusReset()">
+                  oninput="executeProjectFilterSearchMatch()">
               </div>
 
               <label class="block text-[10px] font-bold text-[#003161] uppercase tracking-wider mb-1">Single Target Project Selector</label>
-              <div id="projectCheckboxContainer" class="w-full border border-gray-300 rounded p-1 bg-white max-h-[180px] overflow-y-auto custom-scrollbar shadow-sm flex flex-col gap-1">
-                </div>
+              <div id="projectChecklistContainer" class="flex flex-col gap-1 max-h-[220px] overflow-y-auto custom-scrollbar pr-1 bg-white p-2 rounded border">
+                ${projectsHtml || '<span class="text-gray-400 italic p-2 block">No unique projects found</span>'}
+              </div>
             </div>
+            
+            <button onclick="resetGlobalFiltersSystem()" class="w-full bg-slate-600 hover:bg-slate-700 text-white font-bold py-1.5 px-3 rounded shadow transition-all text-[11px] flex items-center justify-center gap-1">
+              <i class="fa-solid fa-filter-circle-xmark"></i> Reset Global Scope
+            </button>
           </div>
         `;
-        populateProjectCheckboxes("");
       } else {
+        // Programme Level (Multi-Select Allowed)
+        let uniqueProgrammes = [...new Set(rawTableRows.map(r => r.mainProgramme || "Unassigned Programme"))];
+        let programmesHtml = uniqueProgrammes.map(prog => {
+          let isChecked = selectedProgrammesFilterList.includes(prog);
+          return `
+            <label class="flex items-center gap-2 p-1.5 hover:bg-gray-200/60 rounded cursor-pointer transition-colors text-xs">
+              <input type="checkbox" value="${prog}" ${isChecked ? 'checked' : ''} 
+                onchange="handleProgrammeCheckSelectionChange(this)" class="rounded text-blue-600 focus:ring-blue-500 border-gray-300 h-3.5 w-3.5">
+              <span class="text-gray-700 font-medium">${prog}</span>
+            </label>
+          `;
+        }).join('');
+
         filterZone.innerHTML = `
-          <div class="text-center text-gray-400 py-6 border border-dashed border-gray-200 rounded">
-            No system filters configured for Programme mode context.
+          <div class="flex flex-col gap-3">
+            <div class="bg-emerald-50/50 p-2.5 border border-emerald-200/60 rounded-md">
+              <label class="block text-[10px] font-bold text-emerald-800 uppercase tracking-wider mb-1.5">Multi Programme Scope</label>
+              <div class="flex flex-col gap-1 max-h-[250px] overflow-y-auto custom-scrollbar pr-1 bg-white p-2 rounded border">
+                ${programmesHtml || '<span class="text-gray-400 italic p-2 block">No programmes identified</span>'}
+              </div>
+            </div>
+            <button onclick="resetGlobalFiltersSystem()" class="w-full bg-slate-600 hover:bg-slate-700 text-white font-bold py-1.5 px-3 rounded shadow transition-all text-[11px] flex items-center justify-center gap-1">
+              <i class="fa-solid fa-filter-circle-xmark"></i> Reset Global Scope
+            </button>
           </div>
         `;
       }
     }
 
-    function populateProjectCheckboxes(searchQuery) {
-      const container = document.getElementById("projectCheckboxContainer");
-      if (!container) return;
-
-      let uniqueProjectsMap = {};
-      rawTableRows.forEach(row => {
-        let comboKey = `${row.name} (${row.guid})`;
-        uniqueProjectsMap[comboKey] = comboKey;
-      });
-
-      let items = Object.keys(uniqueProjectsMap);
-
-      // If a single item is checked and search hasn't been focused/changed to reset, lock view to that chosen item
-      if (currentSelectedProjectFilterValue && searchQuery === "") {
-        items = items.filter(key => key === currentSelectedProjectFilterValue);
-      } else if (searchQuery) {
-        items = items.filter(key => key.toLowerCase().includes(searchQuery.toLowerCase()));
-      }
-
-      if (items.length === 0) {
-        container.innerHTML = `<span class="text-gray-400 p-1 block italic">No matching options</span>`;
-        return;
-      }
-
-      let html = "";
-      items.forEach(key => {
-        let isChecked = (currentSelectedProjectFilterValue === key) ? "checked" : "";
-        html += `
-          <label class="flex items-center gap-2 hover:bg-gray-50 p-1 rounded cursor-pointer select-none">
-            <input type="checkbox" value="${key}" ${isChecked} onchange="handleProjectSelectionChange(this)" class="rounded text-blue-600 focus:ring-blue-500 h-3.5 w-3.5">
-            <span class="text-[11px] truncate text-gray-700">${key}</span>
-          </label>
-        `;
-      });
-      container.innerHTML = html;
+    function handleProjectRadioSelectionChange(guid) {
+      selectedProjectsFilterList = [guid]; // Enforce strict singular selection
+      refreshStructuredLedgerView();
     }
 
-    function executeProjectFilterSearchMatch() {
-      const query = document.getElementById("projectFilterSearchBox").value;
-      populateProjectCheckboxes(query);
-    }
-
-    function handleSearchFocusReset() {
-      // Clear target search string view lock on interaction, enabling comprehensive typing options list reset
-      const query = document.getElementById("projectFilterSearchBox").value;
-      populateProjectCheckboxes(query);
-    }
-
-    function handleProjectSelectionChange(checkbox) {
+    function handleProgrammeCheckSelectionChange(checkbox) {
       if (checkbox.checked) {
-        currentSelectedProjectFilterValue = checkbox.value;
+        if (!selectedProgrammesFilterList.includes(checkbox.value)) {
+          selectedProgrammesFilterList.push(checkbox.value);
+        }
       } else {
-        currentSelectedProjectFilterValue = "";
+        selectedProgrammesFilterList = selectedProgrammesFilterList.filter(v => v !== checkbox.value);
       }
-      
-      // Clear searching value to apply explicit layout item hide constraints instantly
-      const searchInput = document.getElementById("projectFilterSearchBox");
-      if (searchInput) searchInput.value = "";
-
-      renderGlobalFiltersLayout();
-      renderStructuredLedgerGrid();
+      refreshStructuredLedgerView();
     }
 
     function toggleSearchFilterComponent() {
       isSearchFilterCollapsed = !isSearchFilterCollapsed;
-      const box = document.getElementById("searchFilterBoxWrapper");
-      const icon = document.getElementById("searchToggleIcon");
-      if(box) box.classList.toggle("hidden", isSearchFilterCollapsed);
-      if(icon) {
-        icon.className = isSearchFilterCollapsed ? "fa-solid fa-chevron-down" : "fa-solid fa-chevron-up";
-      }
+      renderGlobalFiltersLayout();
     }
 
-    // --- STRUCTURED LEDGER GRID RENDERING ENGINE ---
-    function renderStructuredLedgerGrid() {
-      const displayZone = document.getElementById("infoPaneContentZone");
-      const titleSpan = document.getElementById("infoPaneTitle");
-      
-      if (activeNavContext !== "Project" || selectedPagesStore["Project"] !== 0) {
-        titleSpan.innerText = "Analytics & Ledger Information";
-        displayZone.innerHTML = `
-          <div class="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400 mt-4">
-            Primary Visualisation Matrix &amp; Ledger Grid Placement Area (${activeNavContext} - Page ${selectedPagesStore[activeNavContext] + 1})
-          </div>
-        `;
-        return;
-      }
-
-      titleSpan.innerText = "Structured Data Ledger Grid Matrix";
-
-      // Filter rows strictly dynamically checking choice parameters
-      let filteredRows = rawTableRows;
-      if (currentSelectedProjectFilterValue) {
-        filteredRows = rawTableRows.filter(row => {
-          let comboKey = `${row.name} (${row.guid})`;
-          return comboKey === currentSelectedProjectFilterValue;
-        });
-      }
-
-      let tableHeadHtml = "";
-      rawTableColumns.forEach(col => {
-        if(col.visible) {
-          tableHeadHtml += `<th class="px-3 py-2 text-left font-bold tracking-wider text-slate-100 border-r border-blue-900 bg-[#003161] ${col.frozen ? 'sticky-column left-0' : ''}">${col.label}</th>`;
+    function executeProjectFilterSearchMatch() {
+      const query = document.getElementById("projectFilterSearchBox").value.toLowerCase();
+      const labels = document.querySelectorAll("#projectChecklistContainer label");
+      labels.forEach(lbl => {
+        const text = lbl.textContent.toLowerCase();
+        if (text.includes(query)) {
+          lbl.classList.remove("hidden");
+        } else {
+          lbl.classList.add("hidden");
         }
       });
-      // Add operational control panel header link
-      tableHeadHtml += `<th class="px-3 py-2 text-center font-bold tracking-wider text-slate-100 bg-[#003161]">Actions</th>`;
-
-      let tableRowsHtml = "";
-      if(filteredRows.length === 0) {
-        tableRowsHtml = `<tr><td colspan="${rawTableColumns.length + 1}" class="text-center p-6 text-gray-400 bg-white italic">No entries align with the designated filters setup metric parameters.</td></tr>`;
-      } else {
-        filteredRows.forEach((row, index) => {
-          // Track index relative to raw storage layout maps
-          let originalIndex = rawTableRows.findIndex(r => r.guid === row.guid && r.freetext === row.freetext);
-          
-          let rowHighlightClass = (currentEditingRowIndex === originalIndex) ? "bg-amber-50 font-medium border-y-2 border-amber-300" : "hover:bg-slate-50 transition-colors";
-          
-          tableRowsHtml += `<tr class="${rowHighlightClass} border-b border-gray-200">`;
-          
-          rawTableColumns.forEach(col => {
-            if(col.visible) {
-              let value = row[col.id];
-              let displayVal = value;
-              let customStyleClass = "";
-              
-              if(col.id === 'rate' || col.id === 'amount') {
-                displayVal = "R " + parseFloat(value).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                customStyleClass = "font-mono text-right text-slate-700";
-              } else if(col.id === 'guid' || col.id === 'date') {
-                customStyleClass = "font-mono text-gray-600";
-              }
-              
-              tableRowsHtml += `<td class="px-3 py-1.5 whitespace-nowrap border-r border-gray-100 ${col.frozen ? 'sticky-column left-0 shadow-sm' : ''} ${customStyleClass}">${displayVal}</td>`;
-            }
-          });
-
-          tableRowsHtml += `
-            <td class="px-2 py-1 whitespace-nowrap text-center">
-              <div class="inline-flex rounded-md shadow-sm" role="group">
-                <button onclick="loadRowToInputEngineForm(${originalIndex})" class="px-2 py-1 text-[10px] font-bold text-amber-700 bg-white border border-gray-200 rounded-l hover:bg-amber-50 focus:z-10 focus:ring-1 focus:ring-amber-500" title="Edit Row Properties"><i class="fa-solid fa-edit"></i></button>
-                <button onclick="deleteTargetLedgerRow(${originalIndex})" class="px-2 py-1 text-[10px] font-bold text-red-600 bg-white border-y border-r border-gray-200 rounded-r hover:bg-red-50 focus:z-10 focus:ring-1 focus:ring-red-500" title="Purge Record"><i class="fa-solid fa-trash-can"></i></button>
-              </div>
-            </td>
-          </tr>`;
-        });
-      }
-
-      displayZone.innerHTML = `
-        <div class="w-full flex flex-col h-full bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mt-2">
-          <div class="overflow-x-auto custom-scrollbar flex-1 max-h-[480px]">
-            <table class="w-full border-collapse text-[11px] relative">
-              <thead>
-                <tr class="bg-[#003161] text-white">
-                  ${tableHeadHtml}
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-200 bg-white">
-                ${tableRowsHtml}
-              </tbody>
-            </table>
-          </div>
-          <div class="bg-gray-50 border-t border-gray-200 px-4 py-2 flex justify-between items-center text-[10px] text-gray-500 font-mono shrink-0">
-            <div>Records Evaluated Matrix Layout Count: <strong>${filteredRows.length} rows</strong></div>
-            <div>Context Filter Token Scope Lock: <strong class="text-[#003161]">${currentSelectedProjectFilterValue ? 'ACTIVE SINGLE PROJECT' : 'GLOBAL VIEW ALL'}</strong></div>
-          </div>
-        </div>
-      `;
     }
 
-    // --- FORM OPERATIONS & BACKEND INPUT ACTIONS METRICS ---
-    function loadRowToInputEngineForm(rowIndex) {
+    function resetGlobalFiltersSystem() {
+      selectedProjectsFilterList = [];
+      selectedProgrammesFilterList = [];
+      inlineTableFilters = {};
+      renderGlobalFiltersLayout();
+      refreshStructuredLedgerView();
+    }
+
+    // --- SECONDARY NAVIGATION PAGES CONFIGURATOR ---
+    const pageContextsRegistry = {
+      "Programme": ["Performance Overview Dashboard", "Capital Expenditure Tracking Matrix", "Strategic Growth Allocations Plan"],
+      "Project": ["Structured Data Ledger Engine", "Geospatial Distribution Plotter", "Audit Verification Ledger Logs"]
+    };
+
+    function toggleSecondaryNav(context) {
+      activeNavContext = context;
+      document.getElementById("secondaryNavHeading").innerText = `${context} Sub-Pages`;
+      
+      const btnProg = document.getElementById("btnNavProgramme");
+      const btnProj = document.getElementById("btnNavProject");
+      
+      if (context === "Programme") {
+        btnProg.className = "text-white bg-[#003161] py-4 px-2 flex items-center justify-center gap-2 rounded w-full border-l-2 border-[#A6CDC6] transition-all";
+        btnProj.className = "text-blue-300/70 hover:text-white transition-all py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-[#003161]/50 w-full border-l-2 border-transparent";
+      } else {
+        btnProj.className = "text-white bg-[#003161] py-4 px-2 flex items-center justify-center gap-2 rounded w-full border-l-2 border-[#A6CDC6] transition-all";
+        btnProg.className = "text-blue-300/70 hover:text-white transition-all py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-[#003161]/50 w-full border-l-2 border-transparent";
+      }
+      
+      renderSecondaryNavPages();
+      renderGlobalFiltersLayout();
+      refreshStructuredLedgerView();
+    }
+
+    function renderSecondaryNavPages() {
+      const zone = document.getElementById("secondaryNavButtonsZone");
+      const pages = pageContextsRegistry[activeNavContext];
+      let activeIndex = selectedPagesStore[activeNavContext];
+      
+      zone.innerHTML = pages.map((page, idx) => {
+        let isSelected = idx === activeIndex;
+        return `
+          <button onclick="selectActivePageItem(${idx})" class="w-full text-left p-2.5 rounded text-[11px] font-medium transition-all duration-150 flex items-center gap-2 ${isSelected ? 'bg-[#003161] text-white shadow-md border-l-4 border-[#A6CDC6]' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}" >
+            <i class="fa-solid ${isSelected ? 'fa-folder-open text-[#A6CDC6]' : 'fa-folder text-slate-500'} shrink-0 text-xs"></i>
+            <span class="truncate">${page}</span>
+          </button>
+        `;
+      }).join('');
+      
+      document.getElementById("infoPaneTitle").innerText = `${activeNavContext} Management Framework — ${pages[activeIndex]}`;
+    }
+
+    function selectActivePageItem(idx) {
+      selectedPagesStore[activeNavContext] = idx;
+      renderSecondaryNavPages();
+      refreshStructuredLedgerView();
+    }
+
+    // --- EXCEL EXPORT & INLINE LEDGER CONTROLS ---
+    function exportLedgerToExcelCSV() {
+      let filteredRows = getFilteredLedgerData();
+      if (filteredRows.length === 0) {
+        alert("There is no active data to export under current filters configuration.");
+        return;
+      }
+      
+      let csvContent = "data:text/csv;charset=utf-8,";
+      // Construct Header Array
+      let headers = rawTableColumns.map(c => `"${c.label}"`).join(",");
+      csvContent += headers + "\r\n";
+      
+      // Construct Rows
+      filteredRows.forEach(row => {
+        let rowStr = rawTableColumns.map(col => {
+          let val = row[col.id] !== undefined ? row[col.id] : "";
+          return `"${val.toString().replace(/"/g, '""')}"`;
+        }).join(",");
+        csvContent += rowStr + "\r\n";
+      });
+      
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `Project_Tracker_Export_${activeNavContext}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function setColumnInlineFilter(colId, val) {
+      if (!val || val.trim() === "") {
+        delete inlineTableFilters[colId];
+      } else {
+        inlineTableFilters[colId] = val.toLowerCase();
+      }
+      refreshStructuredLedgerView();
+    }
+
+    function clearAllLedgerFilters() {
+      inlineTableFilters = {};
+      refreshStructuredLedgerView();
+    }
+
+    function toggleColumnFreeze(colId) {
+      let col = rawTableColumns.find(c => c.id === colId);
+      if (col) {
+        col.frozen = !col.frozen;
+        refreshStructuredLedgerView();
+      }
+    }
+
+    function getFilteredLedgerData() {
+      return rawTableRows.filter(row => {
+        // 1. Context/Global Filter Application
+        if (activeNavContext === "Project") {
+          if (selectedProjectsFilterList.length > 0 && !selectedProjectsFilterList.includes(row.guid)) {
+            return false;
+          }
+        } else if (activeNavContext === "Programme") {
+          if (selectedProgrammesFilterList.length > 0 && !selectedProgrammesFilterList.includes(row.mainProgramme)) {
+            return false;
+          }
+        }
+        
+        // 2. Ledger Column Sub-Search Text Filters
+        for (let colId in inlineTableFilters) {
+          let criteria = inlineTableFilters[colId];
+          let cellValue = row[colId] ? row[colId].toString().toLowerCase() : "";
+          if (!cellValue.includes(criteria)) return false;
+        }
+        
+        return true;
+      });
+    }
+
+    // --- STRUCTURED DATA LEDGER GENERATOR WITH FULL ROW INTERACTION & COLUMN FREEZING ---
+    function refreshStructuredLedgerView() {
+      const hostZone = document.getElementById("infoPaneContentZone");
+      let activePageIndex = selectedPagesStore[activeNavContext];
+      
+      // Render Structured Data Ledger if Project context and Ledger sub-page is active
+      if (activeNavContext === "Project" && activePageIndex === 0) {
+        let matchedData = getFilteredLedgerData();
+        
+        // Build Column Left Positions for Stacking Multiple Frozen Columns dynamically
+        let cumulativeLeftOffset = 0;
+        let leftOffsetsMap = {};
+        rawTableColumns.forEach(col => {
+          if (col.frozen) {
+            leftOffsetsMap[col.id] = cumulativeLeftOffset;
+            cumulativeLeftOffset += 130; // standard theoretical box footprint
+          }
+        });
+
+        // Construct Control Bar and Filter Ribbon above structured grid
+        let controlBarHtml = `
+          <div class="bg-gray-100 p-2 rounded-t-lg border-t border-x border-gray-200 flex flex-wrap items-center justify-between gap-2 shadow-sm shrink-0">
+            <div class="flex items-center gap-2">
+              <button onclick="exportLedgerToExcelCSV()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-1 px-2.5 rounded shadow transition-all text-[11px] flex items-center gap-1">
+                <i class="fa-solid fa-file-excel text-xs"></i> Export to Excel
+              </button>
+              <button onclick="clearAllLedgerFilters()" class="text-gray-600 hover:text-red-700 border bg-white font-semibold py-1 px-2 rounded shadow-inner text-[10px] uppercase flex items-center gap-0.5">
+                <i class="fa-solid fa-filter-circle-xmark"></i> Clear All Table Filters
+              </button>
+            </div>
+            <div class="flex items-center gap-1.5 text-gray-500 text-[11px] mr-1">
+              <span class="font-mono bg-white border px-1.5 py-0.5 rounded text-gray-700 font-bold">${matchedData.length}</span> Rows Visible
+            </div>
+          </div>
+        `;
+
+        // Render Table Headers
+        let headerThsHtml = rawTableColumns.map(col => {
+          let isFrozen = col.frozen;
+          let stickyClass = `sticky-header ${isFrozen ? 'sticky-column' : ''}`;
+          let inlineStyle = isFrozen ? `style="left: ${leftOffsetsMap[col.id]}px; min-width: 130px; max-width: 130px;"` : '';
+          
+          return `
+            <th class="${stickyClass} bg-[#003161] text-white p-2 font-bold uppercase text-[9px] tracking-wider text-left border-r border-[#16404D]" ${inlineStyle}>
+              <div class="flex items-center justify-between gap-1">
+                <span class="truncate" title="${col.label}">${col.label}</span>
+                <button onclick="event.stopPropagation(); toggleColumnFreeze('${col.id}')" class="${isFrozen ? 'text-amber-400' : 'text-blue-300 opacity-40 hover:opacity-100'} p-0.5 transition-opacity" title="${isFrozen ? 'Unfreeze Column' : 'Freeze Column'}">
+                  <i class="fa-solid fa-thumbtack text-[9px]"></i>
+                </button>
+              </div>
+              <div class="mt-1">
+                <input type="text" placeholder="Filter..." value="${inlineTableFilters[col.id] || ''}"
+                  oninput="setColumnInlineFilter('${col.id}', this.value)"
+                  class="w-full font-mono font-normal text-[9px] text-gray-800 bg-white/90 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-amber-500">
+              </div>
+            </th>
+          `;
+        }).join('');
+
+        // Render Table Body Rows with highlight handling and row-level item click select
+        let rowsTrsHtml = matchedData.map((row, realIdx) => {
+          let originalIndex = rawTableRows.findIndex(r => r.guid === row.guid && r.freetext === row.freetext && r.amount === row.amount);
+          let isSelected = currentEditingRowIndex === originalIndex;
+          let rowHighlightClass = isSelected ? 'bg-slate-200/90 font-medium ring-2 ring-blue-600 ring-inset shadow-inner' : 'hover:bg-slate-100/70 odd:bg-white even:bg-gray-50/60';
+          
+          let tdsHtml = rawTableColumns.map(col => {
+            let isFrozen = col.frozen;
+            let cellValue = row[col.id] !== undefined ? row[col.id] : "";
+            
+            // Format monetary values elegantly
+            if (col.id === 'rate' || col.id === 'amount') {
+              cellValue = "R " + parseFloat(cellValue).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            }
+            
+            let stickyClass = isFrozen ? 'sticky-column' : '';
+            // Match cell styling background architecture with row state
+            let inlineStyle = isFrozen ? `style="left: ${leftOffsetsMap[col.id]}px; min-width: 130px; max-width: 130px; background-color: inherit;"` : '';
+            
+            return `
+              <td class="${stickyClass} p-2 text-[11px] border-b border-r border-gray-200/80 font-mono truncate" ${inlineStyle} title="${row[col.id] || ''}">
+                ${cellValue}
+              </td>
+            `;
+          }).join('');
+
+          return `
+            <tr onclick="handleDirectLedgerRowSelectionClick(${originalIndex})" class="cursor-pointer transition-colors duration-150 relative ${rowHighlightClass}">
+              ${tdsHtml}
+            </tr>
+          `;
+        }).join('');
+
+        hostZone.innerHTML = `
+          <div class="flex flex-col h-full w-full overflow-hidden">
+            ${controlBarHtml}
+            <div class="flex-1 overflow-auto custom-scrollbar border-x border-b border-gray-200 bg-white rounded-b-lg">
+              <table class="table-fixed min-w-full border-collapse">
+                <thead>
+                  <tr class="bg-[#003161]">
+                    ${headerThsHtml}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rowsTrsHtml || `<tr><td colSpan="${rawTableColumns.length}" class="text-center p-12 text-gray-400 italic">No structured records matched criteria or text filters.</td></tr>`}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      } else {
+        // General Dashboard fallback matrix rendering layout for alternative tabs
+        hostZone.innerHTML = `
+          <div class="flex flex-col items-center justify-center h-full p-8 text-center text-gray-400 bg-white border border-gray-200 rounded-lg shadow-sm">
+            <div class="bg-blue-50 text-[#003161] rounded-full p-4 mb-3 text-xl shadow-inner">
+              <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <h3 class="font-bold uppercase text-[11px] tracking-wider text-gray-600 mb-1">${activeNavContext} Framework Content Layer</h3>
+            <p class="text-[11px] max-w-sm text-gray-400 leading-normal">Currently displaying analytics page model indexed index: <strong>${activePageIndex}</strong>. Custom analytical rendering pipelines populate here seamlessly.</p>
+          </div>
+        `;
+      }
+    }
+
+    // --- ROW SELECTION INTERACTIVE HOOK ---
+    function handleDirectLedgerRowSelectionClick(rowIndex) {
+      if (rowIndex < 0 || rowIndex >= rawTableRows.length) return;
+      
       currentEditingRowIndex = rowIndex;
-      const targetRow = rawTableRows[rowIndex];
-      
-      document.getElementById("inputProjectGUID").value = targetRow.guid;
-      document.getElementById("inputProjectName").value = targetRow.name;
-      document.getElementById("inputMainCategory").value = targetRow.mainCategory || "";
-      document.getElementById("inputSubCategory").value = targetRow.subCategory || "";
-      document.getElementById("inputFreeText").value = targetRow.freetext;
-      document.getElementById("inputUnit").value = targetRow.unit;
-      document.getElementById("inputQty").value = targetRow.qty;
-      document.getElementById("inputRate").value = targetRow.rate;
-      document.getElementById("inputDate").value = targetRow.date || "";
-      
-      // Auto-recalculate form internal logic bounds
-      calculateAmountEngine();
-      
-      // Update interactive form controls active banners display state parameters
+      let selectedData = rawTableRows[rowIndex];
+
+      // Automatically sync input fields on form context panel
+      document.getElementById("inputProjectGUID").value = selectedData.guid || "";
+      document.getElementById("inputProjectName").value = selectedData.name || "";
+      document.getElementById("inputMainProgramme").value = selectedData.mainProgramme || "";
+      document.getElementById("inputSubProgramme").value = selectedData.subProgramme || "";
+      document.getElementById("inputRolloutFY").value = selectedData.rolloutFY || "";
+      document.getElementById("inputMainCategory").value = selectedData.mainCategory || "";
+      document.getElementById("inputSubCategory").value = selectedData.subCategory || "";
+      document.getElementById("inputFreeText").value = selectedData.freetext || "";
+      document.getElementById("inputUnit").value = selectedData.unit || "";
+      document.getElementById("inputQty").value = selectedData.qty || 0;
+      document.getElementById("inputRate").value = selectedData.rate || 0;
+      document.getElementById("inputAmount").value = parseFloat(selectedData.amount || 0).toFixed(2);
+      document.getElementById("inputDate").value = selectedData.date || "";
+
+      // Toggle form mode indicator banister banner visibility
       document.getElementById("engineModeAlertBanner").classList.remove("hidden");
       document.getElementById("btnSubmitExistingEdit").disabled = false;
       document.getElementById("btnCopySelectedRow").disabled = false;
-      
-      renderStructuredLedgerGrid();
+
+      // Force instant grid rerender to apply selection border highlight textures
+      refreshStructuredLedgerView();
     }
 
     function clearSelectedFormState() {
@@ -707,156 +882,71 @@
       document.getElementById("btnSubmitExistingEdit").disabled = true;
       document.getElementById("btnCopySelectedRow").disabled = true;
       
-      // Flush specific data fields
+      // Clear Input Form Elements safely
+      document.getElementById("inputMainCategory").value = "";
+      document.getElementById("inputSubCategory").value = "";
       document.getElementById("inputFreeText").value = "";
+      document.getElementById("inputUnit").value = "";
       document.getElementById("inputQty").value = "";
       document.getElementById("inputRate").value = "";
-      document.getElementById("inputAmount").value = "";
-      
-      renderStructuredLedgerGrid();
+      document.getElementById("inputAmount").value = "0.00";
+      document.getElementById("inputDate").value = "";
+
+      refreshStructuredLedgerView();
     }
 
-    function collectFormInputPayload() {
-      const guid = document.getElementById("inputProjectGUID").value.trim();
-      const name = document.getElementById("inputProjectName").value.trim();
-      const mainCat = document.getElementById("inputMainCategory").value;
-      const subCat = document.getElementById("inputSubCategory").value;
-      const freeTxt = document.getElementById("inputFreeText").value.trim();
-      const unit = document.getElementById("inputUnit").value.trim();
-      const qty = parseFloat(document.getElementById("inputQty").value) || 0;
-      const rate = parseFloat(document.getElementById("inputRate").value) || 0;
-      const date = document.getElementById("inputDate").value;
-
-      if (!guid || !name || !freeTxt) {
-        alert("Action validation missing parameters metrics: Project GUID, Project Name, and Free Text attributes are mandatory layout fields.");
-        return null;
-      }
-
+    // --- FORM DATA PROCESSING DISPATCH CONTROLS ---
+    function captureFormFieldsToObjectData() {
+      let qty = parseFloat(document.getElementById("inputQty").value) || 0;
+      let rate = parseFloat(document.getElementById("inputRate").value) || 0;
       return {
-        guid: guid,
-        name: name,
-        mainCategory: mainCat,
-        subCategory: subCat,
-        freetext: freeTxt,
-        unit: unit,
+        guid: document.getElementById("inputProjectGUID").value.trim() || "PRJ-NEW",
+        name: document.getElementById("inputProjectName").value.trim() || "Unnamed Target Initiative",
+        mainProgramme: document.getElementById("inputMainProgramme").value.trim() || "General Funding Pool",
+        subProgramme: document.getElementById("inputSubProgramme").value.trim() || "Subsidiary Allocations",
+        rolloutFY: document.getElementById("inputRolloutFY").value.trim() || "2026/27",
+        mainCategory: document.getElementById("inputMainCategory").value,
+        subCategory: document.getElementById("inputSubCategory").value,
+        freetext: document.getElementById("inputFreeText").value.trim() || "Operational Data Payload",
+        unit: document.getElementById("inputUnit").value.trim() || "Units",
         qty: qty,
         rate: rate,
-        amount: qty * rate,
-        visible: true,
-        date: date,
-        audit: `User Execution Run (${currentUser}) at operational registry timestamp.`
+        amount: (qty * rate),
+        date: document.getElementById("inputDate").value || new Date().toISOString().split('T')[0],
+        audit: `Operator Modified Node (${currentUser})`
       };
     }
 
     function submitFormAsNewRow() {
-      const payload = collectFormInputPayload();
-      if(!payload) return;
-      
-      rawTableRows.push(payload);
-      renderGlobalFiltersLayout();
-      renderStructuredLedgerGrid();
+      let payload = captureFormFieldsToObjectData();
+      payload.audit = "Ingested from scratch via Entry Interface Panel";
+      rawTableRows.unshift(payload); // Inject immediately as prime index item row
       clearSelectedFormState();
+      renderGlobalFiltersLayout();
+      refreshStructuredLedgerView();
     }
 
     function submitEditToExistingRow() {
-      if(currentEditingRowIndex === null) return;
-      const payload = collectFormInputPayload();
-      if(!payload) return;
-      
-      rawTableRows[currentEditingRowIndex] = payload;
-      renderGlobalFiltersLayout();
-      renderStructuredLedgerGrid();
+      if (currentEditingRowIndex === null) return;
+      let updatedPayload = captureFormFieldsToObjectData();
+      rawTableRows[currentEditingRowIndex] = updatedPayload;
       clearSelectedFormState();
+      renderGlobalFiltersLayout();
+      refreshStructuredLedgerView();
     }
 
     function makeCopyAndEditSelectedRow() {
-      const payload = collectFormInputPayload();
-      if(!payload) return;
-      
-      payload.audit = `Copied Duplicate Substrate. ` + payload.audit;
-      rawTableRows.push(payload);
-      
-      renderGlobalFiltersLayout();
-      renderStructuredLedgerGrid();
+      if (currentEditingRowIndex === null) return;
+      let duplicatedPayload = captureFormFieldsToObjectData();
+      duplicatedPayload.guid += "-COPY";
+      duplicatedPayload.audit = `Cloned duplication element mapping from baseline registry`;
+      rawTableRows.splice(currentEditingRowIndex + 1, 0, duplicatedPayload);
       clearSelectedFormState();
-    }
-
-    function deleteTargetLedgerRow(rowIndex) {
-      if(confirm("Confirm extreme destructive mutation tracking parameter operation command? This completely destroys row telemetry tracking items.")) {
-        rawTableRows.splice(rowIndex, 1);
-        if(currentEditingRowIndex === rowIndex) clearSelectedFormState();
-        renderGlobalFiltersLayout();
-        renderStructuredLedgerGrid();
-      }
-    }
-
-    // --- NAVIGATION MANAGEMENT CONTROLS ---
-    const secondaryPagesDictionary = {
-      "Programme": ["Overview Performance Insights Dashboard Matrix", "Financial Outlay Forecasting & Appropriation Controls", "Strategic Target Allocation Benchmarking Parameters"],
-      "Project": ["Structured Data Ledger Grid Matrix", "Project Risk Registry & Strategic Remediation Schedules", "Milestone Tracking & Resource Burn Metrics"]
-    };
-
-    function toggleSecondaryNav(contextType) {
-      activeNavContext = contextType;
-      
-      const btnProg = document.getElementById("btnNavProgramme");
-      const btnProj = document.getElementById("btnNavProject");
-      
-      if(contextType === "Programme") {
-        btnProg.className = "text-white bg-[#003161] transition-all py-4 px-2 flex items-center justify-center gap-2 rounded w-full border-l-4 border-amber-500 font-bold";
-        btnProj.className = "text-blue-300/70 hover:text-white transition-all py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-[#003161]/50 w-full border-l-2 border-transparent";
-      } else {
-        btnProj.className = "text-white bg-[#003161] transition-all py-4 px-2 flex items-center justify-center gap-2 rounded w-full border-l-4 border-amber-500 font-bold";
-        btnProg.className = "text-blue-300/70 hover:text-white transition-all py-4 px-2 flex items-center justify-center gap-2 rounded hover:bg-[#003161]/50 w-full border-l-2 border-transparent";
-      }
-      
-      document.getElementById("secondaryNavHeading").innerText = `${contextType} Pages System`;
-      
-      const buttonsZone = document.getElementById("secondaryNavButtonsZone");
-      let buttonsHtml = "";
-      
-      secondaryPagesDictionary[contextType].forEach((pageName, index) => {
-        let isActive = (selectedPagesStore[contextType] === index);
-        let buttonStyle = isActive 
-          ? "bg-[#003161] border-l-2 border-amber-400 text-white font-medium shadow-sm" 
-          : "hover:bg-slate-800/60 text-slate-400 hover:text-slate-200";
-          
-        buttonsHtml += `
-          <button onclick="setActiveSubPageExecution(${index})" class="w-full text-left text-[11px] px-2.5 py-2 rounded transition-all flex items-center gap-2 ${buttonStyle}">
-            <i class="fa-solid ${isActive ? 'fa-folder-open text-amber-400' : 'fa-folder text-slate-500'} shrink-0 text-[10px]"></i>
-            <span class="truncate">${pageName}</span>
-          </button>
-        `;
-      });
-      
-      buttonsZone.innerHTML = buttonsHtml;
-      
       renderGlobalFiltersLayout();
-      renderStructuredLedgerGrid();
+      refreshStructuredLedgerView();
     }
 
-    function setActiveSubPageExecution(pageIndex) {
-      selectedPagesStore[activeNavContext] = pageIndex;
-      toggleSecondaryNav(activeNavContext);
-    }
-
-    // --- ACCORDION UI TOGGLE METHOD ---
-    let isProjectDetailsPaneExpanded = true;
-    function toggleProjectDetailsPane() {
-      isProjectDetailsPaneExpanded = !isProjectDetailsPaneExpanded;
-      const targetContent = document.getElementById("projectDetailsContent");
-      const targetCaret = document.getElementById("projectDetailsCaret");
-      
-      if(isProjectDetailsPaneExpanded) {
-        targetContent.classList.remove("hidden");
-        targetCaret.style.transform = "rotate(0deg)";
-      } else {
-        targetContent.classList.add("hidden");
-        targetCaret.style.transform = "rotate(180deg)";
-      }
-    }
-
-    // --- WINDOW LAYOUT COLLAPSIBLE DYNAMICS HANDLING MECHANICAL IMPLEMENTATION ---
+    // --- PANE VISUAL EXPANSION MECHANICAL WRAPPERS ---
     function collapsePane(paneId) {
       document.getElementById(paneId).classList.add("collapsed-pane");
     }
@@ -864,50 +954,55 @@
       document.getElementById(paneId).classList.remove("collapsed-pane");
     }
 
-    // --- RENDER BOOT RESIZABLE CONTROLS MECHANICS ---
-    function initializePaneResizerDragListeners(resizerId, targetPaneId, horizontalDirectionRule) {
-      const resizer = document.getElementById(resizerId);
-      const targetPane = document.getElementById(targetPaneId);
-      if(!resizer || !targetPane) return;
-      
-      let initialWidth, startPointerX;
-      
-      resizer.addEventListener('mousedown', initDragProcess);
-      
-      function initDragProcess(e) {
-        initialWidth = targetPane.offsetWidth;
-        startPointerX = e.clientX;
-        resizer.classList.add("dragging");
-        document.body.style.cursor = "col-resize";
-        window.addEventListener('mousemove', calculateDraggedWidthAction);
-        window.addEventListener('mouseup', endDragProcess);
-      }
-      
-      function calculateDraggedWidthAction(e) {
-        let delta = e.clientX - startPointerX;
-        let newWidth = horizontalDirectionRule === 'left-to-right' ? (initialWidth + delta) : (initialWidth - delta);
-        
-        let minBound = parseInt(targetPane.style.minWidth) || 100;
-        let maxBound = parseInt(targetPane.style.maxWidth) || 800;
-        if(newWidth < minBound) newWidth = minBound;
-        if(newWidth > maxBound) newWidth = maxBound;
-        
-        targetPane.style.width = newWidth + "px";
-      }
-      
-      function endDragProcess() {
-        resizer.classList.remove("dragging");
-        document.body.style.cursor = "default";
-        window.removeEventListener('mousemove', calculateDraggedWidthAction);
-        window.removeEventListener('mouseup', endDragProcess);
+    let isProjectDetailsCollapsed = false;
+    function toggleProjectDetailsPane() {
+      isProjectDetailsCollapsed = !isProjectDetailsCollapsed;
+      const content = document.getElementById("projectDetailsContent");
+      const caret = document.getElementById("projectDetailsCaret");
+      if (isProjectDetailsCollapsed) {
+        content.classList.add("hidden");
+        caret.className = "fa-solid fa-chevron-down text-gray-400 text-[10px]";
+      } else {
+        content.classList.remove("hidden");
+        caret.className = "fa-solid fa-chevron-up text-gray-400 text-[10px]";
       }
     }
 
-    // Initialize application layout state structures completely
-    toggleSecondaryNav("Project");
-    initializePaneResizerDragListeners('resizer-secondaryNav', 'secondaryNavPane', 'left-to-right');
-    initializePaneResizerDragListeners('resizer-dataInput', 'dataInputPane', 'left-to-right');
-    initializePaneResizerDragListeners('resizer-information', 'informationPane', 'left-to-right');
+    // --- SYSTEM SPLIT PANE RESIZING INITIALIZATION MECHANICAL HANDLERS ---
+    function setupInteractiveSplitPaneMechanics(resizerId, leftPaneId) {
+      const resizer = document.getElementById(resizerId);
+      const leftPane = document.getElementById(leftPaneId);
+      if (!resizer || !leftPane) return;
+
+      resizer.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        resizer.classList.add("dragging");
+        document.body.style.cursor = 'col-resize';
+        
+        function moveHandler(moveEvent) {
+          let computedWidth = moveEvent.clientX - leftPane.getBoundingClientRect().left;
+          leftPane.style.width = computedWidth + 'px';
+        }
+        
+        function upHandler() {
+          resizer.classList.remove("dragging");
+          document.body.style.cursor = 'default';
+          document.removeEventListener('mousemove', moveHandler);
+          document.removeEventListener('mouseup', upHandler);
+        }
+        
+        document.addEventListener('mousemove', moveHandler);
+        document.addEventListener('mouseup', upHandler);
+      });
+    }
+
+    // --- INITIALIZATION RUN ENGINE ENTRY ---
+    document.addEventListener("DOMContentLoaded", () => {
+      toggleSecondaryNav("Project");
+      setupInteractiveSplitPaneMechanics("resizer-secondaryNav", "secondaryNavPane");
+      setupInteractiveSplitPaneMechanics("resizer-dataInput", "dataInputPane");
+      setupInteractiveSplitPaneMechanics("resizer-information", "informationPane");
+    });
   </script>
 </body>
 </html>
