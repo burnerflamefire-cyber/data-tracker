@@ -5,14 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Project Data Tracker</title>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <!-- CONFIG (MUST LOAD BEFORE ANY INIT) -->
+  <!-- CONFIG -->
   <script>
-    // HARD SAFE INLINE CONFIG (prevents timing failure completely)
     window.firebaseConfig = {
       apiKey: "AIzaSyCL6iJKRp-WjCgBTtRCuRny14lUOMP9KJg",
       authDomain: "data-tracker-f11df.firebaseapp.com",
@@ -26,59 +25,95 @@
 
   <script>
     // -------------------------
-    // BOOT STRAP (SAFE VERSION)
+    // STATE CORE
     // -------------------------
+    window.appState = {
+      user: null,
+      ready: false
+    };
 
-    let authUser = null;
-    let authError = null;
-    let firebaseReady = false;
+    // -------------------------
+    // BOOT STRAP
+    // -------------------------
+    function boot() {
+      const app = firebase.initializeApp(window.firebaseConfig);
+      const auth = firebase.auth(app);
 
-    function initFirebase() {
-      try {
-        if (!window.firebaseConfig) {
-          throw new Error("firebaseConfig missing");
+      renderLoading();
+
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          window.appState.user = user;
+          window.firebaseAuthUser = user;
+          window.appState.ready = true;
+          renderApp(user);
+        } else {
+          auth.signInAnonymously();
         }
-
-        const app = firebase.initializeApp(window.firebaseConfig);
-        const auth = firebase.auth(app);
-
-        firebaseReady = true;
-
-        auth.onAuthStateChanged((user) => {
-          if (user) {
-            authUser = user;
-            window.firebaseAuthUser = user;
-          } else {
-            auth.signInAnonymously()
-              .catch(err => authError = err.message);
-          }
-        });
-
-      } catch (e) {
-        authError = e.message;
-      }
+      });
     }
 
-    function render() {
+    // -------------------------
+    // UI: LOADING SCREEN
+    // -------------------------
+    function renderLoading() {
       document.body.innerHTML = `
-        <div style="font-family:Arial;padding:20px;">
-          <h2>Project Data Tracker — Firebase Boot Check</h2>
-
-          <p><b>Config Loaded:</b> ${!!window.firebaseConfig}</p>
-          <p><b>Firebase Ready:</b> ${firebaseReady}</p>
-
-          <p><b>User:</b> ${authUser ? authUser.uid : "Waiting..."}</p>
-
-          <p style="color:red;"><b>Error:</b> ${authError || "None"}</p>
+        <div style="
+          font-family: Arial;
+          height: 100vh;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          flex-direction:column;
+          background:#0f172a;
+          color:white;
+        ">
+          <h2>Project Data Tracker</h2>
+          <p>Loading system...</p>
         </div>
       `;
     }
 
-    window.addEventListener("DOMContentLoaded", () => {
-      initFirebase();
-      render();
-      setInterval(render, 1000);
-    });
+    // -------------------------
+    // UI: MAIN APP SHELL
+    // -------------------------
+    function renderApp(user) {
+      document.body.innerHTML = `
+        <div style="font-family: Arial;">
+          
+          <!-- HEADER -->
+          <div style="padding:12px;background:#003161;color:white;">
+            <b>Project Data Tracker</b>
+            <span style="float:right;font-size:12px;">
+              UID: ${user.uid}
+            </span>
+          </div>
+
+          <!-- APP ROOT -->
+          <div id="app"></div>
+
+        </div>
+      `;
+
+      mountDashboard();
+    }
+
+    // -------------------------
+    // FIRST REAL MODULE HOOK
+    // -------------------------
+    function mountDashboard() {
+      document.getElementById("app").innerHTML = `
+        <div style="padding:20px;">
+          <h3>Welcome ✔</h3>
+          <p>Your app shell is now active.</p>
+        </div>
+      `;
+    }
+
+    // -------------------------
+    // INIT
+    // -------------------------
+    window.addEventListener("DOMContentLoaded", boot);
   </script>
 </head>
 
