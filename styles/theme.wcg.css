@@ -1,0 +1,15 @@
+:root {
+    --wcg-blue: #003a8f;
+    --wcg-blue-dark: #002c6f;
+}
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: #ffffff;
+}
+
+#loading-screen {
+    padding: 40px;
+    font-size: 18px;
+}
