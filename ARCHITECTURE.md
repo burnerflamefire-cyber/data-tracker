@@ -1,8 +1,14 @@
-(HOW EVERYTHING FITS TOGETHER)
+(SYSTEM BLUEPRINT)
 
 # Architecture — Data Tracker
 
-## High-Level Structure
+## 🧭 System Overview
+
+A modular, event-driven web application built around a single universal data model.
+
+---
+
+## 🧱 High-Level Architecture
 
 index.html
 │
@@ -14,46 +20,122 @@ index.html
 │
 ├── core/
 │   ├── app.controller.js
-│   ├── router.js
-│   └── state.store.js
+│   ├── state.store.js
+│   ├── event.bus.js
+│   └── data.model.js
+│
+├── services/
+│   ├── firebase.service.js
+│   ├── category.service.js
+│   └── audit.service.js
 │
 ├── ui/
 │   ├── layout.shell.js
 │   ├── nav.primary.js
 │   ├── nav.secondary.js
-│   └── theme.wcg.css
+│   ├── data.table.js
+│   ├── data.form.js
+│   └── completeness.widget.js
 │
 ├── modules/
 │   ├── project/
-│   │   └── project.module.js
-│   └── programme/
-│       └── programme.module.js
+│   │   ├── project.module.js
+│   │   └── project.logic.js
+│   │
+│   ├── programme/
+│   │   ├── programme.module.js
+│   │   └── programme.logic.js
 │
-├── services/
-│   └── firebase.service.js
+├── config-data/
+│   └── category-mapping.xlsx (ingested)
 │
 └── utils/
     └── helpers.js
 
 ---
 
-## Execution Flow
+## ⚙️ Execution Flow
 
-1. index.html loads
-2. config/app.config.js loads Firebase config
-3. auth/firebase.js initializes Firebase + logs user in
-4. app.controller.js starts system
-5. layout.shell.js renders UI shell
-6. navigation modules load
-7. user selects Project or Programme
-8. corresponding module initializes
+1. index.html loads shell
+2. Firebase config initializes
+3. Auth completes (anonymous login)
+4. AppController starts system
+5. Category configuration loads (Excel → Firebase or JSON)
+6. UI Shell renders
+7. Navigation loads (Project / Programme)
+8. User selects module
+9. Module loads:
+   - Form engine
+   - Table view
+   - Completeness engine
+10. All edits sync to Firebase via service layer
 
 ---
 
-## Key Design Rule
+## 🧠 Core Engine Concept
 
-UI never talks directly to Firebase.
+### One Data Model Rule
 
-Only:
+All modules use the same structure:
 
-Module → Service Layer → Firebase
+- No module-specific schema
+- No feature-specific tables
+- Everything maps to universal record structure
+
+---
+
+## 🔁 Bi-Directional Data Binding
+
+UI components:
+- Form inputs
+- Tables
+- Visual dashboards
+
+All bind to:
+- Firebase records via service layer
+
+Any change:
+UI ↔ State Store ↔ Firebase
+
+---
+
+## 📊 Intelligence Layers
+
+### 1. Category Engine
+- Resolves Main + Sub → Data Category
+- Driven by external configuration file
+
+### 2. Audit Engine
+- Appends change history string per record
+
+### 3. Completeness Engine
+- Compares project vs required dataset
+- Produces completion %
+
+### 4. Alert Engine
+- Budget overrun detection
+- Missing mandatory data detection
+- Risk flags
+
+---
+
+## 🧩 Module Design Rule
+
+Each module must:
+- Be self-contained
+- Never define its own data schema
+- Only interpret shared data model
+- Register via AppController
+
+---
+
+## 🚨 Critical Design Constraint
+
+UI complexity is allowed.
+
+Data model complexity is NOT allowed.
+
+All complexity must move into:
+- Services
+- Engines
+- Configuration files
