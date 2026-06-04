@@ -4,71 +4,81 @@
   <meta charset="UTF-8" />
   <title>Project Data Tracker</title>
 
-  <!-- Tailwind (simple UI styling) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <!-- CONFIG -->
+  <!-- Config -->
   <script src="config/app.config.js"></script>
 
   <style>
-    body {
-      margin: 0;
-      font-family: system-ui;
-      background: #f4f7fb;
-    }
+    body { margin:0; font-family:system-ui; background:#f4f7fb; }
 
-    .wc-blue {
-      background: #002D5B;
-      color: white;
-    }
+    .wc-blue { background:#002D5B; color:white; }
 
     .sidebar {
       transition: width 0.2s ease;
+      overflow: hidden;
     }
 
-    .collapsed {
-      width: 60px !important;
+    .collapsed { width:60px !important; }
+
+    .btn {
+      padding:8px;
+      font-size:12px;
+      border-radius:6px;
+      text-align:left;
+      cursor:pointer;
     }
 
-    .active {
-      background: #004A99;
-    }
+    .btn:hover { background:#004A99; }
+
+    .active { background:#004A99; }
   </style>
 </head>
 
 <body>
 
-<!-- ================= LOADING OVERLAY ================= -->
-<div id="loadingScreen" class="fixed inset-0 flex items-center justify-center wc-blue text-white text-lg">
+<!-- LOADING -->
+<div id="loadingScreen" class="fixed inset-0 flex items-center justify-center wc-blue text-white">
   Loading Project Data Tracker...
 </div>
 
-<!-- ================= APP ROOT ================= -->
+<!-- APP -->
 <div id="app" class="hidden flex h-screen">
 
-  <!-- LEFT NAV -->
+  <!-- LEFT NAV (LEVEL SWITCH) -->
   <div id="leftNav" class="sidebar wc-blue w-56 flex flex-col p-2">
 
-    <button onclick="toggleNav()" class="mb-3 bg-white text-black text-xs p-1 rounded">
-      Toggle
+    <button onclick="toggleLeftNav()" class="bg-white text-black text-xs p-1 rounded mb-3">
+      ☰
     </button>
 
-    <button class="nav-btn active p-2 text-left text-sm rounded mb-1">
+    <div class="text-xs opacity-70 mb-2">NAV LEVEL</div>
+
+    <div onclick="setLevel('project')" id="btnProjectLevel" class="btn active">
       📁 Project Level
-    </button>
+    </div>
 
-    <button class="nav-btn p-2 text-left text-sm rounded mb-1">
+    <div onclick="setLevel('programme')" id="btnProgrammeLevel" class="btn">
       🏢 Programme Level
-    </button>
+    </div>
 
   </div>
 
-  <!-- MAIN AREA -->
+  <!-- MODULE NAV -->
+  <div id="moduleNav" class="wc-blue w-56 flex flex-col p-2 border-l border-blue-900">
+
+    <div class="text-xs opacity-70 mb-2">MODULES</div>
+
+    <div id="moduleList"></div>
+
+  </div>
+
+  <!-- CONTENT -->
   <div class="flex-1 flex flex-col">
 
     <!-- TOP BAR -->
@@ -77,40 +87,106 @@
       <div id="authStatus">Firebase: Initialising...</div>
     </div>
 
-    <!-- CONTENT -->
+    <!-- PAGE CONTENT -->
     <div id="content" class="p-4 text-gray-700">
-      Welcome. Select a module.
+      Select a module
     </div>
 
   </div>
 </div>
 
-<!-- ================= AUTH LAYER ================= -->
+<!-- AUTH -->
 <script src="auth/auth.firebase.js"></script>
 
 <script>
 
-let navCollapsed = false;
+let state = {
+  level: "project"
+};
 
-function toggleNav() {
-  const nav = document.getElementById("leftNav");
-  navCollapsed = !navCollapsed;
-  nav.classList.toggle("collapsed");
+const modules = {
+  project: [
+    { id: "overview", name: "Overview" },
+    { id: "cashflow", name: "Cashflow" },
+    { id: "costs", name: "Cost Tracking" }
+  ],
+  programme: [
+    { id: "dashboard", name: "Programme Dashboard" },
+    { id: "pipeline", name: "Pipeline View" }
+  ]
+};
+
+// ---------------- UI HELPERS ----------------
+
+function toggleLeftNav() {
+  document.getElementById("leftNav").classList.toggle("collapsed");
 }
 
-// Boot UI immediately
+function setLevel(level) {
+  state.level = level;
+
+  document.getElementById("btnProjectLevel").classList.remove("active");
+  document.getElementById("btnProgrammeLevel").classList.remove("active");
+
+  if (level === "project") {
+    document.getElementById("btnProjectLevel").classList.add("active");
+  } else {
+    document.getElementById("btnProgrammeLevel").classList.add("active");
+  }
+
+  renderModules();
+  renderContent("overview");
+}
+
+function renderModules() {
+  const container = document.getElementById("moduleList");
+  container.innerHTML = "";
+
+  modules[state.level].forEach(m => {
+    const div = document.createElement("div");
+    div.className = "btn";
+    div.innerText = m.name;
+
+    div.onclick = () => renderContent(m.id);
+
+    container.appendChild(div);
+  });
+}
+
+function renderContent(moduleId) {
+  const content = document.getElementById("content");
+
+  if (moduleId === "overview") {
+    content.innerHTML = `<h2 class="text-lg font-bold">Project Overview</h2>`;
+  }
+  else if (moduleId === "cashflow") {
+    content.innerHTML = `<h2 class="text-lg font-bold">Cashflow Module</h2>`;
+  }
+  else if (moduleId === "costs") {
+    content.innerHTML = `<h2 class="text-lg font-bold">Cost Tracking Module</h2>`;
+  }
+  else if (moduleId === "dashboard") {
+    content.innerHTML = `<h2 class="text-lg font-bold">Programme Dashboard</h2>`;
+  }
+  else if (moduleId === "pipeline") {
+    content.innerHTML = `<h2 class="text-lg font-bold">Programme Pipeline</h2>`;
+  }
+}
+
+// ---------------- BOOT ----------------
+
 window.addEventListener("load", () => {
 
-  const loading = document.getElementById("loadingScreen");
-  const app = document.getElementById("app");
+  document.getElementById("app").classList.remove("hidden");
 
-  // show UI instantly (no blank screen ever)
-  app.classList.remove("hidden");
+  setTimeout(() => {
+    document.getElementById("loadingScreen").style.display = "none";
+  }, 500);
 
-  // simulate Firebase status hook
-  const status = document.getElementById("authStatus");
+  setLevel("project");
 
   setInterval(() => {
+    const status = document.getElementById("authStatus");
     if (window.globalUserUid) {
       status.innerText = "Firebase: Connected ✔";
     } else {
@@ -118,10 +194,6 @@ window.addEventListener("load", () => {
     }
   }, 1000);
 
-  // hide loading screen after UI is visible
-  setTimeout(() => {
-    loading.style.display = "none";
-  }, 600);
 });
 
 </script>
