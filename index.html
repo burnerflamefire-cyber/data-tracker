@@ -6,31 +6,20 @@
 
 <title>Project Data Tracker</title>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-<!-- Config -->
-<script src="config/app.config.js"></script>
-
-<!-- Auth -->
-<script src="auth/auth.firebase.js"></script>
-
 <style>
 /* =========================
-   WESTERN CAPE GOV THEME
-   ========================= */
-
+   WC GOV BLUE THEME
+========================= */
 :root {
-  --wcg-blue: #002244;
-  --wcg-blue-light: #003366;
-  --wcg-blue-accent: #0055aa;
-  --text-light: #ffffff;
-  --bg-dark: #0b1a2b;
-  --panel-dark: #0f2740;
+  --bg: #0b1b2b;
+  --panel: #002244;
+  --panel-2: #003366;
+  --accent: #0055aa;
+  --text: #e6f0ff;
+  --muted: #9bb3c7;
 }
 
+/* RESET */
 * {
   margin: 0;
   padding: 0;
@@ -39,252 +28,257 @@
 }
 
 body {
-  background: var(--bg-dark);
-  color: var(--text-light);
+  background: var(--bg);
+  color: var(--text);
   height: 100vh;
   overflow: hidden;
 }
 
 /* =========================
-   LAYOUT GRID
-   ========================= */
-
-.app-container {
+   TOP HEADER
+========================= */
+header {
+  height: 45px;
+  background: var(--panel);
   display: flex;
-  height: 100vh;
-}
-
-/* =========================
-   FAR LEFT VERTICAL NAV
-   ========================= */
-
-.vertical-nav {
-  width: 60px;
-  background: var(--wcg-blue);
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  padding-top: 20px;
-  gap: 20px;
+  justify-content: space-between;
+  padding: 0 12px;
+  border-bottom: 1px solid #003a66;
 }
 
-.vertical-btn {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  background: transparent;
-  border: none;
-  color: white;
+header .title {
   font-weight: bold;
-  letter-spacing: 1px;
-  cursor: pointer;
-  padding: 10px 5px;
-  opacity: 0.7;
-  transition: all 0.2s ease;
-  border-left: 3px solid transparent;
+  font-size: 14px;
 }
 
-.vertical-btn:hover {
-  opacity: 1;
-  background: var(--wcg-blue-light);
-}
-
-.vertical-btn.active {
-  opacity: 1;
-  border-left: 3px solid var(--wcg-blue-accent);
-  background: var(--wcg-blue-light);
+header .status {
+  font-size: 11px;
+  color: var(--muted);
 }
 
 /* =========================
-   SECONDARY NAV
-   ========================= */
-
-.side-nav {
-  width: 220px;
-  background: var(--panel-dark);
+   MAIN LAYOUT
+========================= */
+#app {
   display: flex;
-  flex-direction: column;
-  padding: 10px;
-  transition: width 0.3s ease;
+  height: calc(100vh - 45px);
 }
 
-.side-nav.collapsed {
-  width: 0;
-  overflow: hidden;
+/* =========================
+   PRIMARY NAV
+========================= */
+#primaryNav {
+  width: 200px;
+  background: var(--panel);
+  border-right: 1px solid #003a66;
+  transition: width 0.2s;
 }
 
-.side-title {
-  font-size: 12px;
-  opacity: 0.7;
-  margin: 10px 0;
+#primaryNav.collapsed {
+  width: 55px;
 }
 
 .nav-item {
-  padding: 10px;
-  margin: 4px 0;
-  background: #122c47;
-  border-radius: 6px;
+  padding: 12px;
   cursor: pointer;
   font-size: 13px;
+  border-left: 3px solid transparent;
   transition: 0.2s;
 }
 
 .nav-item:hover {
-  background: var(--wcg-blue-accent);
+  background: var(--panel-2);
 }
 
 .nav-item.active {
-  background: var(--wcg-blue-accent);
-  font-weight: bold;
+  border-left: 3px solid var(--accent);
+  background: #001a33;
 }
 
 /* =========================
-   MAIN CONTENT
-   ========================= */
-
-.main {
-  flex: 1;
-  background: #0a1624;
-  display: flex;
-  flex-direction: column;
+   SECONDARY NAV
+========================= */
+#secondaryNav {
+  width: 220px;
+  background: #001a33;
+  border-right: 1px solid #002b4d;
+  transition: width 0.2s;
 }
 
-.top-bar {
-  height: 45px;
-  background: var(--wcg-blue);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 15px;
-  font-size: 12px;
+#secondaryNav.collapsed {
+  width: 0;
+  overflow: hidden;
 }
 
-.workspace {
+/* =========================
+   WORKSPACE
+========================= */
+#workspace {
   flex: 1;
   padding: 15px;
   overflow: auto;
 }
 
-.card {
-  background: #11263d;
-  padding: 20px;
-  border-radius: 8px;
-  border: 1px solid #1b3b5c;
+.module-box {
+  background: #001f3d;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #003a66;
 }
 
 /* =========================
-   COLLAPSE BUTTON
-   ========================= */
-
-.toggle-btn {
-  position: absolute;
-  top: 50%;
-  left: 220px;
-  transform: translateY(-50%);
-  background: var(--wcg-blue-accent);
+   BUTTONS
+========================= */
+.btn {
+  padding: 8px 10px;
+  background: var(--panel-2);
   border: none;
-  color: white;
-  padding: 5px 8px;
+  color: var(--text);
   cursor: pointer;
-  font-size: 10px;
+  font-size: 12px;
+  margin: 5px 0;
+  width: 100%;
+  text-align: left;
 }
+
+.btn:hover {
+  background: var(--accent);
+}
+
+/* COLLAPSE BUTTON */
+.collapse-btn {
+  font-size: 11px;
+  padding: 6px;
+  cursor: pointer;
+  background: #001a33;
+  color: var(--muted);
+  text-align: center;
+  border-bottom: 1px solid #003a66;
+}
+
 </style>
 </head>
 
 <body>
 
-<div class="app-container">
+<!-- =========================
+     HEADER
+========================= -->
+<header>
+  <div class="title">Project Data Tracker</div>
+  <div class="status" id="statusText">UI Shell Loaded</div>
+</header>
 
-  <!-- FAR LEFT: VERTICAL NAV -->
-  <div class="vertical-nav">
-    <button class="vertical-btn active" onclick="switchMode('project')">
-      PROJECT
-    </button>
+<!-- =========================
+     APP LAYOUT
+========================= -->
+<div id="app">
 
-    <button class="vertical-btn" onclick="switchMode('programme')">
-      PROGRAMME
-    </button>
+  <!-- PRIMARY NAV -->
+  <div id="primaryNav">
+    <div class="collapse-btn" onclick="togglePrimary()">☰</div>
+
+    <div class="nav-item active" onclick="setMode('project')">
+      Project Level
+    </div>
+
+    <div class="nav-item" onclick="setMode('programme')">
+      Programme Level
+    </div>
   </div>
 
   <!-- SECONDARY NAV -->
-  <div id="sideNav" class="side-nav">
-    <div class="side-title" id="sideTitle">Project Navigation</div>
-
-    <div class="nav-item active">Dashboard</div>
-    <div class="nav-item">Data Capture</div>
-    <div class="nav-item">Tables</div>
-    <div class="nav-item">Reports</div>
+  <div id="secondaryNav">
+    <div class="collapse-btn" onclick="toggleSecondary()">⇤</div>
+    <div id="secondaryContent"></div>
   </div>
 
-  <!-- MAIN AREA -->
-  <div class="main">
-
-    <!-- TOP BAR -->
-    <div class="top-bar">
-      <div>Project Data Tracker</div>
-      <div id="authStatus">Auth: Initialising...</div>
+  <!-- WORKSPACE -->
+  <div id="workspace">
+    <div class="module-box" id="moduleBox">
+      Welcome — Select a module
     </div>
-
-    <!-- WORKSPACE -->
-    <div class="workspace">
-      <div class="card">
-        <h2>System Shell Loaded ✔</h2>
-        <br/>
-        <p>
-          This is the UI shell. Next step will connect:
-        </p>
-        <br/>
-        <ul>
-          <li>Module loader (Project / Programme)</li>
-          <li>Dynamic navigation</li>
-          <li>Data input engine</li>
-          <li>Firebase live binding</li>
-        </ul>
-      </div>
-    </div>
-
   </div>
+
 </div>
 
 <script>
 /* =========================
-   UI STATE CONTROL
-   ========================= */
+   APP STATE
+========================= */
+let appState = {
+  mode: "project",
+  module: null
+};
 
-let currentMode = "project";
+/* =========================
+   PRIMARY NAV MODE SWITCH
+========================= */
+function setMode(mode) {
+  appState.mode = mode;
 
-function switchMode(mode) {
-  currentMode = mode;
-
-  // update vertical buttons
-  document.querySelectorAll(".vertical-btn").forEach(btn => {
-    btn.classList.remove("active");
-  });
+  document.querySelectorAll("#primaryNav .nav-item")
+    .forEach(el => el.classList.remove("active"));
 
   event.target.classList.add("active");
 
-  // update side nav content
-  const title = document.getElementById("sideTitle");
-
-  if (mode === "project") {
-    title.innerText = "Project Navigation";
-  } else {
-    title.innerText = "Programme Navigation";
-  }
+  renderSecondaryNav();
 }
 
 /* =========================
-   AUTH STATUS HOOK
-   ========================= */
+   SECONDARY NAV RENDER
+========================= */
+function renderSecondaryNav() {
+  const container = document.getElementById("secondaryContent");
 
-setInterval(() => {
-  const el = document.getElementById("authStatus");
+  let items = [];
 
-  if (window.globalUserUid) {
-    el.innerText = "Auth: Connected ✔ " + window.globalUserUid.substring(0, 6);
+  if (appState.mode === "project") {
+    items = ["Overview", "Data Capture", "Table View", "Analytics", "Completeness"];
   } else {
-    el.innerText = "Auth: Waiting...";
+    items = ["Portfolio Overview", "Reporting", "Risk View", "Funding"];
   }
-}, 1000);
+
+  container.innerHTML = "";
+
+  items.forEach(i => {
+    const btn = document.createElement("button");
+    btn.className = "btn";
+    btn.innerText = i;
+    btn.onclick = () => loadModule(i);
+    container.appendChild(btn);
+  });
+}
+
+/* =========================
+   MODULE LOADER (PLACEHOLDER)
+========================= */
+function loadModule(name) {
+  appState.module = name;
+
+  document.getElementById("moduleBox").innerHTML = `
+    <h3>${name}</h3>
+    <p>Module loaded successfully.</p>
+    <p>Mode: ${appState.mode}</p>
+  `;
+}
+
+/* =========================
+   COLLAPSE TOGGLES
+========================= */
+function togglePrimary() {
+  document.getElementById("primaryNav").classList.toggle("collapsed");
+}
+
+function toggleSecondary() {
+  document.getElementById("secondaryNav").classList.toggle("collapsed");
+}
+
+/* =========================
+   INIT
+========================= */
+renderSecondaryNav();
 </script>
 
 </body>
