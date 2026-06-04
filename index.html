@@ -1,42 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>Project Data Tracker</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <title>Project Data Tracker</title>
 
-    <!-- WCG THEME -->
-    <link rel="stylesheet" href="styles/theme.wcg.css">
-    <link rel="stylesheet" href="layout/layout.css">
+  <!-- Tailwind (simple UI styling) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- CONFIG -->
+  <script src="config/app.config.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui;
+      background: #f4f7fb;
+    }
+
+    .wc-blue {
+      background: #002D5B;
+      color: white;
+    }
+
+    .sidebar {
+      transition: width 0.2s ease;
+    }
+
+    .collapsed {
+      width: 60px !important;
+    }
+
+    .active {
+      background: #004A99;
+    }
+  </style>
 </head>
 
 <body>
-    <!-- APP ROOT -->
-    <div id="app">
-        <div id="loading-screen">
-            Loading Project Data Tracker…
-        </div>
+
+<!-- ================= LOADING OVERLAY ================= -->
+<div id="loadingScreen" class="fixed inset-0 flex items-center justify-center wc-blue text-white text-lg">
+  Loading Project Data Tracker...
+</div>
+
+<!-- ================= APP ROOT ================= -->
+<div id="app" class="hidden flex h-screen">
+
+  <!-- LEFT NAV -->
+  <div id="leftNav" class="sidebar wc-blue w-56 flex flex-col p-2">
+
+    <button onclick="toggleNav()" class="mb-3 bg-white text-black text-xs p-1 rounded">
+      Toggle
+    </button>
+
+    <button class="nav-btn active p-2 text-left text-sm rounded mb-1">
+      📁 Project Level
+    </button>
+
+    <button class="nav-btn p-2 text-left text-sm rounded mb-1">
+      🏢 Programme Level
+    </button>
+
+  </div>
+
+  <!-- MAIN AREA -->
+  <div class="flex-1 flex flex-col">
+
+    <!-- TOP BAR -->
+    <div class="wc-blue p-2 text-sm flex justify-between">
+      <div>Project Data Tracker</div>
+      <div id="authStatus">Firebase: Initialising...</div>
     </div>
 
-    <!-- FIREBASE (REQUIRED FIRST) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <!-- CONTENT -->
+    <div id="content" class="p-4 text-gray-700">
+      Welcome. Select a module.
+    </div>
 
-    <!-- EXISTING CONFIG & AUTH (UNCHANGED) -->
-    <script src="config/app.config.js"></script>
-    <script src="auth/auth.firebase.js"></script>
+  </div>
+</div>
 
-    <!-- CORE -->
-    <script src="core/app.state.js"></script>
-    <script src="core/router.js"></script>
-    <script src="core/app.boot.js"></script>
+<!-- ================= AUTH LAYER ================= -->
+<script src="auth/auth.firebase.js"></script>
 
-    <!-- LAYOUT -->
-    <script src="layout/navigation.js"></script>
+<script>
 
-    <!-- PAGES -->
-    <script src="pages/programme.dashboard.js"></script>
-    <script src="pages/project.dashboard.js"></script>
+let navCollapsed = false;
+
+function toggleNav() {
+  const nav = document.getElementById("leftNav");
+  navCollapsed = !navCollapsed;
+  nav.classList.toggle("collapsed");
+}
+
+// Boot UI immediately
+window.addEventListener("load", () => {
+
+  const loading = document.getElementById("loadingScreen");
+  const app = document.getElementById("app");
+
+  // show UI instantly (no blank screen ever)
+  app.classList.remove("hidden");
+
+  // simulate Firebase status hook
+  const status = document.getElementById("authStatus");
+
+  setInterval(() => {
+    if (window.globalUserUid) {
+      status.innerText = "Firebase: Connected ✔";
+    } else {
+      status.innerText = "Firebase: Waiting...";
+    }
+  }, 1000);
+
+  // hide loading screen after UI is visible
+  setTimeout(() => {
+    loading.style.display = "none";
+  }, 600);
+});
+
+</script>
+
 </body>
 </html>
